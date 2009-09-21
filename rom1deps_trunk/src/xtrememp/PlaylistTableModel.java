@@ -112,23 +112,38 @@ public class PlaylistTableModel extends AbstractTableModel {
     public Object getValueAt(int rowIndex, int columnIndex) {
         if (!playlistItems.isEmpty()) {
             PlaylistItem item = playlistItems.get(rowIndex);
-            switch (columnIndex) {
-                case TRACK_COLUMN:
-                    try {
-                        return item.getTagInfo().getTrack() == null ? 0 : item.getTagInfo().getTrack().matches("") ? 0 : Integer.parseInt(item.getTagInfo().getTrack());
-                    } catch (NumberFormatException e) {
-                        return 0;
-                    }
-                case TITLE_COLUMN:
-                    return item.getTagInfo().getTitle() == null ? item.getName() : item.getTagInfo().getTitle().matches("") ? item.getName() : item.getTagInfo().getTitle();
-                case ARTIST_COLUMN:
-                    return item.getTagInfo().getArtist() == null ? UNKNOWN : item.getTagInfo().getArtist().matches("") ? UNKNOWN : item.getTagInfo().getArtist();
-                case ALBUM_COLUMN:
-                    return item.getTagInfo().getAlbum() == null ? UNKNOWN : item.getTagInfo().getAlbum().matches("") ? UNKNOWN : item.getTagInfo().getAlbum();
-                case TIME_COLUMN:
-                    return item.getFormattedLength(item.getDuration());
+            if (item.isFile()) {
+                switch (columnIndex) {
+                    case TRACK_COLUMN:
+                        try {
+                            return item.getTagInfo().getTrack() == null ? 0 : item.getTagInfo().getTrack().matches("") ? 0 : Integer.parseInt(item.getTagInfo().getTrack());
+                        } catch (NumberFormatException e) {
+                            return 0;
+                        }
+                    case TITLE_COLUMN:
+                        return item.getTagInfo().getTitle() == null ? item.getName() : item.getTagInfo().getTitle().matches("") ? item.getName() : item.getTagInfo().getTitle();
+                    case ARTIST_COLUMN:
+                        return item.getTagInfo().getArtist() == null ? UNKNOWN : item.getTagInfo().getArtist().matches("") ? UNKNOWN : item.getTagInfo().getArtist();
+                    case ALBUM_COLUMN:
+                        return item.getTagInfo().getAlbum() == null ? UNKNOWN : item.getTagInfo().getAlbum().matches("") ? UNKNOWN : item.getTagInfo().getAlbum();
+                    case TIME_COLUMN:
+                        return item.getFormattedLength(item.getDuration());
 //                case GENRE_COLUMN:
 //                    return " " + item.getTagInfo().getGenre();
+                }
+            } else {
+                switch (columnIndex) {
+                    case TRACK_COLUMN:
+                        return 0;
+                    case TITLE_COLUMN:
+                        return item.getName() == null ? UNKNOWN : item.getName();
+                    case ARTIST_COLUMN:
+                        return "";
+                    case ALBUM_COLUMN:
+                        return "";
+                    case TIME_COLUMN:
+                        return "\u221E";
+                }
             }
         }
         return null;
