@@ -193,8 +193,8 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
 //                if (OS.isWindowsXP()) {
-                    JFrame.setDefaultLookAndFeelDecorated(true);
-                    JDialog.setDefaultLookAndFeelDecorated(true);
+                JFrame.setDefaultLookAndFeelDecorated(true);
+                JDialog.setDefaultLookAndFeelDecorated(true);
 //                }
                 UIManager.put(SubstanceLookAndFeel.FOCUS_KIND, SubstanceConstants.FocusKind.NONE);
                 SubstanceLookAndFeel.setSkin(Settings.getSkin());
@@ -920,7 +920,13 @@ public class XtremeMP implements ActionListener, ControlListener,
     public void acOpenAndPlay() {
         PlayerLauncher playerLauncher = new PlayerLauncher(true);
         playerLauncher.execute();
-        seekSlider.setEnabled(true);
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                seekSlider.setEnabled(true);
+            }
+        });
     }
 
     @Override
