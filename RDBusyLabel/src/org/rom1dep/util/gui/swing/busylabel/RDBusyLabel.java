@@ -27,6 +27,7 @@ public class RDBusyLabel extends JLabel implements Runnable, Pipe {
     private AnimationType animType = AnimationType.ROTATE;
 
     public RDBusyLabel(Dimension dim) {
+        super.setMinimumSize(dim);
         super.setPreferredSize(dim);
         super.setMaximumSize(dim);//temporary
         super.addComponentListener(handler);
@@ -86,10 +87,11 @@ public class RDBusyLabel extends JLabel implements Runnable, Pipe {
 
     @Override
     protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
         if (baseImage == null) {
-            super.paintComponent(g);
+            return;
         } else {
-            g.drawImage(getDrawingImage(), getBounds().x, getBounds().y, getDrawingImage().getWidth(), getDrawingImage().getHeight(), this);
+            g.drawImage(getDrawingImage(), 0, 0, getDrawingImage().getWidth(), getDrawingImage().getHeight(), this);
         }
     }
 
