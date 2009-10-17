@@ -83,6 +83,7 @@ import xtrememp.util.file.AudioFileFilter;
 import xtrememp.util.file.M3uPlaylistFileFilter;
 import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.playlist.Playlist;
+import xtrememp.playlist.PlaylistChangeListener;
 import xtrememp.playlist.PlaylistException;
 import xtrememp.playlist.PlaylistIO;
 import xtrememp.playlist.PlaylistItem;
@@ -252,6 +253,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
     protected void addFiles(List<File> fileList) {
         AddFilesWorker addFilesWorker = new AddFilesWorker(fileList);
         addFilesWorker.execute();
+        playlistTable.synchronize();
     }
 
     public void add(PlaylistItem pli) {
@@ -402,11 +404,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
             }
             int itemIndex = playlist.indexOf(pli);
             if (itemIndex == -1) {
-                controlListener.acStop();
+                //controlListener.acStop();
                 controlListener.acDisable();
                 if (!playlist.isEmpty()) {
                     playlist.begin();
-                    controlListener.acOpen();
+                    //controlListener.acOpen();
                     doubleSelectedRow = playlistTable.convertRowIndexToView(0);
                 }
             } else {
@@ -775,34 +777,44 @@ public class PlaylistManager extends JPanel implements ActionListener,
         }
     }
 
-    class ExtendedJTable extends JTable {
+    class ExtendedJTable extends JTable implements PlaylistChangeListener {
 
         public ExtendedJTable(AbstractTableModel model) {
             super(model);
+            playlist.addPlaylistChangeListener(this);
         }
 
         @Override
+        /*
+         * Called when user clicks on a table header
+         */
         public void sorterChanged(final RowSorterEvent e) {
             if (e.getType() == RowSorterEvent.Type.SORT_ORDER_CHANGED) {
-                EventQueue.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        //Resync model & view
-                        int[] newSet = new int[getRowCount()];
-                        for (int i = 0; i < getRowCount(); i++) {
-                            newSet[i] = convertRowIndexToModel(i);
-                        }
-                        playlist.resort(newSet);
-                        playlistTableModel.fireTableDataChanged();
-                        makeRowVisible(playlist.getCursorPosition());
-                        playlistTable.setEditingRow(playlist.getCursorPosition());//@Test
-                        //playlistTableModel.fireTableRowsUpdated(1, playlistTable.getRowCount()-1);
-                    }
-                });
+                synchronize();
             } else {
                 super.sorterChanged(e);
             }
+        }
+
+        @Override
+        public void synchronize() {
+            logger.info("Syncronizing Playlist...");
+            EventQueue.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    //Resync model & view
+                    int[] newSet = new int[getRowCount()];
+                    for (int i = 0; i < getRowCount(); i++) {
+                        newSet[i] = convertRowIndexToModel(i);
+                    }
+                    playlist.resort(newSet);
+                    playlistTableModel.fireTableDataChanged();
+                    makeRowVisible(playlist.getCursorPosition());
+                    playlistTable.setEditingRow(playlist.getCursorPosition());//@Test
+                    //playlistTableModel.fireTableRowsUpdated(1, playlistTable.getRowCount()-1);
+                }
+            });
         }
     }
 }

@@ -430,36 +430,12 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         menuBar.add(Box.createHorizontalGlue());
 
-        //** Scratch test failing...
-//        menuBar.add(new JLabel() {
-//
-//            @Override
-//            public Dimension getPreferredSize(){
-//                return new Dimension(40, 40);
-//            }
-//
-//            @Override
-//            public void paintComponent(Graphics g) {
-//                g.setColor(Color.red);
-//                g.fillRect(0, 0, getWidth(), getHeight());
-//            }
-//        });
-        //**Something is wrong with supstance, yap
-
         busyLabel = new RDBusyLabel(new Dimension(22, 22));
         busyLabel.loadBaseImage(Utilities.getImage("logo_alt_base.png"));
         busyLabel.loadAnimImage(Utilities.getImage("logo_alt.png"));
         busyLabel.setAnimationType(AnimationType.ROTATE_3D);
         busyLabel.initImages();
         busyLabel.setVisible(true);
-//        busyLabel.setBusy(true);
-//        JFrame f = new JFrame();
-//        f.setSize(300, 45);
-//        f.add(busyLabel, "Center");
-//        f.pack();
-//        f.setVisible(true);
-//        SubstanceLookAndFeel.setDecorationType(busyLabel, DecorationAreaType.GENERAL);
-        //busyLabel.getBusyPainter().setHighlightColor(Color.gray);
         menuBar.add(busyLabel);
 
         menuBar.add(Box.createHorizontalStrut(5));
@@ -772,7 +748,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             playlistManager.moveDown();
         } else if (source == randomizePlaylistMenuItem) {
             playlistManager.randomizePlaylist();
-            acOpen();
+            //acOpen();
         } else if (source == stopMenuItem || source == stopButton) {
             acStop();
         } else if (source == infoMenuItem) {
@@ -948,13 +924,17 @@ public class XtremeMP implements ActionListener, ControlListener,
     @Override
     public void acPlayPause() {
         if (EventQueue.isDispatchThread()) {
-            seekSlider.setEnabled(true);
+            if (!seekSlider.isEnabled()) {
+                seekSlider.setEnabled(true);
+            }
         } else {
             EventQueue.invokeLater(new Runnable() {
 
                 @Override
                 public void run() {
-                    seekSlider.setEnabled(true);
+                    if (!seekSlider.isEnabled()) {
+                        seekSlider.setEnabled(true);
+                    }
                 }
             });
         }

@@ -19,7 +19,6 @@
 package xtrememp.playlist;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,12 +34,17 @@ public class Playlist {
     private List<PlaylistItem> playlist = null;
     private int cursorPos = -1;
     private boolean isModified = false;
+    private static PlaylistChangeListener plCListener = null;
 
     /**
      * Default constructor
      */
     public Playlist() {
         playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>());
+    }
+
+    public void addPlaylistChangeListener(PlaylistChangeListener newListener) {
+        plCListener = newListener;
     }
 
     /**
@@ -212,6 +216,9 @@ public class Playlist {
      */
     public void setModified(boolean set) {
         isModified = set;
+        if (set) {
+            plCListener.synchronize();
+        }
     }
 
     /**
