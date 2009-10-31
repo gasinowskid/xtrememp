@@ -593,7 +593,7 @@ public class AudioPlayer implements Callable<Void> {
     }
 
     public boolean isPlaying() {
-        return state == PAUSE;
+        return state == PLAY;
     }
 
     @Override
