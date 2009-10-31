@@ -20,11 +20,14 @@ package xtrememp.ui.textfield;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -77,6 +80,26 @@ public class SearchTextField extends JPanel {
             setBackground(new Color(0, 0, 0, 64));
             setFont(getFont().deriveFont(Font.BOLD));
             setFocusAccelerator('S');
+            addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyPressed(KeyEvent evt) {
+                    if (evt.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        if (EventQueue.isDispatchThread()) {
+                            setText("");
+                        } else {
+                            EventQueue.invokeLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    setText("");
+                                }
+                            });
+
+                        }
+                    }
+                }
+            });
         }
 
         @Override
