@@ -32,8 +32,8 @@ import javax.swing.JTextField;
 import net.miginfocom.swing.MigLayout;
 import xtrememp.playlist.PlaylistItem;
 import xtrememp.tag.TagInfo;
-import xtrememp.util.LanguageBundle;
 import xtrememp.util.Utilities;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -62,7 +62,7 @@ public class MediaInfoDialog extends JDialog implements ActionListener {
     public MediaInfoDialog(PlaylistItem pli) {
         super(XtremeMP.getInstance().getMainFrame(), true);
         setLayout(new MigLayout("fill"));
-        setTitle(LanguageBundle.getString("Dialog.MediaInformation"));
+        setTitle(tr("Dialog.MediaInformation"));
         initComponents();
         Utilities.closeOnEscape(this);
 
@@ -148,39 +148,39 @@ public class MediaInfoDialog extends JDialog implements ActionListener {
         container.add(buttonPanel, "south");
 
         JPanel centerPanel = new JPanel(new MigLayout("", "[trailing][grow,fill]", ""));
-        centerPanel.setBorder(BorderFactory.createTitledBorder(LanguageBundle.getString("Dialog.MediaInformation.StandardTags")));
-        titleLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Title"));
+        centerPanel.setBorder(BorderFactory.createTitledBorder(tr("Dialog.MediaInformation.StandardTags")));
+        titleLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Title"));
         centerPanel.add(titleLabel);
         titleTextField = new JTextField();
         centerPanel.add(titleTextField, "span,growx");
-        artistLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Artist"));
+        artistLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Artist"));
         centerPanel.add(artistLabel);
         artistTextField = new JTextField();
         centerPanel.add(artistTextField, "span,growx");
-        albumLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Album"));
+        albumLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Album"));
         centerPanel.add(albumLabel);
         albumTextField = new JTextField();
         centerPanel.add(albumTextField, "span,growx");
-        genreLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Genre"));
+        genreLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Genre"));
         centerPanel.add(genreLabel);
         genreTextField = new JTextField();
         centerPanel.add(genreTextField, "growx,width 100:null:null");
-        trackLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Track"));
+        trackLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Track"));
         centerPanel.add(trackLabel, "split");
         trackTextField = new JTextField();
         centerPanel.add(trackTextField, "growx,width 35:null:null");
-        yearLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Year"));
+        yearLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Year"));
         centerPanel.add(yearLabel, "split");
         yearTextField = new JTextField();
         centerPanel.add(yearTextField, "growx,wrap,width 45:null:null");
-        commentLabel = new JLabel(LanguageBundle.getString("Dialog.MediaInformation.StandardTags.Comment"));
+        commentLabel = new JLabel(tr("Dialog.MediaInformation.StandardTags.Comment"));
         centerPanel.add(commentLabel);
         commentTextArea = new JTextArea();
         centerPanel.add(new JScrollPane(commentTextArea), "span, growx, width min:150, height min:100");
         container.add(centerPanel, "spany, grow, center");
 
         JPanel eastPanel = new JPanel(new MigLayout("", "[175]", ""));
-        eastPanel.setBorder(BorderFactory.createTitledBorder(LanguageBundle.getString("Dialog.MediaInformation.CodecDetails")));
+        eastPanel.setBorder(BorderFactory.createTitledBorder(tr("Dialog.MediaInformation.CodecDetails")));
         cdLabel = new JLabel();
         eastPanel.add(cdLabel);
         container.add(eastPanel, "east");

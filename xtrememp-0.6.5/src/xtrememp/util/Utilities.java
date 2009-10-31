@@ -202,4 +202,8 @@ public final class Utilities {
         Arrays.fill(c, padChar);
         return new String(c) + s;
     }
+
+    public static String tr(String toBeTranslated) {
+        return LanguageBundle.getString(toBeTranslated);
+    }
 }

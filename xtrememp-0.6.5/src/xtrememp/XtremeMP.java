@@ -99,6 +99,7 @@ import xtrememp.util.LanguageBundle;
 import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.util.Utilities;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -194,7 +195,7 @@ public class XtremeMP implements ActionListener, ControlListener,
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 UIManager.put(SubstanceLookAndFeel.FOCUS_KIND, SubstanceConstants.FocusKind.NONE);
                 SubstanceLookAndFeel.setSkin(Settings.getSkin());
-                String title = LanguageBundle.getString("Application.title");
+                String title = tr("Application.title");
                 mainFrame = new JFrame(title);
                 mainFrame.setIconImages(Utilities.getIconImages());
                 mainFrame.setBounds(Settings.getMainFrameBounds());
@@ -294,14 +295,14 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     protected void createMenuBar() {
         menuBar = new JMenuBar();
-        fileMenu = new JMenu(LanguageBundle.getString("MainFrame.Menu.File"));
-        openMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.File.OpenFile"));
-        openURLMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.File.OpenURL"));
-        openPlaylistMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.File.OpenPlaylist"));
-        savePlaylistMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.File.SavePlaylist"));
-        preferencesMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.File.Preferences"));
-        exitMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.File.Exit"));
-        playlistMenu = new JMenu(LanguageBundle.getString("MainFrame.Menu.Player"));
+        fileMenu = new JMenu(tr("MainFrame.Menu.File"));
+        openMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenFile"));
+        openURLMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenURL"));
+        openPlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenPlaylist"));
+        savePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.SavePlaylist"));
+        preferencesMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Preferences"));
+        exitMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Exit"));
+        playlistMenu = new JMenu(tr("MainFrame.Menu.Player"));
         playlistMenuItem = new JMenuItem("Show/Hide");
         previousMenuItem = new JMenuItem("Previous");
         playPauseMenuItem = new JMenuItem("Play/Pause");
@@ -314,9 +315,9 @@ public class XtremeMP implements ActionListener, ControlListener,
         moveDownItemsMenuItem = new JMenuItem("Move down");
         randomizePlaylistMenuItem = new JMenuItem("Randomize");
         infoMenuItem = new JMenuItem("View info...");
-        helpMenu = new JMenu(LanguageBundle.getString("MainFrame.Menu.Help"));
-        updateMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.Help.CheckForUpdates"));
-        aboutMenuItem = new JMenuItem(LanguageBundle.getString("MainFrame.Menu.Help.About"));
+        helpMenu = new JMenu(tr("MainFrame.Menu.Help"));
+        updateMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.CheckForUpdates"));
+        aboutMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.About"));
 
         fileMenu.setMnemonic('F');
 
@@ -753,23 +754,23 @@ public class XtremeMP implements ActionListener, ControlListener,
             SoftwareUpdate.checkForUpdates(true);
             SoftwareUpdate.showCheckForUpdatesDialog();
         } else if (source == aboutMenuItem) {
-            Object[] options = {LanguageBundle.getString("Button.Close")};
+            Object[] options = {tr("Button.Close")};
             Desktop desktop = null;
             if (Desktop.isDesktopSupported()) {
                 desktop = Desktop.getDesktop();
                 if (desktop.isSupported(Desktop.Action.BROWSE)) {
-                    options = new Object[]{LanguageBundle.getString("Button.Close"), LanguageBundle.getString("Button.Website")};
+                    options = new Object[]{tr("Button.Close"), tr("Button.Website")};
                 }
             }
             Version currentVersion = Version.getCurrentVersion();
             StringBuffer message = new StringBuffer();
-            message.append("<html><b><font color='red' size='5'>" + LanguageBundle.getString("Application.title"));
-            message.append("</font></b><br>" + LanguageBundle.getString("Application.description"));
+            message.append("<html><b><font color='red' size='5'>" + tr("Application.title"));
+            message.append("</font></b><br>" + tr("Application.description"));
             message.append("<br>Copyright © 2005-2009 The Xtreme Media Player Project");
-            message.append("<br><br><b>Author: </b>" + LanguageBundle.getString("Application.author"));
+            message.append("<br><br><b>Author: </b>" + tr("Application.author"));
             message.append("<br><b>Version: </b>" + currentVersion);
             message.append("<br><b>Release date: </b>" + currentVersion.getReleaseDate());
-            message.append("<br><b>Homepage: </b>" + LanguageBundle.getString("Application.homepage"));
+            message.append("<br><b>Homepage: </b>" + tr("Application.homepage"));
             message.append("<br><br><b>Java version: </b>" + System.getProperty("java.version"));
             message.append("<br><b>Java vendor: </b>" + System.getProperty("java.vendor"));
             message.append("<br><b>Java home: </b>" + System.getProperty("java.home"));
@@ -782,7 +783,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             int n = JOptionPane.showOptionDialog(mainFrame, message, "About", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
             if (n == 1 && desktop != null) {
                 try {
-                    URL url = new URL(LanguageBundle.getString("Application.homepage"));
+                    URL url = new URL(tr("Application.homepage"));
                     desktop.browse(url.toURI());
                 } catch (Exception ex) {
                     logger.error(ex.getMessage(), ex);
@@ -793,7 +794,7 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playbackBuffering(PlaybackEvent pe) {
-        setStatus(LanguageBundle.getString("MainFrame.StatusBar.Buffering"));
+        setStatus(tr("MainFrame.StatusBar.Buffering"));
     }
 
     @Override

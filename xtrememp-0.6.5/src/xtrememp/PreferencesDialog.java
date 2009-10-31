@@ -48,8 +48,8 @@ import net.miginfocom.swing.MigLayout;
 import xtrememp.player.audio.AudioPlayer;
 import xtrememp.ui.combobox.IconComboBox;
 import xtrememp.ui.combobox.SkinComboSelector;
-import xtrememp.util.LanguageBundle;
 import xtrememp.util.Utilities;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -81,7 +81,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         super(mainFrame, true);
         this.audioPlayer = audioPlayer;
         setLayout(new MigLayout("fill"));
-        setTitle(LanguageBundle.getString("Dialog.Preferences"));
+        setTitle(tr("Dialog.Preferences"));
         initComponents();
         Utilities.closeOnEscape(this);
 
@@ -108,7 +108,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
             Settings.setAutomaticCheckForUpdatesEnabled(updatesCheckBox.isSelected());
         } else if (source.equals(changeCacheDirButton)) {
             JFileChooser fileChooser = new JFileChooser(System.getProperty("user.home"));
-            fileChooser.setDialogTitle(LanguageBundle.getString("Dialog.Preferences.General.CacheDirectory.SelectCacheDir"));
+            fileChooser.setDialogTitle(tr("Dialog.Preferences.General.CacheDirectory.SelectCacheDir"));
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             while (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                 File cacheDir = fileChooser.getSelectedFile();
@@ -117,10 +117,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
                     cacheDirTextField.setText(Settings.getCacheDir().getPath());
                     break;
                 } else {
-                    Object[] options = {LanguageBundle.getString("Button.Close")};
+                    Object[] options = {tr("Button.Close")};
                     JOptionPane.showOptionDialog(XtremeMP.getInstance().getMainFrame(),
-                            LanguageBundle.getString("Dialog.Preferences.General.CacheDirectory.NoReadWritePermissions"),
-                            LanguageBundle.getString("Dialog.OptionDialog.Warning"),
+                            tr("Dialog.Preferences.General.CacheDirectory.NoReadWritePermissions"),
+                            tr("Dialog.OptionDialog.Warning"),
                             JOptionPane.OK_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
                 }
             }
@@ -142,7 +142,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         toolBar.setFloatable(false);
         toolBar.add(Box.createHorizontalGlue());
 
-        generalButton = new JToggleButton(LanguageBundle.getString("Dialog.Preferences.General"), Utilities.getIcon("preferences-system.png"));
+        generalButton = new JToggleButton(tr("Dialog.Preferences.General"), Utilities.getIcon("preferences-system.png"));
         generalButton.setVerticalTextPosition(AbstractButton.BOTTOM);
         generalButton.setHorizontalTextPosition(AbstractButton.CENTER);
         generalButton.setMnemonic(KeyEvent.VK_G);
@@ -150,14 +150,14 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         generalButton.addActionListener(this);
         toolBar.add(generalButton);
 
-        audioButton = new JToggleButton(LanguageBundle.getString("Dialog.Preferences.Audio"), Utilities.getIcon("audio-card.png"));
+        audioButton = new JToggleButton(tr("Dialog.Preferences.Audio"), Utilities.getIcon("audio-card.png"));
         audioButton.setVerticalTextPosition(AbstractButton.BOTTOM);
         audioButton.setHorizontalTextPosition(AbstractButton.CENTER);
         audioButton.setMnemonic(KeyEvent.VK_A);
         audioButton.addActionListener(this);
         toolBar.add(audioButton);
 
-//        hotkeysButton = new JToggleButton(LanguageBundle.getString("Dialog.Preferences.Hotkeys"), Utilities.getIcon("key_bindings.png"));
+//        hotkeysButton = new JToggleButton(tr("Dialog.Preferences.Hotkeys"), Utilities.getIcon("key_bindings.png"));
 //        hotkeysButton.setVerticalTextPosition(AbstractButton.BOTTOM);
 //        hotkeysButton.setHorizontalTextPosition(AbstractButton.CENTER);
 //        hotkeysButton.setMnemonic(KeyEvent.VK_H);
@@ -177,7 +177,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         centerPanel = new JPanel(cardLayout);
         // general panel
         JPanel generalPanel = new JPanel(new MigLayout("ins 8,fillx"));
-        addTextSeparator(generalPanel, LanguageBundle.getString("Dialog.Preferences.General.Interface"));
+        addTextSeparator(generalPanel, tr("Dialog.Preferences.General.Interface"));
         generalPanel.add(new JLabel("Language", SwingConstants.LEADING));
         languageComboBox = new IconComboBox<Locale>(Utilities.getLanguages()) {
 
@@ -208,20 +208,20 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         generalPanel.add(new JLabel("Skin", SwingConstants.LEADING));
         skinComboSelector = new SkinComboSelector();
         generalPanel.add(skinComboSelector, "span,growx");
-//        addTextSeparator(generalPanel, LanguageBundle.getString("Dialog.Preferences.General.Instances"));
+//        addTextSeparator(generalPanel, tr("Dialog.Preferences.General.Instances"));
 //        instanceCheckBox = new JCheckBox("Allow only one instance");
 //        generalPanel.add(instanceCheckBox, "span,growx");
 //        enqueueCheckBox = new JCheckBox("Enqueue files in playlist when in one instance mode");
 //        generalPanel.add(enqueueCheckBox, "span,growx");
-        addTextSeparator(generalPanel, LanguageBundle.getString("Dialog.Preferences.General.Updates"));
+        addTextSeparator(generalPanel, tr("Dialog.Preferences.General.Updates"));
         updatesCheckBox = new JCheckBox("Check for updates at startup");
         updatesCheckBox.setSelected(Settings.isAutomaticCheckForUpdatesEnabled());
         updatesCheckBox.addActionListener(this);
         generalPanel.add(updatesCheckBox, "span,growx");
-        addTextSeparator(generalPanel, LanguageBundle.getString("Dialog.Preferences.General.CacheDirectory"));
+        addTextSeparator(generalPanel, tr("Dialog.Preferences.General.CacheDirectory"));
         cacheDirTextField = new JTextField(Settings.getCacheDir().getPath());
         generalPanel.add(cacheDirTextField, "span,growx,split");
-        changeCacheDirButton = new JButton(LanguageBundle.getString("Button.Change"));
+        changeCacheDirButton = new JButton(tr("Button.Change"));
         changeCacheDirButton.addActionListener(this);
         generalPanel.add(changeCacheDirButton, "wrap");
         centerPanel.add(generalPanel, GENERAL_PANEL);
@@ -241,10 +241,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
         // south panel
         JPanel southPanel = new JPanel(new MigLayout("nogrid, fillx, aligny 100%, gapy unrel"));
-        closeButton = new JButton(LanguageBundle.getString("Button.Close"));
+        closeButton = new JButton(tr("Button.Close"));
         closeButton.addActionListener(this);
         southPanel.add(closeButton, "tag cancel");
-//        resetButton = new JButton(LanguageBundle.getString("Button.Reset"));
+//        resetButton = new JButton(tr("Button.Reset"));
 //        resetButton.addActionListener(this);
 //        southPanel.add(resetButton, "tag help2");
         container.add(southPanel, "south");

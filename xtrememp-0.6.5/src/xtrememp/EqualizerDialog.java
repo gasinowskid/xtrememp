@@ -36,8 +36,8 @@ import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xtrememp.util.LanguageBundle;
 import xtrememp.util.Utilities;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -77,7 +77,7 @@ public class EqualizerDialog extends JDialog implements ActionListener {
     public EqualizerDialog(JFrame mainFrame) {
         super(mainFrame, false);
         setLayout(new BorderLayout());
-        setTitle(LanguageBundle.getString("Equalizer"));
+        setTitle(tr("Equalizer"));
         initComponents();
         Utilities.closeOnEscape(this);
 

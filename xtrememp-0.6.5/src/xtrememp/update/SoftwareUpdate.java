@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xtrememp.Settings;
 import xtrememp.XtremeMP;
-import xtrememp.util.LanguageBundle;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -51,7 +51,7 @@ import xtrememp.util.LanguageBundle;
 public final class SoftwareUpdate {
 
     private static final Logger logger = LoggerFactory.getLogger(SoftwareUpdate.class);
-    private static final String updatesURL = LanguageBundle.getString("Application.updatesURL");
+    private static final String updatesURL = tr("Application.updatesURL");
     private static final Version currentVersion = Version.getCurrentVersion();
     private static SwingWorker checkForUpdatesWorker;
     private static JDialog checkForUpdatesDialog;
@@ -83,23 +83,23 @@ public final class SoftwareUpdate {
                             logger.debug("checkForUpdates: currentVersion = {}", currentVersion);
                             logger.debug("checkForUpdates: newerVersion = {}", newerVersion);
                             logger.debug("SoftwareUpdate::checkForUpdates: updates found");
-                            Object[] options = {LanguageBundle.getString("Button.Cancel")};
+                            Object[] options = {tr("Button.Cancel")};
                             Desktop desktop = null;
                             if (Desktop.isDesktopSupported()) {
                                 desktop = Desktop.getDesktop();
                                 if (desktop.isSupported(Desktop.Action.BROWSE)) {
-                                    options = new Object[]{LanguageBundle.getString("Button.Download"), LanguageBundle.getString("Button.Cancel")};
+                                    options = new Object[]{tr("Button.Download"), tr("Button.Cancel")};
                                 }
                             }
                             JPanel panel = new JPanel(new BorderLayout(0, 10));
-                            panel.add(new JLabel("<html>" + LanguageBundle.getString("Dialog.SoftwareUpdate.UpdatesFound") +
+                            panel.add(new JLabel("<html>" + tr("Dialog.SoftwareUpdate.UpdatesFound") +
                                     " (" + newerVersion + ")</html>"), BorderLayout.CENTER);
                             JCheckBox hideCheckBox = null;
                             if (Settings.isAutomaticCheckForUpdatesEnabled()) {
-                                hideCheckBox = new JCheckBox(LanguageBundle.getString("Dialog.SoftwareUpdate.DisableAutomaticCheckForUpdates"));
+                                hideCheckBox = new JCheckBox(tr("Dialog.SoftwareUpdate.DisableAutomaticCheckForUpdates"));
                                 panel.add(hideCheckBox, BorderLayout.SOUTH);
                             }
-                            int n = JOptionPane.showOptionDialog(XtremeMP.getInstance().getMainFrame(), panel, LanguageBundle.getString("Dialog.SoftwareUpdate"),
+                            int n = JOptionPane.showOptionDialog(XtremeMP.getInstance().getMainFrame(), panel, tr("Dialog.SoftwareUpdate"),
                                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                             if (hideCheckBox != null) {
                                 Settings.setAutomaticCheckForUpdatesEnabled(!hideCheckBox.isSelected());
@@ -116,16 +116,16 @@ public final class SoftwareUpdate {
                             logger.debug("checkForUpdates: no updates found");
                             if (showDialogs) {
                                 JOptionPane.showMessageDialog(XtremeMP.getInstance().getMainFrame(),
-                                        LanguageBundle.getString("Dialog.SoftwareUpdate.NoUpdatesFound"),
-                                        LanguageBundle.getString("Dialog.SoftwareUpdate"), JOptionPane.INFORMATION_MESSAGE);
+                                        tr("Dialog.SoftwareUpdate.NoUpdatesFound"),
+                                        tr("Dialog.SoftwareUpdate"), JOptionPane.INFORMATION_MESSAGE);
                             }
                         }
                     } catch (Exception ex) {
                         logger.error(ex.getMessage(), ex);
                         if (showDialogs) {
                             JOptionPane.showMessageDialog(XtremeMP.getInstance().getMainFrame(),
-                                    LanguageBundle.getString("Dialog.SoftwareUpdate.ConnectionFailure"),
-                                    LanguageBundle.getString("Dialog.SoftwareUpdate"), JOptionPane.INFORMATION_MESSAGE);
+                                    tr("Dialog.SoftwareUpdate.ConnectionFailure"),
+                                    tr("Dialog.SoftwareUpdate"), JOptionPane.INFORMATION_MESSAGE);
                         }
                     }
                 }
@@ -136,14 +136,14 @@ public final class SoftwareUpdate {
 
     public static void showCheckForUpdatesDialog() {
         checkForUpdatesDialog = new JDialog(XtremeMP.getInstance().getMainFrame(),
-                LanguageBundle.getString("Dialog.SoftwareUpdate"), true);
+                tr("Dialog.SoftwareUpdate"), true);
         JPanel panel = new JPanel(new BorderLayout(0, 10));
-        panel.add(new JLabel(LanguageBundle.getString("Dialog.SoftwareUpdate.CheckingForUpdates")), BorderLayout.CENTER);
+        panel.add(new JLabel(tr("Dialog.SoftwareUpdate.CheckingForUpdates")), BorderLayout.CENTER);
         JProgressBar progressBar = new JProgressBar();
         progressBar.setIndeterminate(true);
         progressBar.setPreferredSize(new Dimension(250, 20));
         panel.add(progressBar, BorderLayout.SOUTH);
-        JButton cancelButton = new JButton(LanguageBundle.getString("Button.Cancel"));
+        JButton cancelButton = new JButton(tr("Button.Cancel"));
         cancelButton.addActionListener(new ActionListener() {
 
             @Override

@@ -18,7 +18,7 @@
  */
 package xtrememp.update;
 
-import xtrememp.util.LanguageBundle;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -268,10 +268,10 @@ public class Version implements Comparable<Version> {
     }
 
     public static final Version getCurrentVersion() {
-        int majorNumber = Integer.parseInt(LanguageBundle.getString("Application.version.majorNumber"));
-        int minorNumber = Integer.parseInt(LanguageBundle.getString("Application.version.minorNumber"));
-        int microNumber = Integer.parseInt(LanguageBundle.getString("Application.version.microNumber"));
-        String releaseDate = LanguageBundle.getString("Application.version.releaseDate");
+        int majorNumber = Integer.parseInt(tr("Application.version.majorNumber"));
+        int minorNumber = Integer.parseInt(tr("Application.version.minorNumber"));
+        int microNumber = Integer.parseInt(tr("Application.version.microNumber"));
+        String releaseDate = tr("Application.version.releaseDate");
         return new Version(majorNumber, minorNumber, microNumber, VersionType.DEV, releaseDate, "");
     }
 }
