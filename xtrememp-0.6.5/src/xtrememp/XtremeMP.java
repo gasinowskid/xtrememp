@@ -723,7 +723,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         } else if (source == playlistMenuItem) {
             switchView();
         } else if (source == playPauseMenuItem || source == playPauseButton) {
-            if (playlist.isEmpty()) {
+            if (playlist.isEmpty() && !audioPlayer.isPlaying()) {
                 playlistManager.addFilesDialog();
             } else {
                 acPlayPause();
@@ -738,14 +738,14 @@ public class XtremeMP implements ActionListener, ControlListener,
             playlistManager.remove();
         } else if (source == clearPlaylistMenuItem) {
             playlistManager.clearPlaylist();
-            acStop();
+            //acStop();
         } else if (source == moveUpItemsMenuItem) {
             playlistManager.moveUp();
         } else if (source == moveDownItemsMenuItem) {
             playlistManager.moveDown();
         } else if (source == randomizePlaylistMenuItem) {
             playlistManager.randomizePlaylist();
-            acOpen();
+            //acOpen();
         } else if (source == stopMenuItem || source == stopButton) {
             acStop();
         } else if (source == infoMenuItem) {
@@ -913,25 +913,17 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void acPlayPause() {
-        if (!playlist.isEmpty()) {
-            try {
-                switch (audioPlayer.getState()) {
-                    case AudioPlayer.PLAY:
-                        audioPlayer.pause();
-                        break;
-                    case AudioPlayer.STOP:
-                        acOpenAndPlay();
-                        break;
-                    default:
-                        audioPlayer.play();
-                        break;
-                }
-            } catch (PlayerException ex) {
-                logger.error(ex.getMessage());
+        try {
+            if (audioPlayer.isPlaying()) {
+                audioPlayer.pause();
+            } else {
+                audioPlayer.play();
+            }
+        } catch (PlayerException ex) {
+            logger.error(ex.getMessage());
 //                String msg = "<html><b>An exeption was generated:</b><br><br>" + ex.getMessage() + "<html>";
 //                JOptionPane.showMessageDialog(mainFrame, msg, "Error", JOptionPane.ERROR_MESSAGE);
             }
-        }
     }
 
     @Override

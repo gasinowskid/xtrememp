@@ -403,11 +403,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
             }
             int itemIndex = playlist.indexOf(pli);
             if (itemIndex == -1) {
-                controlListener.acStop();
+                //controlListener.acStop();
                 controlListener.acDisable();
                 if (!playlist.isEmpty()) {
                     playlist.begin();
-                    controlListener.acOpen();
+                    //controlListener.acOpen();
                     doubleSelectedRow = playlistTable.convertRowIndexToView(0);
                 }
             } else {
@@ -433,8 +433,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
             moveUpButton.setEnabled(false);
             moveDownButton.setEnabled(false);
             Settings.setPlaylistPosition(-1);
-            controlListener.acStop();
+            //controlListener.acStop();
             controlListener.acDisable();
+            //cleanPlaylistButton.setEnabled(false);
+        } else {
+            controlListener.acStop();
             cleanPlaylistButton.setEnabled(false);
         }
     }
@@ -479,23 +482,17 @@ public class PlaylistManager extends JPanel implements ActionListener,
         Object source = e.getSource();
         if (source == openPlaylistButton) {
             openPlaylist();
-        }
-        if (source == savePlaylistButton) {
+        } else if (source == savePlaylistButton) {
             savePlaylistDialog();
-        }
-        if (source == addItemButton) {
+        } else if (source == addItemButton) {
             addFilesDialog();
-        }
-        if (source == removeItemButton) {
+        } else if (source == removeItemButton) {
             remove();
-        }
-        if (source == cleanPlaylistButton) {
+        } else if (source == cleanPlaylistButton) {
             clearPlaylist();
-        }
-        if (source == moveUpButton) {
+        } else if (source == moveUpButton) {
             moveUp();
-        }
-        if (source == moveDownButton) {
+        } else if (source == moveDownButton) {
             moveDown();
         }
     }
@@ -747,10 +744,10 @@ public class PlaylistManager extends JPanel implements ActionListener,
             if (!playlist.isEmpty()) {
                 cleanPlaylistButton.setEnabled(true);
             }
-            if (playlist.getCursorPosition() == -1) {
-                playlist.begin();
-                controlListener.acOpen();
-            }
+//            if (playlist.getCursorPosition() == -1) {
+//                playlist.begin();
+//                controlListener.acOpen();
+//            }
         }
 
         protected void scanDir(File dir, List<File> fileList) {
