@@ -71,6 +71,8 @@ import org.pushingpixels.substance.api.DecorationAreaType;
 import org.pushingpixels.substance.api.SubstanceConstants;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.internal.utils.RolloverControlListener;
+import org.rom1dep.util.gui.swing.busylabel.AnimationType;
+import org.rom1dep.util.gui.swing.busylabel.RDBusyLabel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xtrememp.player.audio.AudioPlayer;
@@ -87,7 +89,6 @@ import xtrememp.ui.button.PreviousButton;
 import xtrememp.ui.button.StopButton;
 import xtrememp.ui.button.VolumeButton;
 import xtrememp.tag.TagInfo;
-import xtrememp.ui.label.BusyLabel;
 import xtrememp.update.SoftwareUpdate;
 import xtrememp.update.Version;
 import xtrememp.util.AbstractSwingWorker;
@@ -136,7 +137,7 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem infoMenuItem;
     private JMenuItem updateMenuItem;
     private JMenuItem aboutMenuItem;
-    private BusyLabel busyLabel;
+    private RDBusyLabel busyLabel;
     private JPanel mainPanel;
     private VisualizerPanel visualizationPanel;
     private JPanel controlPanel;
@@ -171,7 +172,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         return mainFrame;
     }
 
-    public BusyLabel getBusyLabel() {
+    public RDBusyLabel getBusyLabel() {
         return busyLabel;
     }
 
@@ -429,7 +430,10 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         menuBar.add(Box.createHorizontalGlue());
 
-        busyLabel = new BusyLabel(new Dimension(18, 18));
+        busyLabel = new RDBusyLabel(new Dimension(22, 22));
+        busyLabel.loadBaseImage(Utilities.getImage("logo_alt_base.png"));
+        busyLabel.loadAnimImage(Utilities.getImage("logo_alt.png"));
+        busyLabel.setAnimationType(AnimationType.ROTATE_3D);
         menuBar.add(busyLabel);
         menuBar.add(Box.createHorizontalStrut(8));
 

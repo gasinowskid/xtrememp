@@ -21,6 +21,7 @@ package xtrememp.util;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -135,6 +136,24 @@ public final class Utilities {
             }
         }
         return icon;
+    }
+
+    /**
+     * Returns a BufferedImage.
+     *
+     * @param name the image name
+     * @return an BufferedImage object.
+     */
+    public static BufferedImage getImage(String name) {
+        BufferedImage image = null;
+        if (name != null) {
+            try {
+                image = ImageIO.read(Utilities.class.getResourceAsStream("/xtrememp/resources/images/" + name));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return image;
     }
 
     /**
