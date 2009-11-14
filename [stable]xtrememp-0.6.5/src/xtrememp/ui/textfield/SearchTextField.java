@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import org.pushingpixels.substance.api.SubstanceColorScheme;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import static xtrememp.util.Utilities.tr;
 
 /**
  *
@@ -61,14 +62,13 @@ public class SearchTextField extends JPanel {
 //    public JButton getButton() {
 //        return button;
 //    }
-
     public JTextField getTextField() {
         return textField;
     }
 
     private class ExtendedTextField extends JTextField {
 
-        private final String search = "Search  (Alt+S)";
+        private final String search = tr("MainFrame.Filter") + " (Alt+S)";
         private Map desktopHints = null;
 
         public ExtendedTextField(int columns) {

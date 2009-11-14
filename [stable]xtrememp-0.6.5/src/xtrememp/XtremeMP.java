@@ -115,7 +115,7 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JFrame mainFrame;
     private JMenuBar menuBar;
     private JMenu fileMenu;
-    private JMenu playlistMenu;
+    private JMenu playerMenu;
     private JMenu helpMenu;
     private JMenuItem openMenuItem;
     private JMenuItem openURLMenuItem;
@@ -123,7 +123,7 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem savePlaylistMenuItem;
     private JMenuItem preferencesMenuItem;
     private JMenuItem exitMenuItem;
-    private JMenuItem playlistMenuItem;
+    private JMenuItem visMenuItem;
     private JMenuItem nextMenuItem;
     private JMenuItem playPauseMenuItem;
     private JMenuItem stopMenuItem;
@@ -300,19 +300,19 @@ public class XtremeMP implements ActionListener, ControlListener,
         savePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.SavePlaylist"));
         preferencesMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Preferences"));
         exitMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Exit"));
-        playlistMenu = new JMenu(tr("MainFrame.Menu.Player"));
-        playlistMenuItem = new JMenuItem("Show/Hide");
+        playerMenu = new JMenu(tr("MainFrame.Menu.Player"));
+        visMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.ShowHide"));
         previousMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Previous"));
-        playPauseMenuItem = new JMenuItem("Play/Pause");
+        playPauseMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.PlayPause"));
         stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
         nextMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Next"));
-        addFilesMenuItem = new JMenuItem("Add files or directories...");
-        removeItemsMenuItem = new JMenuItem("Remove selected");
-        clearPlaylistMenuItem = new JMenuItem("Clear");
-        moveUpItemsMenuItem = new JMenuItem("Move up");
-        moveDownItemsMenuItem = new JMenuItem("Move down");
-        randomizePlaylistMenuItem = new JMenuItem("Randomize");
-        infoMenuItem = new JMenuItem("View info...");
+        addFilesMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.AddFileOrDir"));
+        removeItemsMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.RemSelected"));
+        clearPlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Clear"));
+        moveUpItemsMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.MoveUp"));
+        moveDownItemsMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.MoveDown"));
+        randomizePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Random"));
+        infoMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.ViewInfo"));
         helpMenu = new JMenu(tr("MainFrame.Menu.Help"));
         updateMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.CheckForUpdates"));
         aboutMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.About"));
@@ -355,66 +355,66 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         menuBar.add(fileMenu);
 
-        playlistMenu.setMnemonic('P');
+        playerMenu.setMnemonic('P');
 
-        playlistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
-        playlistMenuItem.addActionListener(this);
-        playlistMenu.add(playlistMenuItem);
+        visMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        visMenuItem.addActionListener(this);
+        playerMenu.add(visMenuItem);
 
-        playlistMenu.addSeparator();
+        playerMenu.addSeparator();
 
         previousMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
         previousMenuItem.addActionListener(this);
-        playlistMenu.add(previousMenuItem);
+        playerMenu.add(previousMenuItem);
 
         playPauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
         playPauseMenuItem.addActionListener(this);
-        playlistMenu.add(playPauseMenuItem);
+        playerMenu.add(playPauseMenuItem);
 
         stopMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
         stopMenuItem.addActionListener(this);
-        playlistMenu.add(stopMenuItem);
+        playerMenu.add(stopMenuItem);
 
         nextMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
         nextMenuItem.addActionListener(this);
-        playlistMenu.add(nextMenuItem);
+        playerMenu.add(nextMenuItem);
 
-        playlistMenu.addSeparator();
+        playerMenu.addSeparator();
 
         addFilesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT, 0));
         addFilesMenuItem.setIcon(Utilities.getIcon("list-add.png"));
         addFilesMenuItem.addActionListener(this);
-        playlistMenu.add(addFilesMenuItem);
+        playerMenu.add(addFilesMenuItem);
 
         removeItemsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
         removeItemsMenuItem.setIcon(Utilities.getIcon("list-remove.png"));
         removeItemsMenuItem.addActionListener(this);
-        playlistMenu.add(removeItemsMenuItem);
+        playerMenu.add(removeItemsMenuItem);
 
         clearPlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, InputEvent.ALT_DOWN_MASK));
         clearPlaylistMenuItem.setIcon(Utilities.getIcon("edit-clear.png"));
         clearPlaylistMenuItem.addActionListener(this);
-        playlistMenu.add(clearPlaylistMenuItem);
+        playerMenu.add(clearPlaylistMenuItem);
 
         moveUpItemsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.ALT_DOWN_MASK));
         moveUpItemsMenuItem.setIcon(Utilities.getIcon("go-up.png"));
         moveUpItemsMenuItem.addActionListener(this);
-        playlistMenu.add(moveUpItemsMenuItem);
+        playerMenu.add(moveUpItemsMenuItem);
 
         moveDownItemsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.ALT_DOWN_MASK));
         moveDownItemsMenuItem.setIcon(Utilities.getIcon("go-down.png"));
         moveDownItemsMenuItem.addActionListener(this);
-        playlistMenu.add(moveDownItemsMenuItem);
+        playerMenu.add(moveDownItemsMenuItem);
 
         randomizePlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
         randomizePlaylistMenuItem.addActionListener(this);
-        playlistMenu.add(randomizePlaylistMenuItem);
+        playerMenu.add(randomizePlaylistMenuItem);
 
         infoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK));
         infoMenuItem.addActionListener(this);
-        playlistMenu.add(infoMenuItem);
+        playerMenu.add(infoMenuItem);
 
-        menuBar.add(playlistMenu);
+        menuBar.add(playerMenu);
 
         helpMenu.setMnemonic('H');
 
@@ -713,7 +713,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             preferencesDialog.setVisible(true);
         } else if (source == exitMenuItem) {
             exit();
-        } else if (source == playlistMenuItem) {
+        } else if (source == visMenuItem) {
             switchView();
         } else if (source == playPauseMenuItem || source == playPauseButton) {
             acPlayPause();
