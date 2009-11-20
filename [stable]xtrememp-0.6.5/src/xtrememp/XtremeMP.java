@@ -559,11 +559,11 @@ public class XtremeMP implements ActionListener, ControlListener,
         });
         volumeSlider.setEnabled(!Settings.isMuted());
         JPanel volumePanel = new JPanel(new MigLayout("fill"));
-        JLabel volumeLabel = new JLabel("Volume", JLabel.CENTER);
+        JLabel volumeLabel = new JLabel(tr("MainFrame.VolumePanel.Volume"), JLabel.CENTER);
         volumeLabel.setFont(volumeLabel.getFont().deriveFont(Font.BOLD));
         volumePanel.add(volumeLabel, "north");
         volumePanel.add(volumeSlider);
-        JCheckBox muteCheckBox = new JCheckBox("Mute");
+        JCheckBox muteCheckBox = new JCheckBox(tr("MainFrame.VolumePanel.Mute"));
         muteCheckBox.setSelected(Settings.isMuted());
         muteCheckBox.addItemListener(new ItemListener() {
 
@@ -754,18 +754,18 @@ public class XtremeMP implements ActionListener, ControlListener,
             message.append("<html><b><font color='red' size='5'>" + tr("Application.title"));
             message.append("</font></b><br>" + tr("Application.description"));
             message.append("<br>Copyright © 2005-2009 The Xtreme Media Player Project");
-            message.append("<br><br><b>Author: </b>" + tr("Application.author"));
-            message.append("<br><b>Version: </b>" + currentVersion);
-            message.append("<br><b>Release date: </b>" + currentVersion.getReleaseDate());
-            message.append("<br><b>Homepage: </b>" + tr("Application.homepage"));
-            message.append("<br><br><b>Java version: </b>" + System.getProperty("java.version"));
-            message.append("<br><b>Java vendor: </b>" + System.getProperty("java.vendor"));
-            message.append("<br><b>Java home: </b>" + System.getProperty("java.home"));
-            message.append("<br><b>OS name: </b>" + System.getProperty("os.name"));
-            message.append("<br><b>OS arch: </b>" + System.getProperty("os.arch"));
-            message.append("<br><b>User name: </b>" + System.getProperty("user.name"));
-            message.append("<br><b>User home: </b>" + System.getProperty("user.home"));
-            message.append("<br><b>User dir: </b>" + System.getProperty("user.dir"));
+            message.append("<br><br><b>" + tr("Application.Key.Author") + ": </b>" + tr("Application.author"));
+            message.append("<br><b>" + tr("Application.Key.Version") + ": </b>" + currentVersion);
+            message.append("<br><b>" + tr("Application.Key.ReleaseDate") + ": </b>" + currentVersion.getReleaseDate());
+            message.append("<br><b>" + tr("Application.Key.Homepage") + ": </b>" + tr("Application.homepage"));
+            message.append("<br><br><b>" + tr("Application.Key.JavaVersion") + ": </b>" + System.getProperty("java.version"));
+            message.append("<br><b>" + tr("Application.Key.JavaVendor") + ": </b>" + System.getProperty("java.vendor"));
+            message.append("<br><b>" + tr("Application.Key.JavaHome") + ": </b>" + System.getProperty("java.home"));
+            message.append("<br><b>" + tr("Application.Key.OSName") + ": </b>" + System.getProperty("os.name"));
+            message.append("<br><b>" + tr("Application.Key.OSArch") + ": </b>" + System.getProperty("os.arch"));
+            message.append("<br><b>" + tr("Application.Key.UserName") + ": </b>" + System.getProperty("user.name"));
+            message.append("<br><b>" + tr("Application.Key.UserHome") + ": </b>" + System.getProperty("user.home"));
+            message.append("<br><b>" + tr("Application.Key.UserDir") + ": </b>" + System.getProperty("user.dir"));
             message.append("</html>");
             int n = JOptionPane.showOptionDialog(mainFrame, message, "About",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
@@ -906,9 +906,7 @@ public class XtremeMP implements ActionListener, ControlListener,
                     playlistManager.addFilesDialog();
                 }
             } else {
-                if ((audioPlayer.getState() != AudioPlayer.PLAY)
-                        && (audioPlayer.getState() != AudioPlayer.PAUSE)
-                        && (playlist.getCursorPosition() == -1)) {
+                if ((audioPlayer.getState() != AudioPlayer.PLAY) && (audioPlayer.getState() != AudioPlayer.PAUSE) && (playlist.getCursorPosition() == -1)) {
                     playlist.begin();
                     acOpenAndPlay();
                 }
