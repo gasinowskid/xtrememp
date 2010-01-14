@@ -204,22 +204,22 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
             @Override
             public void keyPressed(KeyEvent e) {
-                // Select All Ctrl + A
+                // Select all
                 if (e.getKeyCode() == KeyEvent.VK_A && e.getModifiers() == KeyEvent.CTRL_MASK) {
                     playlistTable.selectAll();
-                } // Select previous row
+                } // Select previous track
                 else if (e.getKeyCode() == KeyEvent.VK_UP && playlistTable.getSelectedRow() > 0) {
                     int previousRowIndex = playlistTable.getSelectedRow() - 1;
                     playlistTable.clearSelection();
                     playlistTable.addRowSelectionInterval(previousRowIndex, previousRowIndex);
                     makeRowVisible(previousRowIndex);
-                } // Select next row
+                } // Select next track
                 else if (e.getKeyCode() == KeyEvent.VK_DOWN && playlistTable.getSelectedRow() < playlistTable.getRowCount() - 1) {
                     int nextRowIndex = playlistTable.getSelectedRow() + 1;
                     playlistTable.clearSelection();
                     playlistTable.addRowSelectionInterval(nextRowIndex, nextRowIndex);
                     makeRowVisible(nextRowIndex);
-                } //
+                } // Play selected track
                 else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     int selectedRow = playlistTable.getSelectedRow();
                     if (selectedRow != -1) {
@@ -227,10 +227,13 @@ public class PlaylistManager extends JPanel implements ActionListener,
                         playlist.setCursor(selectedRow);
                         controlListener.acOpenAndPlay();
                     }
+                } // Add new tracks
+                else if (e.getKeyCode() == KeyEvent.VK_INSERT) {
+                    addFilesDialog();
+                } // Delete selected tracks
+                else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    remove();
                 }
-//                else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-//                    remove();
-//                }
             }
         });
         XtremeMP.getInstance().getMainFrame().setDropTarget(new DropTarget(playlistTable, this));
