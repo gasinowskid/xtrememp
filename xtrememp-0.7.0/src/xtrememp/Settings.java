@@ -25,9 +25,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import org.apache.log4j.PropertyConfigurator;
-import org.pushingpixels.substance.api.skin.DustSkin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xtrememp.ui.skin.DarkSapphireSkin;
 import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.Utilities;
 import xtrememp.visualization.spectrum.Spectrogram;
@@ -141,7 +141,7 @@ public final class Settings {
     }
 
     public static String getSkin() {
-        return properties.getProperty(PROPERTY_SKIN, DustSkin.class.getName());
+        return properties.getProperty(PROPERTY_SKIN, DarkSapphireSkin.class.getName());
     }
 
     public static void setSkin(String className) {

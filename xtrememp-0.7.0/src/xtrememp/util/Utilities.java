@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -38,6 +40,8 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
+import org.pushingpixels.substance.api.skin.SkinInfo;
+import xtrememp.ui.skin.DarkSapphireSkin;
 
 /**
  *
@@ -124,6 +128,30 @@ public final class Utilities {
             stereoBuffer.put(average);
         }
         return stereoBuffer.asReadOnlyBuffer();
+    }
+    
+	/**
+	 * Creates info object on a single skin.
+	 * 
+	 * @param displayName
+	 *            Skin display name.
+	 * @param skinClass
+	 *            Skin class.
+	 * @param isDefault
+	 *            Indication whether the specified skin is default.
+	 * @return Info object on the specified skin.
+	 */
+	private static SkinInfo create(String displayName, Class<?> skinClass,
+			boolean isDefault) {
+		SkinInfo result = new SkinInfo(displayName, skinClass.getName());
+		result.setDefault(isDefault);
+		return result;
+	}
+
+    public static Set<SkinInfo> getSkins() {
+        Set<SkinInfo> result = new HashSet<SkinInfo>();
+        result.add(create(DarkSapphireSkin.NAME, DarkSapphireSkin.class, false));
+        return result;
     }
 
     /**
