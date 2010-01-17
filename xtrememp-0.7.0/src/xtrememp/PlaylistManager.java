@@ -18,7 +18,7 @@
  */
 package xtrememp;
 
-import xtrememp.ui.textfield.SearchTextField;
+import xtrememp.ui.text.SearchTextField;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
