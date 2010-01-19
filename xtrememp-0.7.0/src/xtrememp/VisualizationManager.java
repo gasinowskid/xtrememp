@@ -51,6 +51,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JToolBar;
 import xtrememp.player.dsp.DigitalSignalProcessor;
+import xtrememp.player.dsp.DigitalSignalSynchronizer;
 import xtrememp.player.dsp.DssContext;
 import xtrememp.ui.button.PopupButton;
 import xtrememp.util.Utilities;
@@ -263,7 +264,11 @@ public class VisualizationManager extends JPanel implements ActionListener,
             GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
             device = env.getDefaultScreenDevice();
             displayMode = device.getDisplayMode();
-            delay = Math.round(1000 / displayMode.getRefreshRate());
+            int refreshRate = displayMode.getRefreshRate();
+            if(refreshRate == DisplayMode.REFRESH_RATE_UNKNOWN) {
+                refreshRate = DigitalSignalSynchronizer.DEFAULT_FPS;
+            }
+            delay = Math.round(1000 / refreshRate);
         }
 
         @Override
