@@ -31,6 +31,7 @@ import java.awt.event.KeyEvent;
 import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import org.pushingpixels.substance.api.DecorationAreaType;
 import org.pushingpixels.substance.api.SubstanceColorScheme;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import static xtrememp.util.Utilities.tr;
@@ -112,11 +113,10 @@ public class SearchTextField extends JPanel {
                 }
 
                 if (SubstanceLookAndFeel.isCurrentLookAndFeel()) {
-                    boolean isDark = SubstanceLookAndFeel.getCurrentSkin().getMainDefaultColorScheme().isDark();
-                    SubstanceColorScheme colorScheme = isDark ? SubstanceLookAndFeel.getCurrentSkin().getMainDefaultColorScheme()
-                            : SubstanceLookAndFeel.getCurrentSkin().getMainActiveColorScheme();
-                    Color fgColor = isDark ? colorScheme.getForegroundColor()
-                            : colorScheme.getTextBackgroundFillColor();
+                    SubstanceColorScheme defaultColorScheme = SubstanceLookAndFeel.getCurrentSkin().getDefaultColorScheme(DecorationAreaType.TOOLBAR);
+                    SubstanceColorScheme activeColorScheme = SubstanceLookAndFeel.getCurrentSkin().getActiveColorScheme(DecorationAreaType.TOOLBAR);
+                    SubstanceColorScheme colorScheme = defaultColorScheme.isDark() ? defaultColorScheme : activeColorScheme;
+                    Color fgColor = colorScheme.getForegroundColor();
                     g2d.setColor(fgColor);
                     setForeground(fgColor);
                 }

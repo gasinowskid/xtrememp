@@ -129,6 +129,7 @@ public class MediaInfoDialog extends JDialog implements ActionListener {
         setResizable(false);
         setLocationRelativeTo(getParent());
         getRootPane().setDefaultButton(closeButton);
+        closeButton.requestFocusInWindow();
         setVisible(true);
     }
 

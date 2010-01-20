@@ -629,7 +629,6 @@ public class XtremeMP implements ActionListener, ControlListener,
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
             preferencesDialog = new PreferencesDialog(mainFrame, audioPlayer);
-            preferencesDialog.setVisible(true);
         } else if (source == exitMenuItem) {
             exit();
         } else if (source == playPauseMenuItem || source == playPauseButton) {

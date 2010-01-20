@@ -86,10 +86,12 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         Utilities.closeOnEscape(this);
 
 //        setSize(500, 500);
-        pack();
         setResizable(false);
+        pack();
         setLocationRelativeTo(mainFrame);
         getRootPane().setDefaultButton(closeButton);
+        closeButton.requestFocusInWindow();
+        setVisible(true);
     }
 
     @Override
