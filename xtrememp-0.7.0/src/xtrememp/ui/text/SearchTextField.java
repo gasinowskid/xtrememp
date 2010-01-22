@@ -113,9 +113,9 @@ public class SearchTextField extends JPanel {
                 }
 
                 if (SubstanceLookAndFeel.isCurrentLookAndFeel()) {
-                    SubstanceColorScheme defaultColorScheme = SubstanceLookAndFeel.getCurrentSkin().getDefaultColorScheme(DecorationAreaType.TOOLBAR);
+                    SubstanceColorScheme enabledColorScheme = SubstanceLookAndFeel.getCurrentSkin().getEnabledColorScheme(DecorationAreaType.TOOLBAR);
                     SubstanceColorScheme activeColorScheme = SubstanceLookAndFeel.getCurrentSkin().getActiveColorScheme(DecorationAreaType.TOOLBAR);
-                    SubstanceColorScheme colorScheme = defaultColorScheme.isDark() ? defaultColorScheme : activeColorScheme;
+                    SubstanceColorScheme colorScheme = enabledColorScheme.isDark() ? enabledColorScheme : activeColorScheme;
                     Color fgColor = colorScheme.getForegroundColor();
                     g2d.setColor(fgColor);
                     setForeground(fgColor);
