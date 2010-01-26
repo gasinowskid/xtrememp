@@ -27,11 +27,15 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -90,6 +94,8 @@ import xtrememp.ui.button.StopButton;
 import xtrememp.ui.button.VolumeButton;
 import xtrememp.ui.slider.SeekSlider;
 import xtrememp.tag.TagInfo;
+import xtrememp.ui.tray.TrayEventListener;
+import xtrememp.ui.tray.TrayPopupMenu;
 import xtrememp.update.SoftwareUpdate;
 import xtrememp.update.Version;
 import xtrememp.util.AbstractSwingWorker;
@@ -107,7 +113,7 @@ import static xtrememp.util.Utilities.tr;
  * Special thanks to rom1dep for the changes applied to this class.
  */
 public class XtremeMP implements ActionListener, ControlListener,
-        PlaybackListener, IntellitypeListener {
+        PlaybackListener, IntellitypeListener, TrayEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
@@ -152,6 +158,9 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JLabel statusLabel;
     private SeekSlider seekSlider;
     private PlaylistItem currentPli;
+    private SystemTray sysTray;
+    private TrayIcon trayIcon;
+    private TrayPopupMenu trayMenu;
 
     private XtremeMP() {
     }
@@ -241,6 +250,56 @@ public class XtremeMP implements ActionListener, ControlListener,
         });
     }
 
+    private void initTrayIcon() {
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (SystemTray.isSupported()) {
+                    logger.info("SystemTray supported, initializing TrayIcon...");
+                    try {
+                        sysTray = SystemTray.getSystemTray();
+                        trayIcon = new TrayIcon(Utilities.getIconImages().get(1), "Xtreme Media Player");//@TODO: add icon_16 to the list ?
+
+                        trayMenu = new TrayPopupMenu(getInstance(), getInstance());
+                        trayMenu.setInvoker(trayMenu);
+
+                        trayIcon.addMouseListener(new MouseAdapter() {
+
+                            @Override
+                            public void mousePressed(MouseEvent e) {
+                                if (e.getButton() == MouseEvent.BUTTON3) {
+                                    trayMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
+                                    trayMenu.setVisible(true);
+                                } else {
+                                    if (trayMenu.isVisible()) {
+                                        trayMenu.setVisible(false);
+                                    } else {
+                                        if (mainFrame.getExtendedState() == java.awt.Frame.ICONIFIED) {
+                                            trayMaximize();
+                                            trayMenu.fireFrameVisibleStateChanged(true);
+                                            e.consume();
+                                        } else {
+                                            if (e.getClickCount() == 2) {
+                                                trayMinimize();
+                                                trayMenu.fireFrameVisibleStateChanged(false);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        sysTray.add(trayIcon);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                } else {
+                    logger.info("This environment doesn't allow you to controll XtremeMP throught a TrayIcon...");
+                }
+            }
+        });
+    }
+
     public static void main(String[] args) throws Exception {
         List<String> arguments = Arrays.asList(args);
 //        boolean debug = arguments.contains("-debug");
@@ -275,6 +334,7 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         // Init
         getInstance().init(arguments);
+        getInstance().initTrayIcon();
 
         // Check for updates
         if (Settings.isAutomaticUpdatesEnabled()) {
@@ -891,6 +951,22 @@ public class XtremeMP implements ActionListener, ControlListener,
                 }
             });
         }
+    }
+
+    @Override
+    public void trayQuit() {
+        exit();
+    }
+
+    @Override
+    public void trayMinimize() {
+        mainFrame.setExtendedState(java.awt.Frame.ICONIFIED);
+        mainFrame.dispose();
+    }
+
+    public void trayMaximize() {
+        mainFrame.setExtendedState(java.awt.Frame.NORMAL);
+        mainFrame.setVisible(true);
     }
 
     @Override
