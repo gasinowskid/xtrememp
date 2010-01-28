@@ -28,7 +28,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.SystemTray;
-import java.awt.TrayIcon;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -64,6 +64,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -94,8 +95,7 @@ import xtrememp.ui.button.StopButton;
 import xtrememp.ui.button.VolumeButton;
 import xtrememp.ui.slider.SeekSlider;
 import xtrememp.tag.TagInfo;
-import xtrememp.ui.tray.TrayEventListener;
-import xtrememp.ui.tray.TrayPopupMenu;
+import xtrememp.ui.tray.JXTrayIcon;
 import xtrememp.update.SoftwareUpdate;
 import xtrememp.update.Version;
 import xtrememp.util.AbstractSwingWorker;
@@ -113,7 +113,7 @@ import static xtrememp.util.Utilities.tr;
  * Special thanks to rom1dep for the changes applied to this class.
  */
 public class XtremeMP implements ActionListener, ControlListener,
-        PlaybackListener, IntellitypeListener, TrayEventListener {
+        PlaybackListener, IntellitypeListener {
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
@@ -159,8 +159,14 @@ public class XtremeMP implements ActionListener, ControlListener,
     private SeekSlider seekSlider;
     private PlaylistItem currentPli;
     private SystemTray sysTray;
-    private TrayIcon trayIcon;
-    private TrayPopupMenu trayMenu;
+    private JXTrayIcon trayIcon;
+    private JPopupMenu trayMenu;
+    private JMenuItem hideShowTrayMenuItem;
+    private JMenuItem playPauseTrayMenuItem;
+    private JMenuItem stopTrayMenuItem;
+    private JMenuItem nextTrayMenuItem;
+    private JMenuItem previousTrayMenuItem;
+    private JMenuItem exitTrayMenuItem;
 
     private XtremeMP() {
     }
@@ -216,24 +222,10 @@ public class XtremeMP implements ActionListener, ControlListener,
                     public void windowClosing(WindowEvent ev) {
                         exit();
                     }
-//                    @Override
-//                    public void windowIconified(WindowEvent e) {
-//                        if (Toolkit.getDefaultToolkit().isFrameStateSupported(JFrame.ICONIFIED)) {
-//                            getMainFrame().setExtendedState(JFrame.ICONIFIED);
-//                        }
-//                        getMainFrame().setVisible(false);
-//                    }
-//
-//                    @Override
-//                    public void windowDeiconified(WindowEvent e) {
-//                        if (Toolkit.getDefaultToolkit().isFrameStateSupported(JFrame.NORMAL)) {
-//                            getMainFrame().setExtendedState(JFrame.NORMAL);
-//                        }
-//                        getMainFrame().setVisible(true);
-//                    }
                 });
                 createMenuBar();
                 createMainPanels();
+                createTrayIcon();
                 mainFrame.setMinimumSize(new Dimension(controlPanel.getPreferredSize().width + 50, 200));
                 // center the frame
                 if (Settings.isEmpty()) {
@@ -246,56 +238,6 @@ public class XtremeMP implements ActionListener, ControlListener,
                     playlistManager.loadPlaylist(playlistFile.getAbsolutePath());
                 }
                 playlist = playlistManager.getPlaylist();
-            }
-        });
-    }
-
-    private void initTrayIcon() {
-        EventQueue.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                if (SystemTray.isSupported()) {
-                    logger.info("SystemTray supported, initializing TrayIcon...");
-                    try {
-                        sysTray = SystemTray.getSystemTray();
-                        trayIcon = new TrayIcon(Utilities.getIconImages().get(1), "Xtreme Media Player");//@TODO: add icon_16 to the list ?
-
-                        trayMenu = new TrayPopupMenu(getInstance(), getInstance());
-                        trayMenu.setInvoker(trayMenu);
-
-                        trayIcon.addMouseListener(new MouseAdapter() {
-
-                            @Override
-                            public void mousePressed(MouseEvent e) {
-                                if (e.getButton() == MouseEvent.BUTTON3) {
-                                    trayMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
-                                    trayMenu.setVisible(true);
-                                } else {
-                                    if (trayMenu.isVisible()) {
-                                        trayMenu.setVisible(false);
-                                    } else {
-                                        if (mainFrame.getExtendedState() == java.awt.Frame.ICONIFIED) {
-                                            trayMaximize();
-                                            trayMenu.fireFrameVisibleStateChanged(true);
-                                            e.consume();
-                                        } else {
-                                            if (e.getClickCount() == 2) {
-                                                trayMinimize();
-                                                trayMenu.fireFrameVisibleStateChanged(false);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        sysTray.add(trayIcon);
-                    } catch (Exception e) {
-                        logger.error(e.getMessage(), e);
-                    }
-                } else {
-                    logger.info("This environment doesn't allow you to controll XtremeMP throught a TrayIcon...");
-                }
             }
         });
     }
@@ -334,7 +276,6 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         // Init
         getInstance().init(arguments);
-        getInstance().initTrayIcon();
 
         // Check for updates
         if (Settings.isAutomaticUpdatesEnabled()) {
@@ -604,6 +545,73 @@ public class XtremeMP implements ActionListener, ControlListener,
         mainFrame.getContentPane().add(southPanel, "south");
     }
 
+    protected void createTrayIcon() {
+        if (SystemTray.isSupported()) {
+            logger.info("SystemTray supported, initializing TrayIcon...");
+            try {
+                sysTray = SystemTray.getSystemTray();
+                trayIcon = new JXTrayIcon(mainFrame.getIconImage(), tr("Application.title"));
+
+                trayMenu = new JPopupMenu();
+
+                hideShowTrayMenuItem = new JMenuItem(tr("MainFrame.Tray.HideMainFrame"));
+                hideShowTrayMenuItem.setIcon(Utilities.APP_16_ICON);
+                hideShowTrayMenuItem.addActionListener(this);
+                trayMenu.add(hideShowTrayMenuItem);
+
+                trayMenu.addSeparator();
+
+                playPauseTrayMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Play"));
+                playPauseTrayMenuItem.addActionListener(this);
+                trayMenu.add(playPauseTrayMenuItem);
+
+                stopTrayMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
+                stopTrayMenuItem.addActionListener(this);
+                trayMenu.add(stopTrayMenuItem);
+
+                previousTrayMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Previous"));
+                previousTrayMenuItem.addActionListener(this);
+                trayMenu.add(previousTrayMenuItem);
+
+                nextTrayMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Next"));
+                nextTrayMenuItem.addActionListener(this);
+                trayMenu.add(nextTrayMenuItem);
+
+                trayMenu.addSeparator();
+
+                exitTrayMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Exit"));
+                exitTrayMenuItem.addActionListener(this);
+                trayMenu.add(exitTrayMenuItem);
+
+                trayIcon.setJPopupMenu(trayMenu);
+                trayIcon.addMouseListener(new MouseAdapter() {
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        if (SwingUtilities.isLeftMouseButton(e)) {
+                            if (mainFrame.getExtendedState() == JFrame.ICONIFIED) {
+                                if (Toolkit.getDefaultToolkit().isFrameStateSupported(JFrame.NORMAL)) {
+                                    mainFrame.setExtendedState(JFrame.NORMAL);
+                                }
+                                mainFrame.setVisible(true);
+                            } else {
+                                if (Toolkit.getDefaultToolkit().isFrameStateSupported(JFrame.ICONIFIED)) {
+                                    mainFrame.setExtendedState(JFrame.ICONIFIED);
+                                }
+                                mainFrame.dispose();
+                            }
+                        }
+                    }
+                });
+                sysTray.add(trayIcon);
+            } catch (Exception ex) {
+                logger.error(ex.getMessage(), ex);
+            }
+        } else {
+            logger.info("This environment doesn't allow you to controll XtremeMP throught a TrayIcon...");
+        }
+    }
+
     protected void setTime(final String timeText, final int seekSliderValue) {
         if (EventQueue.isDispatchThread()) {
             seekSlider.setValue(seekSliderValue);
@@ -689,18 +697,18 @@ public class XtremeMP implements ActionListener, ControlListener,
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
             preferencesDialog = new PreferencesDialog(mainFrame, audioPlayer);
-        } else if (source == exitMenuItem) {
+        } else if (source == exitMenuItem || source == exitTrayMenuItem) {
             exit();
-        } else if (source == playPauseMenuItem || source == playPauseButton) {
+        } else if (source == playPauseMenuItem || source == playPauseButton || source == playPauseTrayMenuItem) {
             acPlayPause();
-        } else if (source == previousMenuItem || source == previousButton) {
+        } else if (source == stopMenuItem || source == stopButton || source == stopTrayMenuItem) {
+            acStop();
+        } else if (source == previousMenuItem || source == previousButton || source == previousTrayMenuItem) {
             acPrevious();
-        } else if (source == nextMenuItem || source == nextButton) {
+        } else if (source == nextMenuItem || source == nextButton || source == nextTrayMenuItem) {
             acNext();
         } else if (source == randomizePlaylistMenuItem) {
             playlistManager.randomizePlaylist();
-        } else if (source == stopMenuItem || source == stopButton) {
-            acStop();
         } else if (source == playlistManagerMenuItem) {
             if (visualizationPanel.isVisible()) {
                 CardLayout cardLayout = (CardLayout) (mainPanel.getLayout());
@@ -777,7 +785,6 @@ public class XtremeMP implements ActionListener, ControlListener,
             if (currentPli != null && !currentPli.isFile()) {
                 currentPli.loadTagInfo();
             }
-            acUpdateTime(0);
             setStatus(currentPli.getFormattedDisplayName());
         }
     }
@@ -891,6 +898,9 @@ public class XtremeMP implements ActionListener, ControlListener,
                 }
             }
             switch (audioPlayer.getState()) {
+                case AudioPlayer.INIT:
+                    audioPlayer.play();
+                    break;
                 case AudioPlayer.PLAY:
                     audioPlayer.pause();
                     break;
@@ -913,6 +923,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         audioPlayer.stop();
     }
 
+    @Override
     public void acUpdateTime(int value) {
         String timeText = Utilities.ZERO_TIMER;
         if (currentPli != null) {
@@ -926,6 +937,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         setTime(timeText, (currentPli == null) ? 0 : value);
     }
 
+    @Override
     public void acSeek() {
         try {
             if (audioPlayer != null && seekSlider.isEnabled()) {
@@ -951,22 +963,6 @@ public class XtremeMP implements ActionListener, ControlListener,
                 }
             });
         }
-    }
-
-    @Override
-    public void trayQuit() {
-        exit();
-    }
-
-    @Override
-    public void trayMinimize() {
-        mainFrame.setExtendedState(java.awt.Frame.ICONIFIED);
-        mainFrame.dispose();
-    }
-
-    public void trayMaximize() {
-        mainFrame.setExtendedState(java.awt.Frame.NORMAL);
-        mainFrame.setVisible(true);
     }
 
     @Override

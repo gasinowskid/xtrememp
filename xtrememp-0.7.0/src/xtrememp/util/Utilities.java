@@ -63,6 +63,11 @@ public final class Utilities {
     public static final String PLAYLIST_MANAGER = "PLAYLIST_MANAGER";
     public static final String DEFAULT_PLAYLIST = "default.xspf";
     //
+    public static final Icon APP_16_ICON = getIcon("icon_16.png");
+    public static final Icon APP_22_ICON = getIcon("icon_22.png");
+    public static final Icon APP_32_ICON = getIcon("icon_32.png");
+    public static final Icon APP_48_ICON = getIcon("icon_48.png");
+    public static final Icon APP_64_ICON = getIcon("icon_64.png");
     public static final Icon APP_256_ICON = getIcon("icon_256.png");
     //
     public static final Icon FOLDER_ICON = getIcon("folder.png");
@@ -222,11 +227,13 @@ public final class Utilities {
      * @return an <code>List</code> object containing the images.
      */
     public static List<Image> getIconImages() {
-        List<Image> icons = new ArrayList<Image>(3);
-        icons.add(getImage("icon_32.png"));
-        icons.add(getImage("icon_48.png"));
-        icons.add(getImage("icon_64.png"));
-        return icons;
+        List<Image> iconImages = new ArrayList<Image>(5);
+        iconImages.add(getImage("icon_16.png"));
+        iconImages.add(getImage("icon_22.png"));
+        iconImages.add(getImage("icon_32.png"));
+        iconImages.add(getImage("icon_48.png"));
+        iconImages.add(getImage("icon_64.png"));
+        return iconImages;
     }
 
     /**
