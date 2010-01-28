@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,6 +21,7 @@ package xtrememp.ui.button;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
@@ -31,14 +32,14 @@ import javax.swing.event.PopupMenuListener;
  *
  * @author Besmir Beqiri
  */
-public class PopdownButton extends JToggleButton {
+public class PopupButton extends JToggleButton {
 
     private JPopupMenu popupMenu;
     private boolean shouldHandlePopupWillBecomeInvisible = true;
 
-    public PopdownButton() {
-        this.setFocusable(false);
-        this.addMouseListener(createButtonMouseListener());
+    public PopupButton() {
+        setFocusable(false);
+        addMouseListener(createButtonMouseListener());
 
         popupMenu = new JPopupMenu();
         popupMenu.addPopupMenuListener(createPopupMenuListener());
@@ -47,7 +48,12 @@ public class PopdownButton extends JToggleButton {
         // closing of the popup when is pressed.
         JComboBox box = new JComboBox();
         Object preventHide = box.getClientProperty("doNotCancelPopup");
-        this.putClientProperty("doNotCancelPopup", preventHide);
+        putClientProperty("doNotCancelPopup", preventHide);
+    }
+    
+    public PopupButton(Icon icon) {
+        this();
+        setIcon(icon);
     }
 
     private MouseListener createButtonMouseListener() {

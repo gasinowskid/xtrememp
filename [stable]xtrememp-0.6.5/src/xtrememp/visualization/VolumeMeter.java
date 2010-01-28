@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,12 +19,12 @@
 package xtrememp.visualization;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.Point;
-import xtrememp.player.dsp.DigitalSignalSynchronizer.Context;
+import java.nio.FloatBuffer;
+import xtrememp.player.dsp.DssContext;
 
 /**
  *
@@ -57,19 +57,20 @@ public class VolumeMeter extends Visualization {
      * @see xtrememp.visual.Visualization#render
      */
     @Override
-    public synchronized void render(Graphics g, int width, int height, Context dssContext) {
+    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
         float leftLevel = 0.0f;
         float rightLevel = 0.0f;
-        int length = dssContext.getLength();
-        float[][] channels = dssContext.getDataNormalized();
+        int sampleSize = dssContext.getSampleSize();
+        FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
+        FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
 
-        for (int a = 0; a < length; a++) {
-            leftLevel += Math.abs(channels[0][a]);
-            rightLevel += Math.abs(channels[1][a]);
+        for (int i = 0; i < sampleSize; i++) {
+            leftLevel += Math.abs(leftChannel.get(i));
+            rightLevel += Math.abs(rightChannel.get(i));
         }
 
-        leftLevel = ((leftLevel * 2.0f) / (float) length);
-        rightLevel = ((rightLevel * 2.0f) / (float) length);
+        leftLevel = ((leftLevel * 2.0f) / (float) sampleSize);
+        rightLevel = ((rightLevel * 2.0f) / (float) sampleSize);
 
         if (leftLevel > 1.0f) {
             leftLevel = 1.0f;
@@ -97,8 +98,8 @@ public class VolumeMeter extends Visualization {
             }
         }
 
-        g.setColor(Color.black);
-        g.fillRect(0, 0, width, height);
+        g2d.setColor(Color.black);
+        g2d.fillRect(0, 0, width, height);
 
         if (lgp == null || lgp.getEndPoint().getX() != width) {
             Point start = new Point(0, 0);
@@ -108,10 +109,10 @@ public class VolumeMeter extends Visualization {
             lgp = new LinearGradientPaint(start, end, dist, colors, CycleMethod.REPEAT);
         }
 
-        ((Graphics2D) g).setPaint(lgp);
+        g2d.setPaint(lgp);
 
         int wHeight = (height >> 1) - 8;
-        g.fillRect(8, 6, (int) (oldLeft * (float) (width - 32)), wHeight);
-        g.fillRect(8, wHeight + 10, (int) (oldRight * (float) (width - 32)), wHeight);
+        g2d.fillRect(8, 6, (int) (oldLeft * (float) (width - 32)), wHeight);
+        g2d.fillRect(8, wHeight + 10, (int) (oldRight * (float) (width - 32)), wHeight);
     }
 }

@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,10 +23,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -37,6 +40,8 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
+import org.pushingpixels.substance.api.skin.SkinInfo;
+import xtrememp.ui.skin.DarkSapphireSkin;
 
 /**
  *
@@ -45,21 +50,60 @@ import javax.swing.KeyStroke;
 public final class Utilities {
 
     /**
+     * System default locale.
+     */
+    private static Locale systemLocale;
+    /**
      * An array of protocol strings.
      */
     public static final String[] PROTOCOLS = {"http:", "file:", "ftp:", "https:", "ftps:", "jar:"};
+    //
     public static final String ZERO_TIMER = "00:00 / 00:00";
     public static final String VISUALIZATION_PANEL = "VISUALIZATION_PANEL";
     public static final String PLAYLIST_MANAGER = "PLAYLIST_MANAGER";
     public static final String DEFAULT_PLAYLIST = "default.xspf";
+    //
+    public static final Icon APP_256_ICON = getIcon("icon_256.png");
+    //
+    public static final Icon FOLDER_ICON = getIcon("folder.png");
+    public static final Icon FOLDER_REMOTE_ICON = getIcon("folder-remote.png");
+    public static final Icon DOCUMENT_OPEN_ICON = getIcon("document-open.png");
+    public static final Icon DOCUMENT_SAVE_ICON = getIcon("document-save.png");
+    public static final Icon MEDIA_PLAY_ICON = getIcon("media-playback-start.png");
+    public static final Icon MEDIA_PAUSE_ICON = getIcon("media-playback-pause.png");
+    public static final Icon MEDIA_STOP_ICON = getIcon("media-playback-stop.png");
+    public static final Icon MEDIA_PREVIOUS_ICON = getIcon("media-skip-backward.png");
+    public static final Icon MEDIA_NEXT_ICON = getIcon("media-skip-forward.png");
+    public static final Icon PLAYLIST_SHUFFLE_ICON = getIcon("media-playlist-shuffle.png");
+    public static final Icon AUDIO_VOLUME_HIGH_ICON = getIcon("audio-volume-high.png");
+    public static final Icon AUDIO_VOLUME_MEDIUM_ICON = getIcon("audio-volume-medium.png");
+    public static final Icon AUDIO_VOLUME_LOW_ICON = getIcon("audio-volume-low.png");
+    public static final Icon AUDIO_VOLUME_MUTED_ICON = getIcon("audio-volume-muted.png");
+    public static final Icon LIST_ADD_ICON = getIcon("list-add.png");
+    public static final Icon LIST_REMOVE_ICON = getIcon("list-remove.png");
+    public static final Icon EDIT_CLEAR_ICON = getIcon("edit-clear.png");
+    public static final Icon GO_UP_ICON = getIcon("go-up.png");
+    public static final Icon GO_DOWN_ICON = getIcon("go-down.png");
+    public static final Icon GO_PREVIOUS_ICON = getIcon("go-previous.png");
+    public static final Icon GO_NEXT_ICON = getIcon("go-next.png");
+    public static final Icon MEDIA_INFO_ICON = getIcon("media-info.png");
+    public static final Icon VIEW_FULLSCREEN_ICON = getIcon("view-fullscreen.png");
+    public static final Icon MENU_ICON = getIcon("menu.png");
+    public static final Icon PREFERENCES_SYSTEM_ICON = getIcon("preferences-system.png");
+    public static final Icon AUDIO_CARD_ICON = getIcon("audio-card.png");
 
+    /**
+     * Close dialog with ESC key.
+     *
+     * @param dialog a JDialog instance
+     */
     public static void closeOnEscape(final JDialog dialog) {
-        // Close dialog with ESC key
-        JRootPane rPane = dialog.getRootPane();
-        InputMap iMap = rPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        iMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-        ActionMap aMap = rPane.getActionMap();
-        aMap.put("escape", new AbstractAction() {
+        JRootPane rootPane = dialog.getRootPane();
+        String escape = "escape";
+        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), escape);
+        ActionMap actionMap = rootPane.getActionMap();
+        actionMap.put(escape, new AbstractAction() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -68,81 +112,87 @@ public final class Utilities {
         });
     }
 
-    public static float[] stereoMerge(float[] left, float[] right) {
-        for (int i = 0, len = left.length; i < len; i++) {
-            left[i] = (left[i] + right[i]) / 2.0f;
+    /**
+     * Returns a {@link FloatBuffer} as the result
+     * of merging the left and right channel buffers.
+     *
+     * @param leftChannel the left channel buffer
+     * @param rightChannel the right channel buffer
+     * @return a <code>FloatBuffer</code> object
+     */
+    public static FloatBuffer stereoMerge(FloatBuffer leftChannel, FloatBuffer rightChannel) {
+        int capacity = Math.max(leftChannel.capacity(), rightChannel.capacity());
+        FloatBuffer stereoBuffer = FloatBuffer.allocate(capacity);
+        for (int i = 0, len = leftChannel.capacity(); i < len; i++) {
+            float average = (leftChannel.get(i) + rightChannel.get(i)) / 2.0f;
+            stereoBuffer.put(average);
         }
-        return left;
+        return stereoBuffer.asReadOnlyBuffer();
+    }
+    
+	/**
+	 * Creates info object on a single skin.
+	 * 
+	 * @param displayName
+	 *            Skin display name.
+	 * @param skinClass
+	 *            Skin class.
+	 * @param isDefault
+	 *            Indication whether the specified skin is default.
+	 * @return Info object on the specified skin.
+	 */
+	private static SkinInfo create(String displayName, Class<?> skinClass,
+			boolean isDefault) {
+		SkinInfo result = new SkinInfo(displayName, skinClass.getName());
+		result.setDefault(isDefault);
+		return result;
+	}
+
+    public static Set<SkinInfo> getSkins() {
+        Set<SkinInfo> result = new HashSet<SkinInfo>();
+        result.add(create(DarkSapphireSkin.NAME, DarkSapphireSkin.class, false));
+        return result;
     }
 
-    public static String tr(String toBeTranslated) {
-        return LanguageBundle.getString(toBeTranslated);
-    }
-
-    public static List<Image> getIconImages() {
-        List<Image> icons = new ArrayList<Image>();
-        try {
-            icons.add(ImageIO.read(Utilities.class.getResourceAsStream("/xtrememp/resources/images/icon_32.png")));
-            icons.add(ImageIO.read(Utilities.class.getResourceAsStream("/xtrememp/resources/images/icon_48.png")));
-            icons.add(ImageIO.read(Utilities.class.getResourceAsStream("/xtrememp/resources/images/icon_64.png")));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return icons;
+    /**
+     * @see LanguageBundle#getString(java.lang.String)
+     */
+    public static String tr(String key) {
+        return LanguageBundle.getString(key);
     }
 
     public static Locale[] getLanguages() {
-        Locale[] locales = {Locale.getDefault(),
+        Locale[] locales = {getSystemLocale(),
             Locale.ENGLISH, Locale.FRENCH, Locale.ITALIAN};
         return locales;
     }
 
     /**
-     * Returns a human-readable version of the file size, where the input
-     * represents a specific number of bytes.
+     * Gets the current value of the default locale for this instance
+     * of the Java Virtual Machine.
+     * <p>
+     * The Java Virtual Machine sets the default locale during startup
+     * based on the host environment. This method must be used before
+     * <blockquote>
+     * <code>{@link Locale#setDefault(java.util.Locale)}</code>
+     * </blockquote>
+     * method is ever called.
      *
-     * @param size the number of bytes
-     * @return a human-readable display value (includes units)
+     * @return the default locale for this instance of the Java Virtual Machine
      */
-    public static String byteCountToDisplaySize(long size) {
-        long ONE_KB = 1024;
-        long ONE_MB = ONE_KB * ONE_KB;
-        long ONE_GB = ONE_KB * ONE_MB;
-
-        if (size > ONE_GB) {
-            return String.valueOf(size / ONE_GB) + " GB";
-        } else if (size > ONE_MB) {
-            return String.valueOf(size / ONE_MB) + " MB";
-        } else if (size > ONE_KB) {
-            return String.valueOf(size / ONE_KB) + " KB";
-        } else {
-            return String.valueOf(size) + " bytes";
+    public static Locale getSystemLocale() {
+        if (systemLocale == null) {
+            systemLocale = Locale.getDefault();
         }
+        return systemLocale;
     }
 
     /**
-     * Returns an icon.
-     *
-     * @param name the icon name
-     * @return an icon
-     */
-    public static Icon getIcon(String name) {
-        Icon icon = null;
-        if (name != null) {
-            try {
-                icon = new ImageIcon(ImageIO.read(Utilities.class.getResourceAsStream("/xtrememp/resources/images/" + name)));
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-        return icon;
-    }
-
-    /**
-     * Returns a BufferedImage.
+     * Returns a {@link BufferedImage} as the result of decoding
+     * an image with the given name.
      *
      * @param name the image name
-     * @return an BufferedImage object.
+     * @return a <code>BufferedImage</code> object, or <code>null</code>.
      */
     public static BufferedImage getImage(String name) {
         BufferedImage image = null;
@@ -154,6 +204,29 @@ public final class Utilities {
             }
         }
         return image;
+    }
+
+    /**
+     * Returns an {@link Icon}.
+     *
+     * @param name the icon name
+     * @return an <code>Icon</code> object, or <code>null</code>.
+     */
+    public static Icon getIcon(String name) {
+        return new ImageIcon(getImage(name));
+    }
+
+    /**
+     * Returns a list of icon images.
+     *
+     * @return an <code>List</code> object containing the images.
+     */
+    public static List<Image> getIconImages() {
+        List<Image> icons = new ArrayList<Image>(3);
+        icons.add(getImage("icon_32.png"));
+        icons.add(getImage("icon_48.png"));
+        icons.add(getImage("icon_64.png"));
+        return icons;
     }
 
     /**
@@ -185,6 +258,29 @@ public final class Utilities {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns a human-readable version of the file size, where the input
+     * represents a specific number of bytes.
+     *
+     * @param size the number of bytes
+     * @return a human-readable display value (includes units)
+     */
+    public static String byteCountToDisplaySize(long size) {
+        long ONE_KB = 1024;
+        long ONE_MB = ONE_KB * ONE_KB;
+        long ONE_GB = ONE_KB * ONE_MB;
+
+        if (size > ONE_GB) {
+            return String.valueOf(size / ONE_GB) + " GB";
+        } else if (size > ONE_MB) {
+            return String.valueOf(size / ONE_MB) + " MB";
+        } else if (size > ONE_KB) {
+            return String.valueOf(size / ONE_KB) + " KB";
+        } else {
+            return String.valueOf(size) + " bytes";
+        }
     }
 
     /**

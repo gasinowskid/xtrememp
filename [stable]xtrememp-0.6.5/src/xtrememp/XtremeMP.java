@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@ import com.melloware.jintellitype.IntellitypeListener;
 import com.melloware.jintellitype.JIntellitype;
 import java.awt.event.ItemEvent;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -31,11 +32,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -44,8 +40,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import javax.sound.sampled.AudioSystem;
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -57,22 +56,23 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
+import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.plaf.SliderUI;
-import javax.swing.plaf.basic.BasicSliderUI;
 import net.miginfocom.swing.MigLayout;
 import org.apache.log4j.PropertyConfigurator;
+import org.jdesktop.swingx.JXBusyLabel;
+import org.jdesktop.swingx.painter.BusyPainter;
+import org.pushingpixels.lafwidget.animation.AnimationConfigurationManager;
+import org.pushingpixels.lafwidget.animation.AnimationFacet;
 import org.pushingpixels.substance.api.DecorationAreaType;
 import org.pushingpixels.substance.api.SubstanceConstants;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
-import org.pushingpixels.substance.internal.utils.RolloverControlListener;
-import org.rom1dep.util.gui.swing.busylabel.AnimationType;
-import org.rom1dep.util.gui.swing.busylabel.RDBusyLabel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xtrememp.player.audio.AudioPlayer;
@@ -88,6 +88,7 @@ import xtrememp.ui.button.PlayPauseButton;
 import xtrememp.ui.button.PreviousButton;
 import xtrememp.ui.button.StopButton;
 import xtrememp.ui.button.VolumeButton;
+import xtrememp.ui.slider.SeekSlider;
 import xtrememp.tag.TagInfo;
 import xtrememp.update.SoftwareUpdate;
 import xtrememp.update.Version;
@@ -116,6 +117,7 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenu playerMenu;
+    private JMenu viewMenu;
     private JMenu helpMenu;
     private JMenuItem openMenuItem;
     private JMenuItem openURLMenuItem;
@@ -123,23 +125,18 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem savePlaylistMenuItem;
     private JMenuItem preferencesMenuItem;
     private JMenuItem exitMenuItem;
-    private JMenuItem visMenuItem;
     private JMenuItem nextMenuItem;
     private JMenuItem playPauseMenuItem;
     private JMenuItem stopMenuItem;
     private JMenuItem previousMenuItem;
-    private JMenuItem addFilesMenuItem;
-    private JMenuItem removeItemsMenuItem;
-    private JMenuItem clearPlaylistMenuItem;
-    private JMenuItem moveUpItemsMenuItem;
-    private JMenuItem moveDownItemsMenuItem;
     private JMenuItem randomizePlaylistMenuItem;
-    private JMenuItem infoMenuItem;
+    private JRadioButtonMenuItem playlistManagerMenuItem;
+    private JRadioButtonMenuItem visualizationMenuItem;
     private JMenuItem updateMenuItem;
     private JMenuItem aboutMenuItem;
-    private RDBusyLabel busyLabel;
+    private JXBusyLabel busyLabel;
     private JPanel mainPanel;
-    private VisualizerPanel visualizationPanel;
+    private VisualizationManager visualizationPanel;
     private JPanel controlPanel;
     private AudioPlayer audioPlayer;
     private Playlist playlist;
@@ -153,10 +150,8 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JSlider volumeSlider;
     private JLabel timeLabel;
     private JLabel statusLabel;
-    private JSlider seekSlider;
+    private SeekSlider seekSlider;
     private PlaylistItem currentPli;
-    private int oldSeekValue = 0;
-    private boolean isSeekPressed = false;
 
     private XtremeMP() {
     }
@@ -172,28 +167,37 @@ public class XtremeMP implements ActionListener, ControlListener,
         return mainFrame;
     }
 
-    public RDBusyLabel getBusyLabel() {
+    public JXBusyLabel getBusyLabel() {
         return busyLabel;
     }
 
-    public void init(List<String> arguments) throws Exception {
+    public AudioPlayer getAudioPlayer() {
+        return audioPlayer;
+    }
+
+    public void init(List<String> arguments) {
         // Process arguments
 //        for (String arg : arguments) {
 //        }
+
+        if (JIntellitype.isJIntellitypeSupported()) {
+            JIntellitype.getInstance().addIntellitypeListener(this);
+        }
+
         audioPlayer = new AudioPlayer(this);
         String mixerName = Settings.getMixerName();
         if (!Utilities.isNullOrEmpty(mixerName)) {
             audioPlayer.setMixerName(mixerName);
         }
         // Launch gui
-        EventQueue.invokeAndWait(new Runnable() {
+        EventQueue.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                SubstanceLookAndFeel.setSkin(Settings.getSkin());
-                UIManager.put(SubstanceLookAndFeel.FOCUS_KIND, SubstanceConstants.FocusKind.NONE);
                 JFrame.setDefaultLookAndFeelDecorated(true);
                 JDialog.setDefaultLookAndFeelDecorated(true);
+                UIManager.put(SubstanceLookAndFeel.FOCUS_KIND, SubstanceConstants.FocusKind.NONE);
+                SubstanceLookAndFeel.setSkin(Settings.getSkin());
                 mainFrame = new JFrame(tr("Application.title"));
                 mainFrame.setIconImages(Utilities.getIconImages());
                 mainFrame.setBounds(Settings.getMainFrameBounds());
@@ -223,24 +227,18 @@ public class XtremeMP implements ActionListener, ControlListener,
                 createMainPanels();
                 mainFrame.setMinimumSize(new Dimension(controlPanel.getPreferredSize().width + 50, 200));
                 // center the frame
-                if (!Settings.containsKey("xtrememp.mainFrame.x")) {
+                if (Settings.isEmpty()) {
                     mainFrame.setLocationRelativeTo(null);
                 }
                 mainFrame.setVisible(true);
+
+                File playlistFile = new File(Settings.getCacheDir(), Utilities.DEFAULT_PLAYLIST);
+                if (playlistFile.exists()) {
+                    playlistManager.loadPlaylist(playlistFile.getAbsolutePath());
+                }
+                playlist = playlistManager.getPlaylist();
             }
         });
-        if (JIntellitype.isJIntellitypeSupported()) {
-            JIntellitype.getInstance().addIntellitypeListener(this);
-        }
-        if (Settings.isAutomaticCheckForUpdatesEnabled()) {
-            // check for updates after 5 sec
-            SoftwareUpdate.scheduleCheckForUpdates(5 * 1000);
-        }
-        File playlistFile = new File(Settings.getCacheDir(), Utilities.DEFAULT_PLAYLIST);
-        if (playlistFile.exists()) {
-            playlistManager.loadPlaylist(playlistFile.getAbsolutePath());
-        }
-        playlist = playlistManager.getPlaylist();
     }
 
     public static void main(String[] args) throws Exception {
@@ -266,12 +264,23 @@ public class XtremeMP implements ActionListener, ControlListener,
         System.err.close();
 
         // Set language
-        LanguageBundle.setLanguage(Utilities.getLanguages()[Settings.getLanguageIndex()]);
+        Locale locale = Utilities.getLanguages()[Settings.getLanguageIndex()];
+        Locale.setDefault(locale);
+        LanguageBundle.setLanguage(locale);
 
-//        long currentTime = System.currentTimeMillis();
+        // Animation configurations
+        AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW, JTable.class);
+        AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ROLLOVER, JTable.class);
+        AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.SELECTION, JTable.class);
+
         // Init
         getInstance().init(arguments);
-//        logger.info("Startup time: {}", System.currentTimeMillis() - currentTime);
+
+        // Check for updates
+        if (Settings.isAutomaticUpdatesEnabled()) {
+            // wait 5 sec
+            SoftwareUpdate.scheduleCheckForUpdates(5 * 1000);
+        }
     }
 
     protected void exit() {
@@ -293,136 +302,124 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     protected void createMenuBar() {
         menuBar = new JMenuBar();
-        fileMenu = new JMenu(tr("MainFrame.Menu.File"));
+
+        // File Menu
+        String fileMenuStr = tr("MainFrame.Menu.File");
+        fileMenu = new JMenu(fileMenuStr);
+        fileMenu.setMnemonic(fileMenuStr.charAt(0));
+
         openMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenFile"));
-        openURLMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenURL"));
-        openPlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenPlaylist"));
-        savePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.SavePlaylist"));
-        preferencesMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Preferences"));
-        exitMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Exit"));
-        playerMenu = new JMenu(tr("MainFrame.Menu.Player"));
-        visMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.ShowHide"));
-        previousMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Previous"));
-        playPauseMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.PlayPause"));
-        stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
-        nextMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Next"));
-        addFilesMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.AddFileOrDir"));
-        removeItemsMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.RemSelected"));
-        clearPlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Clear"));
-        moveUpItemsMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.MoveUp"));
-        moveDownItemsMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.MoveDown"));
-        randomizePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Random"));
-        infoMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.ViewInfo"));
-        helpMenu = new JMenu(tr("MainFrame.Menu.Help"));
-        updateMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.CheckForUpdates"));
-        aboutMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.About"));
-
-        fileMenu.setMnemonic('F');
-
         openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
-        openMenuItem.setIcon(Utilities.getIcon("folder.png"));
+        openMenuItem.setIcon(Utilities.FOLDER_ICON);
         openMenuItem.addActionListener(this);
         fileMenu.add(openMenuItem);
 
+        openURLMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenURL"));
         openURLMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, InputEvent.CTRL_DOWN_MASK));
-        openURLMenuItem.setIcon(Utilities.getIcon("folder-remote.png"));
+        openURLMenuItem.setIcon(Utilities.FOLDER_REMOTE_ICON);
         openURLMenuItem.addActionListener(this);
         fileMenu.add(openURLMenuItem);
 
         fileMenu.addSeparator();
 
+        openPlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenPlaylist"));
         openPlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        openPlaylistMenuItem.setIcon(Utilities.getIcon("document-open.png"));
+        openPlaylistMenuItem.setIcon(Utilities.DOCUMENT_OPEN_ICON);
         openPlaylistMenuItem.addActionListener(this);
         fileMenu.add(openPlaylistMenuItem);
 
+        savePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.File.SavePlaylist"));
         savePlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        savePlaylistMenuItem.setIcon(Utilities.getIcon("document-save.png"));
+        savePlaylistMenuItem.setIcon(Utilities.DOCUMENT_SAVE_ICON);
         savePlaylistMenuItem.addActionListener(this);
         fileMenu.add(savePlaylistMenuItem);
 
         fileMenu.addSeparator();
 
+        preferencesMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Preferences"));
         preferencesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK));
         preferencesMenuItem.addActionListener(this);
         fileMenu.add(preferencesMenuItem);
 
         fileMenu.addSeparator();
 
+        exitMenuItem = new JMenuItem(tr("MainFrame.Menu.File.Exit"));
         exitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK));
         exitMenuItem.addActionListener(this);
         fileMenu.add(exitMenuItem);
 
         menuBar.add(fileMenu);
 
-        playerMenu.setMnemonic('P');
+        // Player Menu
+        String playerMenuStr = tr("MainFrame.Menu.Player");
+        playerMenu = new JMenu(playerMenuStr);
+        playerMenu.setMnemonic(playerMenuStr.charAt(0));
 
-        visMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
-        visMenuItem.addActionListener(this);
-        playerMenu.add(visMenuItem);
-
-        playerMenu.addSeparator();
-
-        previousMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
-        previousMenuItem.addActionListener(this);
-        playerMenu.add(previousMenuItem);
-
+        playPauseMenuItem = new JMenuItem("Play/Pause");
         playPauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
         playPauseMenuItem.addActionListener(this);
         playerMenu.add(playPauseMenuItem);
 
+        stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
         stopMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
+//        stopMenuItem.setIcon(Utilities.MEDIA_STOP_ICON);
         stopMenuItem.addActionListener(this);
         playerMenu.add(stopMenuItem);
 
+        previousMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Previous"));
+        previousMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
+//        previousMenuItem.setIcon(Utilities.MEDIA_PREVIOUS_ICON);
+        previousMenuItem.addActionListener(this);
+        playerMenu.add(previousMenuItem);
+
+        nextMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Next"));
         nextMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
+//        nextMenuItem.setIcon(Utilities.MEDIA_NEXT_ICON);
         nextMenuItem.addActionListener(this);
         playerMenu.add(nextMenuItem);
 
         playerMenu.addSeparator();
 
-        addFilesMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT, 0));
-        addFilesMenuItem.setIcon(Utilities.getIcon("list-add.png"));
-        addFilesMenuItem.addActionListener(this);
-        playerMenu.add(addFilesMenuItem);
-
-        removeItemsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
-        removeItemsMenuItem.setIcon(Utilities.getIcon("list-remove.png"));
-        removeItemsMenuItem.addActionListener(this);
-        playerMenu.add(removeItemsMenuItem);
-
-        clearPlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, InputEvent.ALT_DOWN_MASK));
-        clearPlaylistMenuItem.setIcon(Utilities.getIcon("edit-clear.png"));
-        clearPlaylistMenuItem.addActionListener(this);
-        playerMenu.add(clearPlaylistMenuItem);
-
-        moveUpItemsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, InputEvent.ALT_DOWN_MASK));
-        moveUpItemsMenuItem.setIcon(Utilities.getIcon("go-up.png"));
-        moveUpItemsMenuItem.addActionListener(this);
-        playerMenu.add(moveUpItemsMenuItem);
-
-        moveDownItemsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, InputEvent.ALT_DOWN_MASK));
-        moveDownItemsMenuItem.setIcon(Utilities.getIcon("go-down.png"));
-        moveDownItemsMenuItem.addActionListener(this);
-        playerMenu.add(moveDownItemsMenuItem);
-
+        randomizePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Randomize"));
         randomizePlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
+        randomizePlaylistMenuItem.setIcon(Utilities.PLAYLIST_SHUFFLE_ICON);
         randomizePlaylistMenuItem.addActionListener(this);
         playerMenu.add(randomizePlaylistMenuItem);
 
-        infoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK));
-        infoMenuItem.addActionListener(this);
-        playerMenu.add(infoMenuItem);
-
         menuBar.add(playerMenu);
 
-        helpMenu.setMnemonic('H');
+        // View Menu
+        String viewMenuStr = tr("MainFrame.Menu.View");
+        viewMenu = new JMenu(viewMenuStr);
+        viewMenu.setMnemonic(viewMenuStr.charAt(0));
 
+        playlistManagerMenuItem = new JRadioButtonMenuItem(tr("MainFrame.Menu.View.PlaylistManager"));
+        playlistManagerMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        playlistManagerMenuItem.addActionListener(this);
+        viewMenu.add(playlistManagerMenuItem);
+
+        visualizationMenuItem = new JRadioButtonMenuItem(tr("MainFrame.Menu.View.Visualizations"));
+        visualizationMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK));
+        visualizationMenuItem.addActionListener(this);
+        viewMenu.add(visualizationMenuItem);
+
+        ButtonGroup viewBG = new ButtonGroup();
+        viewBG.add(playlistManagerMenuItem);
+        viewBG.add(visualizationMenuItem);
+
+        menuBar.add(viewMenu);
+
+        // Help menu
+        String helpMenuStr = tr("MainFrame.Menu.Help");
+        helpMenu = new JMenu(helpMenuStr);
+        helpMenu.setMnemonic(helpMenuStr.charAt(0));
+
+        updateMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.CheckForUpdates"));
         updateMenuItem.addActionListener(this);
         helpMenu.add(updateMenuItem);
         helpMenu.addSeparator();
 
-        aboutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.ALT_DOWN_MASK));
+        aboutMenuItem = new JMenuItem(tr("MainFrame.Menu.Help.About"));
         aboutMenuItem.addActionListener(this);
         helpMenu.add(aboutMenuItem);
 
@@ -430,10 +427,10 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         menuBar.add(Box.createHorizontalGlue());
 
-        busyLabel = new RDBusyLabel(new Dimension(22, 22));
-        busyLabel.loadBaseImage(Utilities.getImage("logo_alt_base.png"));
-        busyLabel.loadAnimImage(Utilities.getImage("logo_alt.png"));
-        busyLabel.setAnimationType(AnimationType.ROTATE_3D);
+        busyLabel = new JXBusyLabel(new Dimension(18, 18));
+        BusyPainter busyPainter = busyLabel.getBusyPainter();
+        busyPainter.setTrailLength(4);
+        busyPainter.setHighlightColor(Color.darkGray);
         menuBar.add(busyLabel);
         menuBar.add(Box.createHorizontalStrut(8));
 
@@ -443,78 +440,23 @@ public class XtremeMP implements ActionListener, ControlListener,
     protected void createMainPanels() {
         mainPanel = new JPanel(new CardLayout());
         playlistManager = new PlaylistManager(this);
-        visualizationPanel = new VisualizerPanel();
+        visualizationPanel = new VisualizationManager();
         if (Settings.getLastView().equals(Utilities.VISUALIZATION_PANEL)) {
             mainPanel.add(visualizationPanel, Utilities.VISUALIZATION_PANEL);
             mainPanel.add(playlistManager, Utilities.PLAYLIST_MANAGER);
             audioPlayer.getDspAudioDataConsumer().add(visualizationPanel);
+            visualizationMenuItem.setSelected(true);
         } else {
             mainPanel.add(playlistManager, Utilities.PLAYLIST_MANAGER);
             mainPanel.add(visualizationPanel, Utilities.VISUALIZATION_PANEL);
+            playlistManagerMenuItem.setSelected(true);
         }
         mainFrame.getContentPane().setLayout(new MigLayout("fill"));
         mainFrame.getContentPane().add(mainPanel, "grow");
 
         JPanel southPanel = new JPanel(new MigLayout("fill", "[center]"));
         SubstanceLookAndFeel.setDecorationType(southPanel, DecorationAreaType.TOOLBAR);
-        seekSlider = new JSlider(0, 0, 0);
-        for (MouseListener ml : seekSlider.getMouseListeners()) {
-            if (!(ml instanceof RolloverControlListener)) {
-                seekSlider.removeMouseListener(ml);
-            }
-        }
-        for (MouseMotionListener mml : seekSlider.getMouseMotionListeners()) {
-            if (!(mml instanceof RolloverControlListener)) {
-                seekSlider.removeMouseMotionListener(mml);
-            }
-        }
-        seekSlider.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                isSeekPressed = true;
-                SliderUI sliderUI = seekSlider.getUI();
-                if (seekSlider.isEnabled() && sliderUI instanceof BasicSliderUI) {
-                    BasicSliderUI basicSliderUI = (BasicSliderUI) sliderUI;
-                    if (seekSlider.getOrientation() == JSlider.HORIZONTAL) {
-                        seekSlider.setValue(basicSliderUI.valueForXPosition(e.getX()));
-                    } else {
-                        seekSlider.setValue(basicSliderUI.valueForYPosition(e.getY()));
-                    }
-                    oldSeekValue = seekSlider.getValue();
-                    updateTime(currentPli, oldSeekValue);
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                try {
-                    if (audioPlayer != null && seekSlider.isEnabled()) {
-                        audioPlayer.seek(Math.round(audioPlayer.getByteLength() * (double) oldSeekValue / seekSlider.getMaximum()));
-                    }
-                } catch (PlayerException ex) {
-                    logger.error(ex.getMessage(), ex);
-                }
-                isSeekPressed = false;
-            }
-        });
-        seekSlider.addMouseMotionListener(new MouseMotionAdapter() {
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                SliderUI sliderUI = seekSlider.getUI();
-                if (seekSlider.isEnabled() && sliderUI instanceof BasicSliderUI) {
-                    BasicSliderUI basicSliderUI = (BasicSliderUI) sliderUI;
-                    if (seekSlider.getOrientation() == JSlider.HORIZONTAL) {
-                        seekSlider.setValue(basicSliderUI.valueForXPosition(e.getX()));
-                    } else {
-                        seekSlider.setValue(basicSliderUI.valueForYPosition(e.getY()));
-                    }
-                    oldSeekValue = seekSlider.getValue();
-                    updateTime(currentPli, oldSeekValue);
-                }
-            }
-        });
+        seekSlider = new SeekSlider(this);
         seekSlider.setEnabled(false);
         southPanel.add(seekSlider, "north, gap 4 4 1 0");
 
@@ -559,11 +501,11 @@ public class XtremeMP implements ActionListener, ControlListener,
         });
         volumeSlider.setEnabled(!Settings.isMuted());
         JPanel volumePanel = new JPanel(new MigLayout("fill"));
-        JLabel volumeLabel = new JLabel(tr("MainFrame.VolumePanel.Volume"), JLabel.CENTER);
+        JLabel volumeLabel = new JLabel(tr("MainFrame.Menu.Player.Volume"), JLabel.CENTER);
         volumeLabel.setFont(volumeLabel.getFont().deriveFont(Font.BOLD));
         volumePanel.add(volumeLabel, "north");
         volumePanel.add(volumeSlider);
-        JCheckBox muteCheckBox = new JCheckBox(tr("MainFrame.VolumePanel.Mute"));
+        JCheckBox muteCheckBox = new JCheckBox(tr("MainFrame.Menu.Player.Mute"));
         muteCheckBox.setSelected(Settings.isMuted());
         muteCheckBox.addItemListener(new ItemListener() {
 
@@ -600,32 +542,6 @@ public class XtremeMP implements ActionListener, ControlListener,
         statusBar.add(statusLabel, "gap 4 8 0 0, wmin 0");
         southPanel.add(statusBar, "south");
         mainFrame.getContentPane().add(southPanel, "south");
-    }
-
-    protected void switchView() {
-        CardLayout cardLayout = (CardLayout) (mainPanel.getLayout());
-        if (playlistManager.isVisible()) {
-            audioPlayer.getDspAudioDataConsumer().add(visualizationPanel);
-            cardLayout.show(mainPanel, Utilities.VISUALIZATION_PANEL);
-            Settings.setLastView(Utilities.VISUALIZATION_PANEL);
-        } else {
-            audioPlayer.getDspAudioDataConsumer().remove(visualizationPanel);
-            cardLayout.show(mainPanel, Utilities.PLAYLIST_MANAGER);
-            Settings.setLastView(Utilities.PLAYLIST_MANAGER);
-        }
-    }
-
-    protected void updateTime(PlaylistItem pli, final int value) {
-        String timeText = Utilities.ZERO_TIMER;
-        if (pli != null) {
-            String formattedLength = pli.getFormattedLength();
-            if (Utilities.isNullOrEmpty(formattedLength)) {
-                timeText = pli.getFormattedLength(Math.round(value / 1000f));
-            } else {
-                timeText = pli.getFormattedLength(Math.round(value / 1000f)) + " / " + formattedLength.trim();
-            }
-        }
-        setTime(timeText, (pli == null) ? 0 : value);
     }
 
     protected void setTime(final String timeText, final int seekSliderValue) {
@@ -685,7 +601,10 @@ public class XtremeMP implements ActionListener, ControlListener,
                 Settings.setLastDir(file.getParent());
             }
         } else if (source == openURLMenuItem) {
-            String url = JOptionPane.showInputDialog(mainFrame, "Enter the URL to a media file on the Internet!", "Open URL", JOptionPane.QUESTION_MESSAGE);
+            String url = JOptionPane.showInputDialog(mainFrame,
+                    tr("Dialog.OpenURL"),
+                    tr("Dialog.OpenURL.Message"),
+                    JOptionPane.INFORMATION_MESSAGE);
             if (url != null && Utilities.startWithProtocol(url)) {
                 boolean isPlaylistFile = false;
                 for (String ext : PlaylistFileFilter.playlistExt) {
@@ -710,33 +629,34 @@ public class XtremeMP implements ActionListener, ControlListener,
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
             preferencesDialog = new PreferencesDialog(mainFrame, audioPlayer);
-            preferencesDialog.setVisible(true);
         } else if (source == exitMenuItem) {
             exit();
-        } else if (source == visMenuItem) {
-            switchView();
         } else if (source == playPauseMenuItem || source == playPauseButton) {
             acPlayPause();
         } else if (source == previousMenuItem || source == previousButton) {
             acPrevious();
         } else if (source == nextMenuItem || source == nextButton) {
             acNext();
-        } else if (source == addFilesMenuItem) {
-            playlistManager.addFilesDialog();
-        } else if (source == removeItemsMenuItem) {
-            playlistManager.remove();
-        } else if (source == clearPlaylistMenuItem) {
-            playlistManager.clearPlaylist();
-        } else if (source == moveUpItemsMenuItem) {
-            playlistManager.moveUp();
-        } else if (source == moveDownItemsMenuItem) {
-            playlistManager.moveDown();
         } else if (source == randomizePlaylistMenuItem) {
             playlistManager.randomizePlaylist();
         } else if (source == stopMenuItem || source == stopButton) {
             acStop();
-        } else if (source == infoMenuItem) {
-            playlistManager.showMediaInfoDialog();
+        } else if (source == playlistManagerMenuItem) {
+            if (visualizationPanel.isVisible()) {
+                CardLayout cardLayout = (CardLayout) (mainPanel.getLayout());
+                audioPlayer.getDspAudioDataConsumer().remove(visualizationPanel);
+                cardLayout.show(mainPanel, Utilities.PLAYLIST_MANAGER);
+                playlistManagerMenuItem.setSelected(true);
+                Settings.setLastView(Utilities.PLAYLIST_MANAGER);
+            }
+        } else if (source == visualizationMenuItem) {
+            if (playlistManager.isVisible()) {
+                CardLayout cardLayout = (CardLayout) (mainPanel.getLayout());
+                audioPlayer.getDspAudioDataConsumer().add(visualizationPanel);
+                cardLayout.show(mainPanel, Utilities.VISUALIZATION_PANEL);
+                visualizationMenuItem.setSelected(true);
+                Settings.setLastView(Utilities.VISUALIZATION_PANEL);
+            }
         } else if (source == updateMenuItem) {
             SoftwareUpdate.checkForUpdates(true);
             SoftwareUpdate.showCheckForUpdatesDialog();
@@ -754,22 +674,22 @@ public class XtremeMP implements ActionListener, ControlListener,
             message.append("<html><b><font color='red' size='5'>" + tr("Application.title"));
             message.append("</font></b><br>" + tr("Application.description"));
             message.append("<br>Copyright © 2005-2009 The Xtreme Media Player Project");
-            message.append("<br><br><b>" + tr("Application.Key.Author") + ": </b>" + tr("Application.author"));
-            message.append("<br><b>" + tr("Application.Key.Version") + ": </b>" + currentVersion);
-            message.append("<br><b>" + tr("Application.Key.ReleaseDate") + ": </b>" + currentVersion.getReleaseDate());
-            message.append("<br><b>" + tr("Application.Key.Homepage") + ": </b>" + tr("Application.homepage"));
-            message.append("<br><br><b>" + tr("Application.Key.JavaVersion") + ": </b>" + System.getProperty("java.version"));
-            message.append("<br><b>" + tr("Application.Key.JavaVendor") + ": </b>" + System.getProperty("java.vendor"));
-            message.append("<br><b>" + tr("Application.Key.JavaHome") + ": </b>" + System.getProperty("java.home"));
-            message.append("<br><b>" + tr("Application.Key.OSName") + ": </b>" + System.getProperty("os.name"));
-            message.append("<br><b>" + tr("Application.Key.OSArch") + ": </b>" + System.getProperty("os.arch"));
-            message.append("<br><b>" + tr("Application.Key.UserName") + ": </b>" + System.getProperty("user.name"));
-            message.append("<br><b>" + tr("Application.Key.UserHome") + ": </b>" + System.getProperty("user.home"));
-            message.append("<br><b>" + tr("Application.Key.UserDir") + ": </b>" + System.getProperty("user.dir"));
+            message.append("<br><br><b>" + tr("Dialog.About.Author") + ": </b>" + tr("Application.author"));
+            message.append("<br><b>" + tr("Dialog.About.Version") + ": </b>" + currentVersion);
+            message.append("<br><b>" + tr("Dialog.About.ReleaseDate") + ": </b>" + currentVersion.getReleaseDate());
+            message.append("<br><b>" + tr("Dialog.About.Homepage") + ": </b>" + tr("Application.homepage"));
+            message.append("<br><br><b>" + tr("Dialog.About.JavaVersion") + ": </b>" + System.getProperty("java.version"));
+            message.append("<br><b>" + tr("Dialog.About.JavaVendor") + ": </b>" + System.getProperty("java.vendor"));
+            message.append("<br><b>" + tr("Dialog.About.JavaHome") + ": </b>" + System.getProperty("java.home"));
+            message.append("<br><b>" + tr("Dialog.About.OSName") + ": </b>" + System.getProperty("os.name"));
+            message.append("<br><b>" + tr("Dialog.About.OSArch") + ": </b>" + System.getProperty("os.arch"));
+            message.append("<br><b>" + tr("Dialog.About.UserName") + ": </b>" + System.getProperty("user.name"));
+            message.append("<br><b>" + tr("Dialog.About.UserHome") + ": </b>" + System.getProperty("user.home"));
+            message.append("<br><b>" + tr("Dialog.About.UserDir") + ": </b>" + System.getProperty("user.dir"));
             message.append("</html>");
-            int n = JOptionPane.showOptionDialog(mainFrame, message, "About",
+            int n = JOptionPane.showOptionDialog(mainFrame, message, tr("Dialog.About"),
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
-                    Utilities.getIcon("icon_256.png"), options, options[0]);
+                    Utilities.APP_256_ICON, options, options[0]);
             if (n == 1 && desktop != null) {
                 try {
                     URL url = new URL(tr("Application.homepage"));
@@ -797,7 +717,6 @@ public class XtremeMP implements ActionListener, ControlListener,
             if (currentPli != null && !currentPli.isFile()) {
                 currentPli.loadTagInfo();
             }
-            updateTime(currentPli, 0);
             setStatus(currentPli.getFormattedDisplayName());
         }
     }
@@ -820,14 +739,14 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playbackProgress(PlaybackEvent pe) {
-        if (currentPli != null && !seekSlider.getValueIsAdjusting() && !isSeekPressed && mainFrame.isVisible()) {
-            int position = oldSeekValue + Math.round(pe.getPosition() / 1000f);
-            updateTime(currentPli, position);
+        if (currentPli != null && !seekSlider.getValueIsAdjusting() && !seekSlider.isPressed() && mainFrame.isVisible()) {
+            acUpdateTime(seekSlider.getOldValue() + Math.round(pe.getPosition() / 1000F));
 
             // Shoutcast stream title.
             Map properties = pe.getProperties();
-            if (!currentPli.isFile() && properties.containsKey("mp3.shoutcast.metadata.StreamTitle")) {
-                String streamTitle = ((String) properties.get("mp3.shoutcast.metadata.StreamTitle")).trim();
+            String streamTitleKey = "mp3.shoutcast.metadata.StreamTitle";
+            if (!currentPli.isFile() && properties.containsKey(streamTitleKey)) {
+                String streamTitle = ((String) properties.get(streamTitleKey)).trim();
                 TagInfo tagInfo = currentPli.getTagInfo();
                 if (!streamTitle.isEmpty() && (tagInfo != null)) {
                     String sTitle = " (" + tagInfo.getTitle() + ")";
@@ -865,7 +784,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 playPauseButton.setPlayIcon();
-                updateTime(currentPli, 0);
+                acUpdateTime(0);
             }
         });
     }
@@ -902,36 +821,61 @@ public class XtremeMP implements ActionListener, ControlListener,
     public void acPlayPause() {
         try {
             if (playlist.isEmpty()) {
-                if (audioPlayer.getState() == AudioPlayer.STOP) {
+                if ((audioPlayer.getState() == AudioSystem.NOT_SPECIFIED) || (audioPlayer.getState() == AudioPlayer.STOP)) {
                     playlistManager.addFilesDialog();
                 }
             } else {
                 if ((audioPlayer.getState() != AudioPlayer.PLAY) && (audioPlayer.getState() != AudioPlayer.PAUSE) && (playlist.getCursorPosition() == -1)) {
                     playlist.begin();
-                    acOpenAndPlay();
                 }
             }
             switch (audioPlayer.getState()) {
                 case AudioPlayer.PLAY:
                     audioPlayer.pause();
                     break;
-                case AudioPlayer.STOP:
-                    acOpenAndPlay();
+                case AudioPlayer.INIT:
+                    audioPlayer.play();
+                    break;
+                case AudioPlayer.PAUSE:
+                    audioPlayer.play();
                     break;
                 default:
-                    audioPlayer.play();
+                    acOpenAndPlay();
                     break;
             }
         } catch (PlayerException ex) {
             logger.error(ex.getMessage());
 //                String msg = "<html><b>An exeption was generated:</b><br><br>" + ex.getMessage() + "<html>";
 //                JOptionPane.showMessageDialog(mainFrame, msg, "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        }
     }
 
     @Override
     public void acStop() {
         audioPlayer.stop();
+    }
+
+    public void acUpdateTime(int value) {
+        String timeText = Utilities.ZERO_TIMER;
+        if (currentPli != null) {
+            String formattedLength = currentPli.getFormattedLength();
+            if (Utilities.isNullOrEmpty(formattedLength)) {
+                timeText = currentPli.getFormattedLength(Math.round(value / 1000f));
+            } else {
+                timeText = currentPli.getFormattedLength(Math.round(value / 1000f)) + " / " + formattedLength.trim();
+            }
+        }
+        setTime(timeText, (currentPli == null) ? 0 : value);
+    }
+
+    public void acSeek() {
+        try {
+            if (audioPlayer != null && seekSlider.isEnabled()) {
+                audioPlayer.seek(Math.round(audioPlayer.getByteLength() * (double) seekSlider.getValue() / seekSlider.getMaximum()));
+            }
+        } catch (PlayerException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
     }
 
     @Override
@@ -1005,10 +949,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             if (currentPli != null) {
                 try {
                     if (get()) {
-                        oldSeekValue = 0;
-                        seekSlider.setValue(0);
-                        seekSlider.setMinimum(0);
-                        seekSlider.setMaximum(0);
+                        seekSlider.reset();
                         playlistManager.colorizeRow();
                         if (isFile) {
                             if (duration > 0) {

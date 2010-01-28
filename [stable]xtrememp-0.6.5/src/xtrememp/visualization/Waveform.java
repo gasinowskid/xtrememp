@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,12 +19,12 @@
 package xtrememp.visualization;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.VolatileImage;
-import xtrememp.player.dsp.DigitalSignalSynchronizer.Context;
+import java.nio.FloatBuffer;
+import xtrememp.player.dsp.DssContext;
 
 /**
  *
@@ -63,8 +63,8 @@ public class Waveform extends Visualization {
 
         int valCode1 = image1.validate(gc);
         int valCode2 = image2.validate(gc);
-        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE ||
-                valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
+        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
+                || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
             createImages(width, height);
         }
 
@@ -88,7 +88,7 @@ public class Waveform extends Visualization {
     }
 
     @Override
-    public void render(Graphics g, int width, int height, Context dssContext) {
+    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
         if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
             createImages(width, height);
         }
@@ -97,8 +97,8 @@ public class Waveform extends Visualization {
             int valCode2 = image2.validate(gc);
             if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
                 fillBackground(Color.black);
-            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE ||
-                    valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
+            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
+                    || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
                 createImages(width, height);
             }
 
@@ -107,14 +107,15 @@ public class Waveform extends Visualization {
             g2d1.drawImage(image2, -1, 0, null);
             int width2 = width - 1;
             int height2 = height >> 1;
-            int length = dssContext.getLength();
+            int sampleSize = dssContext.getSampleSize();
             float leftLevel = 0.0f;
             float rightLevel = 0.0f;
-            float[][] channels = dssContext.getDataNormalized();
+            FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
+            FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
 
-            for (int a = 0; a < length; a++) {
-                leftLevel -= Math.abs(channels[0][a]);
-                rightLevel += Math.abs(channels[1][a]);
+            for (int i = 0; i < sampleSize; i++) {
+                leftLevel -= Math.abs(leftChannel.get(i));
+                rightLevel += Math.abs(rightChannel.get(i));
             }
 
             // clear previous last lines
@@ -124,9 +125,9 @@ public class Waveform extends Visualization {
             g2d1.setColor(Color.blue);
             g2d1.drawLine(0, height2, width2, height2);
             // draw last lines
-            int tmp1 = Math.round(leftLevel / (float) length * (float) height2) + height2;
+            int tmp1 = Math.round(leftLevel / (float) sampleSize * (float) height2) + height2;
             g2d1.drawLine(width2, height2, width2, tmp1);
-            int tmp2 = Math.round(rightLevel / (float) length * (float) height2) + height2;
+            int tmp2 = Math.round(rightLevel / (float) sampleSize * (float) height2) + height2;
             g2d1.drawLine(width2, height2, width2, tmp2);
             g2d1.dispose();
 
@@ -134,7 +135,7 @@ public class Waveform extends Visualization {
             g2d2.drawImage(image1, 0, 0, null);
             g2d2.dispose();
 
-            g.drawImage(image2, 0, 0, null);
+            g2d.drawImage(image2, 0, 0, null);
         } while (image1.contentsLost() || image2.contentsLost());
     }
 }

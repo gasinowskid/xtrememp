@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,9 +25,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import org.apache.log4j.PropertyConfigurator;
-import org.pushingpixels.substance.api.skin.GraphiteAquaSkin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xtrememp.ui.skin.DarkSapphireSkin;
 import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.Utilities;
 import xtrememp.visualization.spectrum.Spectrogram;
@@ -53,6 +53,11 @@ public final class Settings {
     private static final String PROPERTY_VISUALIZATION = "xtrememp.visualization";
     private static final String PROPERTY_LANGUAGE_INDEX = "xtrememp.language.index";
     private static final String PROPERTY_SKIN = "xtrememp.skin";
+    private static final String PROPERTY_UPDATES_AUTOMATIC = "xtrememp.update.automatic";
+    private static final String PROPERTY_MAINFRAME_X = "xtrememp.mainframe.x";
+    private static final String PROPERTY_MAINFRAME_Y = "xtrememp.mainframe.y";
+    private static final String PROPERTY_MAINFRAME_WIDTH = "xtrememp.mainframe.width";
+    private static final String PROPERTY_MAINFRAME_HEIGHT = "xtrememp.mainframe.height";
     private static final Properties properties = new Properties();
 
     public static void setLanguageIndex(int value) {
@@ -136,7 +141,7 @@ public final class Settings {
     }
 
     public static String getSkin() {
-        return properties.getProperty(PROPERTY_SKIN, GraphiteAquaSkin.class.getName());
+        return properties.getProperty(PROPERTY_SKIN, DarkSapphireSkin.class.getName());
     }
 
     public static void setSkin(String className) {
@@ -157,12 +162,12 @@ public final class Settings {
         PropertyConfigurator.configure(new Log4jProperties());
     }
 
-    public static boolean isAutomaticCheckForUpdatesEnabled() {
-        return Boolean.parseBoolean(properties.getProperty("xtrememp.update.automatic.checkforupdates", Boolean.toString(true)));
+    public static boolean isAutomaticUpdatesEnabled() {
+        return Boolean.parseBoolean(properties.getProperty(PROPERTY_UPDATES_AUTOMATIC, Boolean.toString(true)));
     }
 
-    public static void setAutomaticCheckForUpdatesEnabled(boolean b) {
-        properties.setProperty("xtrememp.update.automatic.checkforupdates", Boolean.toString(b));
+    public static void setAutomaticUpdatesEnabled(boolean b) {
+        properties.setProperty(PROPERTY_UPDATES_AUTOMATIC, Boolean.toString(b));
     }
 
     /**
@@ -172,10 +177,10 @@ public final class Settings {
      * @returna a rectangle indicating this component's bounds
      */
     public static Rectangle getMainFrameBounds() {
-        String x = properties.getProperty("xtrememp.mainFrame.x", "200");
-        String y = properties.getProperty("xtrememp.mainFrame.y", "200");
-        String width = properties.getProperty("xtrememp.mainFrame.width", "676");
-        String height = properties.getProperty("xtrememp.mainFrame.height", "540");
+        String x = properties.getProperty(PROPERTY_MAINFRAME_X, "200");
+        String y = properties.getProperty(PROPERTY_MAINFRAME_Y, "200");
+        String width = properties.getProperty(PROPERTY_MAINFRAME_WIDTH, "676");
+        String height = properties.getProperty(PROPERTY_MAINFRAME_HEIGHT, "540");
         return new Rectangle(Integer.parseInt(x), Integer.parseInt(y), Integer.parseInt(width), Integer.parseInt(height));
     }
 
@@ -185,14 +190,14 @@ public final class Settings {
      * @param r the bounding rectangle for this component
      */
     public static void setMainFrameBounds(Rectangle r) {
-        properties.setProperty("xtrememp.mainFrame.x", Integer.toString(r.x));
-        properties.setProperty("xtrememp.mainFrame.y", Integer.toString(r.y));
-        properties.setProperty("xtrememp.mainFrame.width", Integer.toString(r.width));
-        properties.setProperty("xtrememp.mainFrame.height", Integer.toString(r.height));
+        properties.setProperty(PROPERTY_MAINFRAME_X, Integer.toString(r.x));
+        properties.setProperty(PROPERTY_MAINFRAME_Y, Integer.toString(r.y));
+        properties.setProperty(PROPERTY_MAINFRAME_WIDTH, Integer.toString(r.width));
+        properties.setProperty(PROPERTY_MAINFRAME_HEIGHT, Integer.toString(r.height));
     }
 
-    public static boolean containsKey(Object key) {
-        return properties.containsKey(key);
+    public static boolean isEmpty() {
+        return properties.isEmpty();
     }
 
     /**

@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,8 +31,8 @@ import xtrememp.util.Utilities;
 public class StopButton extends JButton {
 
     public StopButton() {
-        super(Utilities.getIcon("media-playback-stop.png"));
-        setPreferredSize(new Dimension(25, 25));
+        super(Utilities.MEDIA_STOP_ICON);
+        setPreferredSize(new Dimension(24, 24));
         putClientProperty(SubstanceLookAndFeel.BUTTON_SHAPER_PROPERTY, new RoundSquareButtonShaper());
     }
 }

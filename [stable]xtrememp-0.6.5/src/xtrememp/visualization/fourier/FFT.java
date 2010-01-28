@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,12 +18,13 @@
  */
 package xtrememp.visualization.fourier;
 
+import java.nio.FloatBuffer;
+
 /**
  * @author Kris Fudalewski
  * @author Besmir Beqiri
  *
- * Fast Fourier Transformation class used for calculating the realtime spectrum analyzer in the
- * KJSpoceAndSpectrunAnalyzer component.
+ * Fast Fourier Transformation class used for calculating the realtime spectrum analyzer.
  */
 public class FFT {
 
@@ -33,11 +34,12 @@ public class FFT {
     private float[] fftSin;
     private float[] fftCos;
     private int[] fftBr;
-    private int ss,  ss2,  nu;
+    private int ss, ss2, nu;
 
     /**
-     * @param The amount of the sample provided to the "calculate" method to use during
-     *        FFT calculations, this is used to prepare the calculation tables in advance.
+     * @param sampleSize the amount of the sample provided to the "calculate"
+     *        method to use during FFT calculations, this is used to prepare
+     *        the calculation tables in advance.
      */
     public FFT(int sampleSize) {
 
@@ -60,13 +62,8 @@ public class FFT {
         prepareTables();
 
     }
-
-    /**
-     * @param  pSample The sample to compute FFT values on.
-     * @return         The results of the calculation, normalized between 0.0 and 1.0.
-     */
+    
     private int bitrev(int pJ, int pNu) {
-
         int j1 = pJ;
         int j2;
         int k = 0;
@@ -78,27 +75,26 @@ public class FFT {
         }
 
         return k;
-
     }
 
     /**
      * Converts sound data over time into pressure values. (FFT)
      *
-     * @param  pSample The sample to compute FFT values on.
-     * @return         The results of the calculation, normalized between 0.0 and 1.0.
+     * @param sample the sample to compute FFT values on.
+     * @return the results of the calculation, normalized between 0.0 and 1.0.
      */
-    public float[] calculate(float[] pSample) {
+    public float[] calculate(FloatBuffer sample) {
 
         int n2 = ss2;
 
         // -- Fill buffer.
-        for (int a = 0; a < pSample.length; a++) {
-            xre[a] = pSample[a];
+        for (int a = 0, len = sample.capacity(); a < len; a++) {
+            xre[a] = sample.get(a);
             xim[a] = 0.0f;
         }
 
         // -- Clear the remainder of the buffer.
-        for (int a = pSample.length; a < ss; a++) {
+        for (int a = sample.capacity(); a < ss; a++) {
             xre[a] = 0.0f;
             xim[a] = 0.0f;
         }

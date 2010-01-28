@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,6 +31,7 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.flac.FlacInfoReader;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
+import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.flac.FlacTag;
 import org.kc7bfi.jflac.FLACDecoder;
 import org.kc7bfi.jflac.metadata.StreamInfo;
@@ -95,13 +96,13 @@ public class FlacInfo implements TagInfo {
                 duration = gah.getTrackLength();
             }
             if (flacTag != null) {
-                title = flacTag.getFirstTitle();
-                artist = flacTag.getFirstArtist();
-                album = flacTag.getFirstAlbum();
-                year = flacTag.getFirstYear();
-                genre = flacTag.getFirstGenre();
-                track = flacTag.getFirstTrack();
-                comment = flacTag.getFirstComment();
+                title = flacTag.getFirst(FieldKey.TITLE);
+                artist = flacTag.getFirst(FieldKey.ARTIST);
+                album = flacTag.getFirst(FieldKey.ALBUM);
+                year = flacTag.getFirst(FieldKey.YEAR);
+                genre = flacTag.getFirst(FieldKey.GENRE);
+                track = flacTag.getFirst(FieldKey.TRACK);
+                comment = flacTag.getFirst(FieldKey.COMMENT);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

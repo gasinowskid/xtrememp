@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,8 +21,8 @@ package xtrememp.util;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.SwingWorker;
+import org.jdesktop.swingx.JXBusyLabel;
 import xtrememp.XtremeMP;
-import org.rom1dep.util.gui.swing.busylabel.RDBusyLabel;
 
 /**
  *
@@ -30,7 +30,7 @@ import org.rom1dep.util.gui.swing.busylabel.RDBusyLabel;
  */
 public abstract class AbstractSwingWorker<T, V> extends SwingWorker<T, V> implements PropertyChangeListener {
 
-    private RDBusyLabel busyLabel;
+    private JXBusyLabel busyLabel;
 
     public AbstractSwingWorker() {
         busyLabel = XtremeMP.getInstance().getBusyLabel();

@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -77,7 +77,7 @@ public class AudioPlayer implements Callable<Void> {
     protected List<PlaybackListener> listeners;
     protected ExecutorService execService;
     protected Future<Void> future;
-    protected Map properties;
+    protected Map<String, Object> properties;
     protected FloatControl gainControl;
     protected FloatControl panControl;
     protected BooleanControl muteControl;
@@ -88,7 +88,7 @@ public class AudioPlayer implements Callable<Void> {
     public static final int SEEK = 3;
     public static final int STOP = 4;
     protected volatile int state = AudioSystem.NOT_SPECIFIED;
-    protected Map emptyMap = new HashMap();
+    protected Map<String, Object> emptyMap = new HashMap<String, Object>();
     protected long oldPosition = 0;
 
     public AudioPlayer() {
@@ -197,6 +197,7 @@ public class AudioPlayer implements Callable<Void> {
      * Inits AudioInputStream and AudioFileFormat from the data source.
      * @throws PlayerException
      */
+    @SuppressWarnings("unchecked")
     protected void initAudioInputStream() throws PlayerException {
         closeStream(); // Close any previous opened audio stream before creating a new one.
         if (audioInputStream == null) {
@@ -229,7 +230,7 @@ public class AudioPlayer implements Callable<Void> {
                     // Clone the Map because it is not mutable.
                     properties = deepCopy(properties);
                 } else {
-                    properties = new HashMap();
+                    properties = new HashMap<String, Object>();
                 }
                 // Add JavaSound properties.
                 if (audioFileFormat.getByteLength() > 0) {
@@ -260,8 +261,7 @@ public class AudioPlayer implements Callable<Void> {
                 }
                 if (audioFormat instanceof TAudioFormat) {
                     // Tritonus SPI compliant audio format.
-                    Map addproperties = ((TAudioFormat) audioFormat).properties();
-                    properties.putAll(addproperties);
+                    properties.putAll(((TAudioFormat) audioFormat).properties());
                 }
             } catch (UnsupportedAudioFileException ex) {
                 throw new PlayerException(ex);
@@ -380,12 +380,12 @@ public class AudioPlayer implements Callable<Void> {
      * @param src
      * @return map
      */
-    protected Map deepCopy(Map src) {
-        HashMap map = new HashMap();
+    protected Map<String, Object> deepCopy(Map<String, Object> src) {
+        HashMap<String, Object> map = new HashMap<String, Object>();
         if (src != null) {
-            Iterator it = src.keySet().iterator();
+            Iterator<String> it = src.keySet().iterator();
             while (it.hasNext()) {
-                Object key = it.next();
+                String key = it.next();
                 Object value = src.get(key);
                 map.put(key, value);
 //                logger.info("key: {}, value: {}", key, value);
@@ -590,10 +590,6 @@ public class AudioPlayer implements Callable<Void> {
 
     public DigitalSignalSynchronizer getDspAudioDataConsumer() {
         return dss;
-    }
-
-    public boolean isPlaying() {
-        return state == PLAY;
     }
 
     @Override

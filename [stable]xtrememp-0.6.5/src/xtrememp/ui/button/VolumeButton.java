@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,6 @@
 package xtrememp.ui.button;
 
 import java.awt.Dimension;
-import javax.swing.Icon;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import xtrememp.Settings;
 import xtrememp.ui.button.shaper.RoundSquareButtonShaper;
@@ -29,39 +28,34 @@ import xtrememp.util.Utilities;
  *
  * @author Besmir Beqiri
  */
-public class VolumeButton extends PopdownButton {
-
-    private final Icon volumeHighIcon = Utilities.getIcon("audio-volume-high.png");
-    private final Icon volumeMediumIcon = Utilities.getIcon("audio-volume-medium.png");
-    private final Icon volumeLowIcon = Utilities.getIcon("audio-volume-low.png");
-    private final Icon volumeMutedIcon = Utilities.getIcon("audio-volume-muted.png");
+public class VolumeButton extends PopupButton {
 
     public VolumeButton(boolean muted) {
         if (muted) {
-            setVolumeMutedIcon();
+            this.setVolumeMutedIcon();
         } else {
-            setVolumeIcon(Settings.getGain());
+            this.setVolumeIcon(Settings.getGain());
         }
-        setPreferredSize(new Dimension(25, 25));
-        putClientProperty(SubstanceLookAndFeel.BUTTON_SHAPER_PROPERTY, new RoundSquareButtonShaper());
+        this.setPreferredSize(new Dimension(24, 24));
+        this.putClientProperty(SubstanceLookAndFeel.BUTTON_SHAPER_PROPERTY, new RoundSquareButtonShaper());
     }
 
     public void setVolumeIcon(int volume) {
         if (volume <= 100) {
-            setIcon(volumeHighIcon);
+            this.setIcon(Utilities.AUDIO_VOLUME_HIGH_ICON);
         }
         if (volume <= 67) {
-            setIcon(volumeMediumIcon);
+            this.setIcon(Utilities.AUDIO_VOLUME_MEDIUM_ICON);
         }
         if (volume <= 34) {
-            setIcon(volumeLowIcon);
+            this.setIcon(Utilities.AUDIO_VOLUME_LOW_ICON);
         }
         if (volume == 0) {
-            setIcon(volumeMutedIcon);
+            setVolumeMutedIcon();
         }
     }
 
     public void setVolumeMutedIcon() {
-        setIcon(volumeMutedIcon);
+        this.setIcon(Utilities.AUDIO_VOLUME_MUTED_ICON);
     }
 }

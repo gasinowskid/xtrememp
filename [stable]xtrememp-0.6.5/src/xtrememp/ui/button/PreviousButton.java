@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,8 +31,8 @@ import xtrememp.util.Utilities;
 public class PreviousButton extends JButton {
 
     public PreviousButton() {
-        super(Utilities.getIcon("media-skip-backward.png"));
-        setPreferredSize(new Dimension(50, 25));
+        super(Utilities.MEDIA_PREVIOUS_ICON);
+        setPreferredSize(new Dimension(48, 24));
         putClientProperty(SubstanceLookAndFeel.BUTTON_SHAPER_PROPERTY,
                 new PreviousButtonShaper());
     }

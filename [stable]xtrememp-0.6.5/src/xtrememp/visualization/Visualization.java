@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,8 +18,8 @@
  */
 package xtrememp.visualization;
 
-import java.awt.Graphics;
-import xtrememp.player.dsp.DigitalSignalSynchronizer.Context;
+import java.awt.Graphics2D;
+import xtrememp.player.dsp.DssContext;
 
 /**
  *
@@ -42,10 +42,10 @@ public abstract class Visualization implements Comparable<Visualization> {
      * @param height height of the rendering area.
      * @param dssContext
      */
-    public abstract void render(Graphics g, int width, int height, Context dssContext);
+    public abstract void render(Graphics2D g2d, int width, int height, DssContext dssContext);
 
     @Override
     public int compareTo(Visualization obj) {
-        return this.getDisplayName().compareTo(((Visualization) obj).getDisplayName());
+        return this.getDisplayName().compareTo(obj.getDisplayName());
     }
 }

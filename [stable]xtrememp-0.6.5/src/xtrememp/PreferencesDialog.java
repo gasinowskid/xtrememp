@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -86,10 +86,12 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         Utilities.closeOnEscape(this);
 
 //        setSize(500, 500);
-        pack();
         setResizable(false);
+        pack();
         setLocationRelativeTo(mainFrame);
         getRootPane().setDefaultButton(closeButton);
+        closeButton.requestFocusInWindow();
+        setVisible(true);
     }
 
     @Override
@@ -105,7 +107,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         } else if (source.equals(languageComboBox)) {
             Settings.setLanguageIndex(languageComboBox.getSelectedIndex());
         } else if (source.equals(updatesCheckBox)) {
-            Settings.setAutomaticCheckForUpdatesEnabled(updatesCheckBox.isSelected());
+            Settings.setAutomaticUpdatesEnabled(updatesCheckBox.isSelected());
         } else if (source.equals(changeCacheDirButton)) {
             JFileChooser fileChooser = new JFileChooser(System.getProperty("user.home"));
             fileChooser.setDialogTitle(tr("Dialog.Preferences.General.CacheDirectory.SelectCacheDir"));
@@ -142,7 +144,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         toolBar.setFloatable(false);
         toolBar.add(Box.createHorizontalGlue());
 
-        generalButton = new JToggleButton(tr("Dialog.Preferences.General"), Utilities.getIcon("preferences-system.png"));
+        generalButton = new JToggleButton(tr("Dialog.Preferences.General"), Utilities.PREFERENCES_SYSTEM_ICON);
         generalButton.setVerticalTextPosition(AbstractButton.BOTTOM);
         generalButton.setHorizontalTextPosition(AbstractButton.CENTER);
         generalButton.setMnemonic(KeyEvent.VK_G);
@@ -150,7 +152,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         generalButton.addActionListener(this);
         toolBar.add(generalButton);
 
-        audioButton = new JToggleButton(tr("Dialog.Preferences.Audio"), Utilities.getIcon("audio-card.png"));
+        audioButton = new JToggleButton(tr("Dialog.Preferences.Audio"), Utilities.AUDIO_CARD_ICON);
         audioButton.setVerticalTextPosition(AbstractButton.BOTTOM);
         audioButton.setHorizontalTextPosition(AbstractButton.CENTER);
         audioButton.setMnemonic(KeyEvent.VK_A);
@@ -183,7 +185,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
             @Override
             public String getCaption(Locale item) {
-                if (item.equals(Locale.getDefault())) {
+                if (item.equals(Utilities.getSystemLocale())) {
                     return "Auto";
                 } else {
                     String dl = item.getDisplayLanguage(item);
@@ -196,7 +198,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
             @Override
             public Icon getItemIcon(Locale item) {
-                if (!item.equals(Locale.getDefault())) {
+                if (!item.equals(Utilities.getSystemLocale())) {
                     return Utilities.getIcon("flags/" + item.getLanguage() + ".png");
                 }
                 return null;
@@ -214,8 +216,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 //        enqueueCheckBox = new JCheckBox("Enqueue files in playlist when in one instance mode");
 //        generalPanel.add(enqueueCheckBox, "span,growx");
         addTextSeparator(generalPanel, tr("Dialog.Preferences.General.Updates"));
-        updatesCheckBox = new JCheckBox(tr("Dialog.Preferences.General.Updates.CheckForUpdatesAtStartup"));
-        updatesCheckBox.setSelected(Settings.isAutomaticCheckForUpdatesEnabled());
+        updatesCheckBox = new JCheckBox(tr("Dialog.Preferences.General.Updates.CheckForUpdatesOnStartup"));
+        updatesCheckBox.setSelected(Settings.isAutomaticUpdatesEnabled());
         updatesCheckBox.addActionListener(this);
         generalPanel.add(updatesCheckBox, "span,growx");
         addTextSeparator(generalPanel, tr("Dialog.Preferences.General.CacheDirectory"));

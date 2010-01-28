@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -95,14 +95,14 @@ public final class SoftwareUpdate {
                             panel.add(new JLabel("<html>" + tr("Dialog.SoftwareUpdate.UpdatesFound") +
                                     " (" + newerVersion + ")</html>"), BorderLayout.CENTER);
                             JCheckBox hideCheckBox = null;
-                            if (Settings.isAutomaticCheckForUpdatesEnabled()) {
+                            if (Settings.isAutomaticUpdatesEnabled()) {
                                 hideCheckBox = new JCheckBox(tr("Dialog.SoftwareUpdate.DisableAutomaticCheckForUpdates"));
                                 panel.add(hideCheckBox, BorderLayout.SOUTH);
                             }
                             int n = JOptionPane.showOptionDialog(XtremeMP.getInstance().getMainFrame(), panel, tr("Dialog.SoftwareUpdate"),
                                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                             if (hideCheckBox != null) {
-                                Settings.setAutomaticCheckForUpdatesEnabled(!hideCheckBox.isSelected());
+                                Settings.setAutomaticUpdatesEnabled(!hideCheckBox.isSelected());
                             }
                             if ((options.length == 2) && (n == 0)) {
                                 try {

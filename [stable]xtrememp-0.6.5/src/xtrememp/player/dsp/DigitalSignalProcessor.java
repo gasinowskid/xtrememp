@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,28 +18,16 @@
  */
 package xtrememp.player.dsp;
 
-import javax.sound.sampled.SourceDataLine;
-
 /**
  * @author Besmir Beqiri
  */
 public interface DigitalSignalProcessor {
 
     /**
-     * Called by the DigitalSignalSynchronizer during the call of the 'start' method.
-     * Allows a DSP to prepare any necessary buffers or object according to the audio format of
-     * the source data line.
-     *
-     * @param sampleSize     The sample size that this DSP should be prepared to handle.
-     * @param sourceDataLine The source data line that will be monitored.
-     */
-    void initialize(int sampleSize, SourceDataLine sourceDataLine);
-
-    /**
      * Called by the DigitalSignalSynchronizer while the SourceDataLine is active.
      *
      * @param dssContext A context object containing a reference to the sample data to be processed
-     * 					  as well as other useful references during processing time.
+     * 			 as well as other useful references during processing time.
      */
-    void process(DigitalSignalSynchronizer.Context dssContext);
+    void process(DssContext dssContext);
 }

@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -129,20 +129,21 @@ public class MediaInfoDialog extends JDialog implements ActionListener {
         setResizable(false);
         setLocationRelativeTo(getParent());
         getRootPane().setDefaultButton(closeButton);
+        closeButton.requestFocusInWindow();
         setVisible(true);
     }
 
     private void initComponents() {
         Container container = getContentPane();
         JPanel northPanel = new JPanel(new MigLayout("wrap", "[right,5lp:pref][500]", ""));
-        northPanel.add(new JLabel("File/Url:"));
+        northPanel.add(new JLabel(tr("Dialog.MediaInformation.Location")));
         locationTextField = new JTextField();
         locationTextField.setEditable(false);
         northPanel.add(locationTextField, "growx,push");
         container.add(northPanel, "north");
 
         JPanel buttonPanel = new JPanel(new MigLayout("nogrid, fillx, aligny 100%, gapy unrel"));
-        closeButton = new JButton("Close");
+        closeButton = new JButton(tr("Button.Close"));
         closeButton.addActionListener(this);
         buttonPanel.add(closeButton, "tag cancel");
         container.add(buttonPanel, "south");
@@ -179,10 +180,10 @@ public class MediaInfoDialog extends JDialog implements ActionListener {
         centerPanel.add(new JScrollPane(commentTextArea), "span, growx, width min:150, height min:100");
         container.add(centerPanel, "spany, grow, center");
 
-        JPanel eastPanel = new JPanel(new MigLayout("", "[175]", ""));
+        JPanel eastPanel = new JPanel(new MigLayout("fill"));
         eastPanel.setBorder(BorderFactory.createTitledBorder(tr("Dialog.MediaInformation.CodecDetails")));
         cdLabel = new JLabel();
-        eastPanel.add(cdLabel);
+        eastPanel.add(cdLabel, "grow, width 150:null:null");
         container.add(eastPanel, "east");
     }
 

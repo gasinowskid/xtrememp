@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2008  Besmir Beqiri
+ * Copyright (C) 2005-2010  Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -45,7 +45,7 @@ public class PreviousButtonShaper extends ButtonShaper {
         int z = h / 3;
 
         Shape shape = new Ellipse2D.Double(w - z, 0, z, h);
-        Area area = new Area(new RoundRectangle2D.Double(z / 2, 0, w - z, h, z, z));
+        Area area = new Area(new RoundRectangle2D.Double(z / 2 + 1, 0, w - z, h, z, z));
         area.subtract(new Area(shape));
 
         return area;

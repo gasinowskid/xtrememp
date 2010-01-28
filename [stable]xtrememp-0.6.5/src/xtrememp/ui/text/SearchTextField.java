@@ -1,7 +1,7 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
- * 
+ * Copyright (C) 2005-2010 Besmir Beqiri
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package xtrememp.ui.textfield;
+package xtrememp.ui.text;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -31,6 +31,7 @@ import java.awt.event.KeyEvent;
 import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import org.pushingpixels.substance.api.DecorationAreaType;
 import org.pushingpixels.substance.api.SubstanceColorScheme;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import static xtrememp.util.Utilities.tr;
@@ -41,17 +42,10 @@ import static xtrememp.util.Utilities.tr;
  */
 public class SearchTextField extends JPanel {
 
-//    private JButton button;
     private JTextField textField;
 
     public SearchTextField(int columns) {
         super(new BorderLayout());
-//        button = new JButton(Utilities.getIcon("folder-saved-search.png"));
-//        button.setToolTipText("Search");
-//        button.putClientProperty(SubstanceLookAndFeel.BUTTON_OPEN_SIDE_PROPERTY, SubstanceConstants.Side.RIGHT);
-//        button.putClientProperty(SubstanceLookAndFeel.FLAT_PROPERTY, Boolean.FALSE);
-//        SubstanceLookAndFeel.setDecorationType(button, DecorationAreaType.NONE);
-//        this.add(button, BorderLayout.WEST);
         textField = new ExtendedTextField(columns);
         textField.setBackground(new Color(0, 0, 0, 64));
         textField.setFont(getFont().deriveFont(Font.BOLD | Font.ITALIC));
@@ -59,23 +53,21 @@ public class SearchTextField extends JPanel {
         this.add(textField, BorderLayout.CENTER);
     }
 
-//    public JButton getButton() {
-//        return button;
-//    }
     public JTextField getTextField() {
         return textField;
     }
 
     private class ExtendedTextField extends JTextField {
 
-        private final String search = tr("MainFrame.Filter") + " (Alt+S)";
+        private final char faChar = 'S';
+        private final String searchText = tr("MainFrame.PlaylistManager.Filter") + "  (Alt+" + faChar + ")";
         private Map desktopHints = null;
 
         public ExtendedTextField(int columns) {
             super(columns);
             setBackground(new Color(0, 0, 0, 64));
             setFont(getFont().deriveFont(Font.BOLD));
-            setFocusAccelerator('S');
+            setFocusAccelerator(faChar);
             addKeyListener(new KeyAdapter() {
 
                 @Override
@@ -109,7 +101,7 @@ public class SearchTextField extends JPanel {
 
             if (!isFocusOwner() && getText().isEmpty()) {
                 Insets insets = getInsets();
-                Graphics2D g2d = (Graphics2D) g;
+                Graphics2D g2d = (Graphics2D) g.create();
 
                 if (desktopHints == null) {
                     Toolkit tk = Toolkit.getDefaultToolkit();
@@ -121,14 +113,15 @@ public class SearchTextField extends JPanel {
                 }
 
                 if (SubstanceLookAndFeel.isCurrentLookAndFeel()) {
-                    boolean isDark = SubstanceLookAndFeel.getCurrentSkin().getMainDefaultColorScheme().isDark();
-                    SubstanceColorScheme colorScheme = isDark ? SubstanceLookAndFeel.getCurrentSkin().getMainDefaultColorScheme()
-                            : SubstanceLookAndFeel.getCurrentSkin().getMainActiveColorScheme();
-                    Color fgColor = isDark ? colorScheme.getForegroundColor()
-                            : colorScheme.getDarkColor();
+                    SubstanceColorScheme enabledColorScheme = SubstanceLookAndFeel.getCurrentSkin().getEnabledColorScheme(DecorationAreaType.TOOLBAR);
+                    SubstanceColorScheme activeColorScheme = SubstanceLookAndFeel.getCurrentSkin().getActiveColorScheme(DecorationAreaType.TOOLBAR);
+                    SubstanceColorScheme colorScheme = enabledColorScheme.isDark() ? enabledColorScheme : activeColorScheme;
+                    Color fgColor = colorScheme.getForegroundColor();
                     g2d.setColor(fgColor);
+                    setForeground(fgColor);
                 }
-                g2d.drawString(search, insets.left, getHeight() - (insets.top + insets.bottom));
+                g2d.drawString(searchText, insets.left, getHeight() - (insets.top + insets.bottom));
+                g2d.dispose();
             }
         }
     }

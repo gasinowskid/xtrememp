@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,6 +32,7 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.audio.ogg.util.OggInfoReader;
+import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 import xtrememp.util.Utilities;
 
@@ -79,11 +80,11 @@ public class OggVorbisInfo implements TagInfo {
         }
         size = input.length();
         location = input.getPath();
-        VorbisCommentTag vctag = null;
+        VorbisCommentTag vcTag = null;
         GenericAudioHeader gah = null;
         try {
             AudioFile oggFile = AudioFileIO.read(input);
-            vctag = (VorbisCommentTag) oggFile.getTag();
+            vcTag = (VorbisCommentTag) oggFile.getTag();
             OggInfoReader oir = new OggInfoReader();
             gah = oir.read(new RandomAccessFile(input, "r"));
 
@@ -94,15 +95,15 @@ public class OggVorbisInfo implements TagInfo {
                 bitrate = (int) gah.getBitRateAsNumber();
                 totalms = gah.getTrackLength();
             }
-            if (vctag != null) {
-                vendor = vctag.getVendor();
-                title = vctag.getFirstTitle();
-                artist = vctag.getFirstArtist();
-                album = vctag.getFirstAlbum();
-                year = vctag.getFirstYear();
-                genre = vctag.getFirstGenre();
-                track = vctag.getFirstTrack();
-                comment = vctag.getFirstComment();
+            if (vcTag != null) {
+                vendor = vcTag.getVendor();
+                title = vcTag.getFirst(FieldKey.TITLE);
+                artist = vcTag.getFirst(FieldKey.ARTIST);
+                album = vcTag.getFirst(FieldKey.ALBUM);
+                year = vcTag.getFirst(FieldKey.YEAR);
+                genre = vcTag.getFirst(FieldKey.GENRE);
+                track = vcTag.getFirst(FieldKey.TRACK);
+                comment = vcTag.getFirst(FieldKey.COMMENT);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

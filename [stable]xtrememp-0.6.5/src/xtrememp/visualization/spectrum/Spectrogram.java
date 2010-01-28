@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,13 +19,13 @@
 package xtrememp.visualization.spectrum;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.VolatileImage;
+import java.nio.FloatBuffer;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
-import xtrememp.player.dsp.DigitalSignalSynchronizer.Context;
+import xtrememp.player.dsp.DssContext;
 import xtrememp.util.Utilities;
 import xtrememp.visualization.Visualization;
 import xtrememp.visualization.fourier.FFT;
@@ -152,8 +152,8 @@ public class Spectrogram extends Visualization {
 
         int valCode1 = image1.validate(gc);
         int valCode2 = image2.validate(gc);
-        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE ||
-                valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
+        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
+                || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
             createImages(width, height);
         }
 
@@ -177,7 +177,7 @@ public class Spectrogram extends Visualization {
     }
 
     @Override
-    public void render(Graphics g, int width, int height, Context dssContext) {
+    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
         if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
             createImages(width, height);
         }
@@ -186,14 +186,15 @@ public class Spectrogram extends Visualization {
             int valCode2 = image2.validate(gc);
             if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
                 fillBackground(Color.black);
-            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE ||
-                    valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
+            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
+                    || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
                 createImages(width, height);
             }
 
             // rendering
-            float[][] channels = dssContext.getDataNormalized();
-            float[] stereoChannel = Utilities.stereoMerge(channels[0], channels[1]);
+            FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
+            FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
+            FloatBuffer stereoChannel = Utilities.stereoMerge(leftChannel, rightChannel);
             float[] _fft = fft.calculate(stereoChannel);
             float offset = (float) height / (float) bands;
 
@@ -231,10 +232,9 @@ public class Spectrogram extends Visualization {
             g2d2.drawImage(image1, 0, 0, null);
             g2d2.dispose();
 
-            g.drawImage(image2, 0, 0, null);
+            g2d.drawImage(image2, 0, 0, null);
         } while (image1.contentsLost() || image2.contentsLost());
     }
-
 //    private void initColors() {
 //        sColors = new Color[256];
 //        for (int i = 0; i < 32; i++) {

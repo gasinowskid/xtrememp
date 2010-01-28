@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,16 +25,12 @@ package xtrememp;
 public interface ControlListener {
 
     public void acOpen();
-
     public void acOpenAndPlay();
-
     public void acNext();
-
     public void acPlayPause();
-
     public void acPrevious();
-
     public void acStop();
-    
+    public void acUpdateTime(int value);
+    public void acSeek();
     public void acDisable();
 }

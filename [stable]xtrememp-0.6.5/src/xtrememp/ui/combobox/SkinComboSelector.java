@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Map;
+import java.util.Set;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.SwingUtilities;
@@ -30,6 +31,7 @@ import org.pushingpixels.substance.api.SubstanceSkin;
 import org.pushingpixels.substance.api.renderers.SubstanceDefaultComboBoxRenderer;
 import org.pushingpixels.substance.api.skin.SkinInfo;
 import xtrememp.Settings;
+import xtrememp.util.Utilities;
 
 /**
  *
@@ -40,6 +42,12 @@ public class SkinComboSelector extends JComboBox {
     public SkinComboSelector() {
         super();
         // populate the combobox
+        // XtremeMP skins
+        Set<SkinInfo> skinSet = Utilities.getSkins();
+        for (SkinInfo si : skinSet) {
+            this.addItem(si);
+        }
+        // Substance skins
         Map<String, SkinInfo> skinMap = SubstanceLookAndFeel.getAllSkins();
         SubstanceSkin currentSkin = SubstanceLookAndFeel.getCurrentSkin();
         for (final Map.Entry<String, SkinInfo> entry : skinMap.entrySet()) {

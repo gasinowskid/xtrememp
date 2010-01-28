@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,6 +32,14 @@ public class LanguageBundle {
     private static Locale languageLocale;
     private static ResourceBundle languageBundle;
 
+    /**
+     * Gets a string for the given key from the language resource bundle
+     * containing a translated version specified by the selected language.
+     *
+     * @param key the key for the desired string
+     * @throws NullPointerException if <code>key</code> is <code>null</code>
+     * @return the string for the given key
+     */
     public static String getString(String key) {
         if (languageBundle != null) {
             String result;
@@ -53,7 +61,7 @@ public class LanguageBundle {
      */
     public static void setLanguage(Locale locale) {
         if (locale == null) {
-            languageBundle = ResourceBundle.getBundle(BASE_NAME, Locale.getDefault());
+            languageBundle = ResourceBundle.getBundle(BASE_NAME, Utilities.getSystemLocale());
         } else {
             languageBundle = ResourceBundle.getBundle(BASE_NAME, locale);
         }

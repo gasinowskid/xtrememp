@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,6 +32,7 @@ import java.util.Map;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
+import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import xtrememp.util.Utilities;
 
@@ -85,11 +86,11 @@ public class MpegInfo implements TagInfo {
         size = input.length();
         location = input.getPath();
         MP3AudioHeader audioHeader = null;
-        Tag tag = null;
+        Tag mpegTag = null;
         try {
             MP3File mp3File = (MP3File) AudioFileIO.read(input);
             audioHeader = mp3File.getMP3AudioHeader();
-            tag = mp3File.getTag();
+            mpegTag = mp3File.getTag();
 
             if (audioHeader != null) {
                 type = audioHeader.getEncodingType();
@@ -118,14 +119,14 @@ public class MpegInfo implements TagInfo {
                 emphasis = audioHeader.getEmphasis();
                 totals = audioHeader.getTrackLength();
             }
-            if (tag != null) {
-                title = tag.getFirstTitle();
-                artist = tag.getFirstArtist();
-                album = tag.getFirstAlbum();
-                year = tag.getFirstYear();
-                genre = tag.getFirstGenre();
-                track = tag.getFirstTrack();
-                comment = tag.getFirstComment();
+            if (mpegTag != null) {
+                title = mpegTag.getFirst(FieldKey.TITLE);
+                artist = mpegTag.getFirst(FieldKey.ARTIST);
+                album = mpegTag.getFirst(FieldKey.ALBUM);
+                year = mpegTag.getFirst(FieldKey.YEAR);
+                genre = mpegTag.getFirst(FieldKey.GENRE);
+                track = mpegTag.getFirst(FieldKey.TRACK);
+                comment = mpegTag.getFirst(FieldKey.COMMENT);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -328,7 +329,7 @@ public class MpegInfo implements TagInfo {
     @Override
     public String getCodecDetails() {
         StringBuffer sb = new StringBuffer();
-        sb.append("<html><b>Encoding Type: </b>");
+        sb.append("<html><b>Encoding type: </b>");
         sb.append(getEncodingType().toUpperCase());
         if (!Utilities.isNullOrEmpty(getEncoder())) {
             sb.append("<br><b>Encoder: </b>");

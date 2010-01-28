@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,10 +20,9 @@ package xtrememp.ui.label;
 
 import javax.swing.Icon;
 import javax.swing.JLabel;
-import org.pushingpixels.lafwidget.LafWidgetUtilities;
-import org.pushingpixels.lafwidget.animation.FadeConfigurationManager;
-import org.pushingpixels.lafwidget.animation.FadeKind;
-import org.pushingpixels.lafwidget.animation.FadeTracker;
+import org.pushingpixels.lafwidget.animation.AnimationConfigurationManager;
+import org.pushingpixels.lafwidget.animation.AnimationFacet;
+import org.pushingpixels.substance.internal.animation.IconGlowTracker;
 import org.pushingpixels.substance.internal.utils.icon.GlowingIcon;
 
 /**
@@ -33,22 +32,26 @@ import org.pushingpixels.substance.internal.utils.icon.GlowingIcon;
 public class GlowingIconLabel extends JLabel {
 
     static {
-        FadeConfigurationManager.getInstance().allowFades(FadeKind.ICON_GLOW,
+        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW,
                 GlowingIconLabel.class);
     }
 
+    private IconGlowTracker iconGlowTracker;
+
     public GlowingIconLabel(Icon icon) {
         super();
-        setIcon(new GlowingIcon(icon, this));
+
+        this.iconGlowTracker = new IconGlowTracker(this);
+        this.setIcon(new GlowingIcon(icon, iconGlowTracker));
     }
 
     @Override
     public void setVisible(boolean flag) {
         super.setVisible(flag);
         if (flag) {
-            FadeTracker.getInstance().trackFadeLooping(FadeKind.ICON_GLOW,
-                    LafWidgetUtilities.getAnimationKind(this).derive(0.1f),
-                    this, null, false, null, 3, true);
+            if(!iconGlowTracker.isPlaying()) {
+                iconGlowTracker.play(3);
+            }
         }
     }
 }

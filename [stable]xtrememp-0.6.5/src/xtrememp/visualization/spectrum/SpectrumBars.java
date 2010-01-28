@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2009 Besmir Beqiri
+ * Copyright (C) 2005-2010 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,13 +19,13 @@
 package xtrememp.visualization.spectrum;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.Point;
+import java.nio.FloatBuffer;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
-import xtrememp.player.dsp.DigitalSignalSynchronizer.Context;
+import xtrememp.player.dsp.DssContext;
 import xtrememp.util.Utilities;
 import xtrememp.visualization.Visualization;
 import xtrememp.visualization.fourier.FFT;
@@ -98,17 +98,18 @@ public class SpectrumBars extends Visualization {
     }
 
     @Override
-    public void render(Graphics g, int width, int height, Context dssContext) {
-        float[][] channels = dssContext.getDataNormalized();
-        float[] stereoChannel = Utilities.stereoMerge(channels[0], channels[1]);
+    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
+        FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
+        FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
+        FloatBuffer stereoChannel = Utilities.stereoMerge(leftChannel, rightChannel);
         float[] _fft = fft.calculate(stereoChannel);
         float barWidth = (float) width / (float) bands;
         float c = 0;
         int i = 0;
         int li = 0;
 
-        g.setColor(Color.black);
-        g.fillRect(0, 0, width, height);
+        g2d.setColor(Color.black);
+        g2d.fillRect(0, 0, width, height);
 
         for (int bd = 0; bd < bands; bd++) {
             i = samTable[bd];
@@ -147,17 +148,17 @@ public class SpectrumBars extends Visualization {
                 Color[] colors = {Color.red, Color.yellow, Color.green, Color.green.darker().darker()};
                 lgp = new LinearGradientPaint(start, end, dist, colors, CycleMethod.REPEAT);
             }
-            
-            ((Graphics2D) g).setPaint(lgp);
-            renderSpectrumBar(g, (int) c, height, (int) barWidth - 1, (int) (fs * height), bd);
+
+            g2d.setPaint(lgp);
+            renderSpectrumBar(g2d, (int) c, height, (int) barWidth - 1, (int) (fs * height), bd);
             c += barWidth;
         }
     }
 
-    private void renderSpectrumBar(Graphics g, int x, int y, int w, int h, int band) {
-        g.fillRect(x, y - h, w, y);
+    private void renderSpectrumBar(Graphics2D g2d, int x, int y, int w, int h, int band) {
+        g2d.fillRect(x, y - h, w, y);
         if ((peakColor != null) && (peaksEnabled == true)) {
-            g.setColor(peakColor);
+            g2d.setColor(peakColor);
             if (h > peaks[band]) {
                 peaks[band] = h;
                 peaksDelay[band] = peakDelay;
@@ -170,7 +171,7 @@ public class SpectrumBars extends Visualization {
                     peaks[band] = 0;
                 }
             }
-            g.fillRect(x, y - peaks[band], w, 1);
+            g2d.fillRect(x, y - peaks[band], w, 1);
         }
     }
 
