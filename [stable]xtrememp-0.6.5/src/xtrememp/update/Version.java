@@ -260,8 +260,7 @@ public class Version implements Comparable<Version> {
     /**
      * Sets download url.
      * 
-     * @param downloadURL
-     *            the download url
+     * @param downloadURL the download url
      */
     protected void setDownloadURL(String downloadURL) {
         this.downloadURL = downloadURL;
@@ -272,6 +271,6 @@ public class Version implements Comparable<Version> {
         int minorNumber = Integer.parseInt(tr("Application.version.minorNumber"));
         int microNumber = Integer.parseInt(tr("Application.version.microNumber"));
         String releaseDate = tr("Application.version.releaseDate");
-        return new Version(majorNumber, minorNumber, microNumber, VersionType.DEV, releaseDate, "");
+        return new Version(majorNumber, minorNumber, microNumber, VersionType.FINAL, releaseDate, "http://downloads.sourceforge.net/xtrememp/xtrememp-0.6.5-bin.zip");
     }
 }
