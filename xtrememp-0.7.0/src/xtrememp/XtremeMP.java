@@ -356,7 +356,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         playerMenu = new JMenu(playerMenuStr);
         playerMenu.setMnemonic(playerMenuStr.charAt(0));
 
-        playPauseMenuItem = new JMenuItem("Play/Pause");
+        playPauseMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Play"));
         playPauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
         playPauseMenuItem.addActionListener(this);
         playerMenu.add(playPauseMenuItem);
@@ -801,6 +801,8 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 playPauseButton.setPauseIcon();
+                playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Pause"));
+                playPauseTrayMenuItem.setText(tr("MainFrame.Menu.Player.Pause"));
             }
         });
     }
@@ -841,6 +843,8 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 playPauseButton.setPlayIcon();
+                playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
+                playPauseTrayMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
             }
         });
     }
