@@ -85,7 +85,6 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         initComponents();
         Utilities.closeOnEscape(this);
 
-//        setSize(500, 500);
         setResizable(false);
         pack();
         setLocationRelativeTo(mainFrame);
@@ -229,8 +228,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         centerPanel.add(generalPanel, GENERAL_PANEL);
         // audio panel
         JPanel audioPanel = new JPanel(new MigLayout("ins 8,fillx"));
-        addTextSeparator(audioPanel, "Playback Devices");
-        audioPanel.add(new JLabel("Mixer", SwingConstants.LEADING));
+        addTextSeparator(audioPanel, tr("Dialog.Preferences.Audio.PlaybackDevice"));
+        audioPanel.add(new JLabel(tr("Dialog.Preferences.Audio.PlaybackDevice.Mixer"), SwingConstants.LEADING));
         mixerComboBox = new JComboBox(audioPlayer.getMixers().toArray());
         mixerComboBox.setSelectedItem(Settings.getMixerName());
         mixerComboBox.addActionListener(this);
