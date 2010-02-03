@@ -159,6 +159,21 @@ public final class Utilities {
         return result;
     }
 
+    public static boolean isWindowsOS() {
+        String os = System.getProperty("os.name").toLowerCase();
+        return os != null && os.indexOf("windows") != -1;
+    }
+
+    public static boolean isLinuxOS() {
+        String os = System.getProperty("os.name").toLowerCase();
+        return os != null && os.indexOf("linux") != -1;
+    }
+
+    public static boolean isRunningX64() {
+        String arch = System.getProperty("sun.arch.data.model").toLowerCase();
+        return arch != null && arch.indexOf("64") != -1;
+    }
+
     /**
      * @see LanguageBundle#getString(java.lang.String)
      */

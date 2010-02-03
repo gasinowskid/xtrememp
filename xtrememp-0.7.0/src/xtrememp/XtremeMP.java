@@ -195,15 +195,22 @@ public class XtremeMP implements ActionListener, ControlListener,
 //        for (String arg : arguments) {
 //        }
 
+        // Initialize JIntellitype
+        if (Utilities.isWindowsOS() && Utilities.isRunningX64()) {
+            String userDir = System.getProperty("user.dir");
+            JIntellitype.setLibraryLocation(userDir + "\\native\\JIntellitype64.dll");
+        }
         if (JIntellitype.isJIntellitypeSupported()) {
             JIntellitype.getInstance().addIntellitypeListener(this);
         }
 
+        // Initialize audio engine
         audioPlayer = new AudioPlayer(this);
         String mixerName = Settings.getMixerName();
         if (!Utilities.isNullOrEmpty(mixerName)) {
             audioPlayer.setMixerName(mixerName);
         }
+        
         // Launch gui
         EventQueue.invokeLater(new Runnable() {
 
@@ -295,8 +302,12 @@ public class XtremeMP implements ActionListener, ControlListener,
         } catch (PlaylistException ex) {
             logger.error("Can't save default playlist", ex);
         }
-        // Release system resources
+        // Release audio engine resources
         audioPlayer.stop();
+        // Clean up all resources used by JIntellitype
+        if (JIntellitype.isJIntellitypeSupported()) {
+            JIntellitype.getInstance().cleanUp();
+        }
         logger.info("Exit application...");
         System.exit(0);
     }
