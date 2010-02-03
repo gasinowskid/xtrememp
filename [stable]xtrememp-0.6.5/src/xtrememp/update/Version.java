@@ -28,13 +28,13 @@ public class Version implements Comparable<Version> {
 
     public enum VersionType {
 
+        DEV("Dev"),
         BETA("Beta"),
         BETA1("Beta 1"),
         BETA2("Beta 2"),
         RC("RC"),
         RC1("RC 1"),
         RC2("RC 2"),
-        DEV("Dev"),
         FINAL("Final");
 
         private String vtString;
@@ -271,6 +271,6 @@ public class Version implements Comparable<Version> {
         int minorNumber = Integer.parseInt(tr("Application.version.minorNumber"));
         int microNumber = Integer.parseInt(tr("Application.version.microNumber"));
         String releaseDate = tr("Application.version.releaseDate");
-        return new Version(majorNumber, minorNumber, microNumber, VersionType.FINAL, releaseDate, "http://downloads.sourceforge.net/xtrememp/xtrememp-0.6.5-bin.zip");
+        return new Version(majorNumber, minorNumber, microNumber, VersionType.FINAL, releaseDate, tr("Application.homepage"));
     }
 }
