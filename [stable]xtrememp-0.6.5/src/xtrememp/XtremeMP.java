@@ -797,6 +797,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 playPauseButton.setPlayIcon();
+                playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
                 acUpdateTime(0);
             }
         });
