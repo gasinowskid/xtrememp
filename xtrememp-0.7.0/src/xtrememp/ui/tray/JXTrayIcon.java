@@ -18,15 +18,23 @@
  */
 package xtrememp.ui.tray;
 
+import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.Point;
+import java.awt.PopupMenu;
 import java.awt.TrayIcon;
+import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JDialog;
 import javax.swing.JPopupMenu;
+import javax.swing.JWindow;
+import javax.swing.RootPaneContainer;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import xtrememp.util.Utilities;
 
 /**
  * Based on a blog post from Alexander Potochkin at the following url:
@@ -38,32 +46,54 @@ import javax.swing.event.PopupMenuListener;
 public class JXTrayIcon extends TrayIcon {
 
     private JPopupMenu menu;
-    private static JDialog dialog;
+    private Window window;
+    private PopupMenuListener popupListener;
 
-    static {
-        dialog = new JDialog((Frame) null, "TrayDialog");
-        dialog.setUndecorated(true);
-        dialog.setAlwaysOnTop(true);
+    public JXTrayIcon(Image image) {
+        super(image);
+        init();
     }
-    private static PopupMenuListener popupListener = new PopupMenuListener() {
-
-        @Override
-        public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-        }
-
-        @Override
-        public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-            dialog.setVisible(false);
-        }
-
-        @Override
-        public void popupMenuCanceled(PopupMenuEvent e) {
-            dialog.setVisible(false);
-        }
-    };
 
     public JXTrayIcon(Image image, String tooltip) {
         super(image, tooltip);
+        init();
+    }
+
+    public JXTrayIcon(Image image, String tooltip, PopupMenu popup) {
+        super(image, tooltip, popup);
+        init();
+    }
+
+    public JXTrayIcon(Image image, String tooltip, JPopupMenu popup) {
+        super(image, tooltip);
+        init();
+        setJPopupMenu(popup);
+    }
+
+    private final void init() {
+        popupListener = new PopupMenuListener() {
+
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                if (window != null) {
+                    window.dispose();
+                    window = null;
+                }
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+                if (window != null) {
+                    window.dispose();
+                    window = null;
+                }
+            }
+        };
+
         addMouseListener(new MouseAdapter() {
 
             @Override
@@ -78,22 +108,38 @@ public class JXTrayIcon extends TrayIcon {
         });
     }
 
-    private void showJPopupMenu(MouseEvent e) {
+    private final void showJPopupMenu(MouseEvent e) {
         if (e.isPopupTrigger() && menu != null) {
-            int adjustedY = e.getY() - menu.getPreferredSize().height;
-            dialog.setLocation(e.getX(), adjustedY < 0 ? e.getY() : adjustedY);
-            dialog.setVisible(true);
-            menu.show(dialog.getContentPane(), 0, 0);
-            // popup works only for focused windows
-            dialog.toFront();
+            if (window == null) {
+                if (Utilities.isWindowsOS()) {
+                    window = new JDialog((Frame) null);
+                    ((JDialog) window).setUndecorated(true);
+                } else {
+                    window = new JWindow((Frame) null);
+                }
+                window.setAlwaysOnTop(true);
+                Dimension size = menu.getPreferredSize();
+
+                Point centerPoint = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+                if (e.getY() > centerPoint.getY()) {
+                    window.setLocation(e.getX(), e.getY() - size.height);
+                } else {
+                    window.setLocation(e.getX(), e.getY());
+                }
+
+                window.setVisible(true);
+                menu.show(((RootPaneContainer) window).getContentPane(), 0, 0);
+                // popup works only for focused windows
+                window.toFront();
+            }
         }
     }
 
-    public JPopupMenu getJPopupMenu() {
+    public final JPopupMenu getJPopupMenu() {
         return menu;
     }
 
-    public void setJPopupMenu(JPopupMenu menu) {
+    public final void setJPopupMenu(JPopupMenu menu) {
         if (this.menu != null) {
             this.menu.removePopupMenuListener(popupListener);
         }
