@@ -752,7 +752,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             StringBuffer message = new StringBuffer();
             message.append("<html><b><font color='red' size='5'>" + tr("Application.title"));
             message.append("</font></b><br>" + tr("Application.description"));
-            message.append("<br>Copyright © 2005-2009 The Xtreme Media Player Project");
+            message.append("<br>Copyright © 2005-2010 Xtreme Media Player Project");
             message.append("<br><br><b>" + tr("Dialog.About.Author") + ": </b>" + tr("Application.author"));
             message.append("<br><b>" + tr("Dialog.About.Version") + ": </b>" + currentVersion);
             message.append("<br><b>" + tr("Dialog.About.ReleaseDate") + ": </b>" + currentVersion.getReleaseDate());
@@ -867,6 +867,8 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 playPauseButton.setPlayIcon();
+                playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
+                playPauseTrayMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
                 acUpdateTime(0);
             }
         });
