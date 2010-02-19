@@ -1,4 +1,4 @@
-Copyright (c) 2005-2008, Besmir Beqiri
+Copyright (c) 2005-2010, Besmir Beqiri
 
 All rights reserved.
 

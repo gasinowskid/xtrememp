@@ -134,24 +134,21 @@ public final class Utilities {
         }
         return stereoBuffer.asReadOnlyBuffer();
     }
-    
-	/**
-	 * Creates info object on a single skin.
-	 * 
-	 * @param displayName
-	 *            Skin display name.
-	 * @param skinClass
-	 *            Skin class.
-	 * @param isDefault
-	 *            Indication whether the specified skin is default.
-	 * @return Info object on the specified skin.
-	 */
-	private static SkinInfo create(String displayName, Class<?> skinClass,
-			boolean isDefault) {
-		SkinInfo result = new SkinInfo(displayName, skinClass.getName());
-		result.setDefault(isDefault);
-		return result;
-	}
+
+    /**
+     * Creates info object on a single skin.
+     *
+     * @param displayName Skin display name.
+     * @param skinClass Skin class.
+     * @param isDefault Indication whether the specified skin is default.
+     * @return Info object on the specified skin.
+     */
+    private static SkinInfo create(String displayName, Class<?> skinClass,
+            boolean isDefault) {
+        SkinInfo result = new SkinInfo(displayName, skinClass.getName());
+        result.setDefault(isDefault);
+        return result;
+    }
 
     public static Set<SkinInfo> getSkins() {
         Set<SkinInfo> result = new HashSet<SkinInfo>();

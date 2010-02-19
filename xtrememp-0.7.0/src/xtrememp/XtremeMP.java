@@ -70,7 +70,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 import net.miginfocom.swing.MigLayout;
-import org.apache.log4j.PropertyConfigurator;
 import org.jdesktop.swingx.JXBusyLabel;
 import org.jdesktop.swingx.painter.BusyPainter;
 import org.pushingpixels.lafwidget.animation.AnimationConfigurationManager;
@@ -101,7 +100,6 @@ import xtrememp.update.Version;
 import xtrememp.util.AbstractSwingWorker;
 import xtrememp.util.LanguageBundle;
 import xtrememp.util.file.AudioFileFilter;
-import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.util.Utilities;
 import static xtrememp.util.Utilities.tr;
@@ -252,10 +250,12 @@ public class XtremeMP implements ActionListener, ControlListener,
     public static void main(String[] args) throws Exception {
         List<String> arguments = Arrays.asList(args);
 //        boolean debug = arguments.contains("-debug");
+
         // Load Settings
         Settings.loadSettings();
-        // Load log4j properties
-        PropertyConfigurator.configure(new Log4jProperties());
+        // Configure logback
+        Settings.configureLogback();
+
         // Enable uncaught exception catching
         try {
             Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
