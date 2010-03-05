@@ -792,11 +792,11 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playbackStopped(PlaybackEvent pe) {
+        currentPli = null;
         EventQueue.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                currentPli = null;
                 playPauseButton.setPlayIcon();
                 playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
                 acUpdateTime(0);
