@@ -796,6 +796,7 @@ public class XtremeMP implements ActionListener, ControlListener,
 
             @Override
             public void run() {
+                currentPli = null;
                 playPauseButton.setPlayIcon();
                 playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
                 acUpdateTime(0);
@@ -901,7 +902,6 @@ public class XtremeMP implements ActionListener, ControlListener,
             if (audioPlayer.getState() != AudioPlayer.PLAY) {
                 //Unbuffer the pending track if exists...
                 acStop();
-                currentPli = null;
             }
         }
     }
