@@ -799,6 +799,7 @@ public class XtremeMP implements ActionListener, ControlListener,
                 playPauseButton.setPlayIcon();
                 playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
                 acUpdateTime(0);
+                statusLabel.setText("");
             }
         });
     }
@@ -899,10 +900,8 @@ public class XtremeMP implements ActionListener, ControlListener,
         if (audioPlayer != null) {
             if (audioPlayer.getState() != AudioPlayer.PLAY) {
                 //Unbuffer the pending track if exists...
-                acStop();//Maybe should AudioPlayer.stop call reset() to prevent the "show time again" bug ?
-                //Init statusbar
-                setStatus("");
-                setTime(Utilities.ZERO_TIMER, 0);
+                acStop();
+                currentPli = null;
             }
         }
     }
