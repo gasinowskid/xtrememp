@@ -195,7 +195,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         if (!Utilities.isNullOrEmpty(mixerName)) {
             audioPlayer.setMixerName(mixerName);
         }
-        
+
         // Launch gui
         EventQueue.invokeLater(new Runnable() {
 
@@ -895,19 +895,15 @@ public class XtremeMP implements ActionListener, ControlListener,
     }
 
     @Override
-    public void acDisable() {
-        if (EventQueue.isDispatchThread()) {
-            seekSlider.setEnabled(false);
-            statusLabel.setText("");
-        } else {
-            EventQueue.invokeLater(new Runnable() {
-
-                @Override
-                public void run() {
-                    seekSlider.setEnabled(false);
-                    statusLabel.setText("");
-                }
-            });
+    public void acClear() {
+        if (audioPlayer != null) {
+            if (audioPlayer.getState() != AudioPlayer.PLAY) {
+                //Unbuffer the pending track if exists...
+                acStop();//Maybe should AudioPlayer.stop call reset() to prevent the "show time again" bug ?
+                //Init statusbar
+                setStatus("");
+                setTime(Utilities.ZERO_TIMER, 0);
+            }
         }
     }
 

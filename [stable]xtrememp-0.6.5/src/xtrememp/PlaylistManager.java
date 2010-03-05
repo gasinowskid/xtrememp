@@ -431,6 +431,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
             mediaInfoButton.setEnabled(false);
             moveUpButton.setEnabled(false);
             moveDownButton.setEnabled(false);
+            controlListener.acClear();
             Settings.setPlaylistPosition(-1);
             cleanPlaylistButton.setEnabled(false);
             playlistTable.requestFocusInWindow();
