@@ -71,6 +71,12 @@ public class Playlist {
         fireItemAddedEvent(item);
     }
 
+    /**
+     * Adds a collection of items to the playlist.
+     * @param c a collection of items.
+     * @return <code>true</code> if the collection was successfully added,
+     *         else <code>false</code>.
+     */
     public boolean addAll(Collection<? extends PlaylistItem> c) {
         boolean added = playlist.addAll(c);
         setModified(added);

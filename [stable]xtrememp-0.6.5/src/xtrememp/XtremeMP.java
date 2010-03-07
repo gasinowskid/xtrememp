@@ -80,9 +80,11 @@ import xtrememp.player.audio.PlaybackEvent;
 import xtrememp.player.audio.PlayerException;
 import xtrememp.player.audio.PlaybackListener;
 import xtrememp.playlist.Playlist;
+import xtrememp.playlist.PlaylistEvent;
 import xtrememp.playlist.PlaylistIO;
 import xtrememp.playlist.PlaylistItem;
 import xtrememp.playlist.PlaylistException;
+import xtrememp.playlist.PlaylistListener;
 import xtrememp.ui.button.NextButton;
 import xtrememp.ui.button.PlayPauseButton;
 import xtrememp.ui.button.PreviousButton;
@@ -107,7 +109,7 @@ import static xtrememp.util.Utilities.tr;
  * Special thanks to rom1dep for the changes applied to this class.
  */
 public class XtremeMP implements ActionListener, ControlListener,
-        PlaybackListener, IntellitypeListener {
+        PlaybackListener, PlaylistListener, IntellitypeListener {
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
@@ -141,7 +143,6 @@ public class XtremeMP implements ActionListener, ControlListener,
     private AudioPlayer audioPlayer;
     private Playlist playlist;
     private PlaylistManager playlistManager;
-    private PreferencesDialog preferencesDialog;
     private StopButton stopButton;
     private PreviousButton previousButton;
     private PlayPauseButton playPauseButton;
@@ -244,6 +245,7 @@ public class XtremeMP implements ActionListener, ControlListener,
                     playlistManager.loadPlaylist(playlistFile.getAbsolutePath());
                 }
                 playlist = playlistManager.getPlaylist();
+                playlist.addPlaylistListener(XtremeMP.this);
             }
         });
     }
@@ -476,12 +478,14 @@ public class XtremeMP implements ActionListener, ControlListener,
         stopButton.addActionListener(this);
         controlPanel.add(stopButton);
         previousButton = new PreviousButton();
+        previousButton.setEnabled(false);
         previousButton.addActionListener(this);
         controlPanel.add(previousButton);
         playPauseButton = new PlayPauseButton();
         playPauseButton.addActionListener(this);
         controlPanel.add(playPauseButton, "height pref!");
         nextButton = new NextButton();
+        nextButton.setEnabled(false);
         nextButton.addActionListener(this);
         controlPanel.add(nextButton);
         volumeButton = new VolumeButton(Settings.isMuted());
@@ -639,7 +643,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         } else if (source == savePlaylistMenuItem) {
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
-            preferencesDialog = new PreferencesDialog(mainFrame, audioPlayer);
+            new PreferencesDialog(mainFrame, audioPlayer);
         } else if (source == exitMenuItem) {
             exit();
         } else if (source == playPauseMenuItem || source == playPauseButton) {
@@ -730,6 +734,14 @@ public class XtremeMP implements ActionListener, ControlListener,
             }
             setStatus(currentPli.getFormattedDisplayName());
         }
+
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                stopButton.setEnabled(true);
+            }
+        });
     }
 
     @Override
@@ -798,6 +810,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 playPauseButton.setPlayIcon();
+                stopButton.setEnabled(false);
                 playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
                 acUpdateTime(0);
                 statusLabel.setText("");
@@ -888,7 +901,7 @@ public class XtremeMP implements ActionListener, ControlListener,
     @Override
     public void acSeek() {
         try {
-            if (audioPlayer != null && seekSlider.isEnabled()) {
+            if (seekSlider.isEnabled()) {
                 audioPlayer.seek(Math.round(audioPlayer.getByteLength() * (double) seekSlider.getValue() / seekSlider.getMaximum()));
             }
         } catch (PlayerException ex) {
@@ -897,11 +910,43 @@ public class XtremeMP implements ActionListener, ControlListener,
     }
 
     @Override
-    public void acClear() {
-        if (audioPlayer != null) {
-            if (audioPlayer.getState() != AudioPlayer.PLAY) {
-                //Unbuffer the pending track if exists...
-                acStop();
+    public void playlistItemAdded(PlaylistEvent e) {
+        if (!playlist.isEmpty()) {
+            if (EventQueue.isDispatchThread()) {
+                previousButton.setEnabled(true);
+                nextButton.setEnabled(true);
+            } else {
+                EventQueue.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        previousButton.setEnabled(true);
+                        nextButton.setEnabled(true);
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    public void playlistItemRemoved(PlaylistEvent e) {
+        if (playlist.isEmpty()) {
+            if (audioPlayer.getState() != AudioPlayer.PLAY
+                    && audioPlayer.getState() != AudioPlayer.PAUSE) {
+                audioPlayer.stop();
+            }
+            if (EventQueue.isDispatchThread()) {
+                previousButton.setEnabled(false);
+                nextButton.setEnabled(false);
+            } else {
+                EventQueue.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        previousButton.setEnabled(false);
+                        nextButton.setEnabled(false);
+                    }
+                });
             }
         }
     }

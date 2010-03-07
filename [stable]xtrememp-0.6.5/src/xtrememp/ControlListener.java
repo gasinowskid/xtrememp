@@ -32,5 +32,4 @@ public interface ControlListener {
     public void acStop();
     public void acUpdateTime(int value);
     public void acSeek();
-    public void acClear();
 }
