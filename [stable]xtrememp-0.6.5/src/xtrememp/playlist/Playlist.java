@@ -19,8 +19,12 @@
 package xtrememp.playlist;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Playlist implementation.
@@ -30,8 +34,9 @@ import java.util.List;
  */
 public class Playlist {
 
-//    private static Log log = LogFactory.getLog(Playlist.class);
-    protected List<PlaylistItem> playlist = null;
+    private static Logger logger = LoggerFactory.getLogger(Playlist.class);
+    protected final List<PlaylistItem> playlist;
+    protected final List<PlaylistListener> listeners;
     protected int cursorPos = -1;
     protected boolean isModified = false;
 
@@ -39,27 +44,51 @@ public class Playlist {
      * Default constructor
      */
     public Playlist() {
-        playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>());
+        playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>(1));
+        listeners = new ArrayList<PlaylistListener>(1);
+    }
+
+    /**
+     * Append item at the end of the playlist.
+     * @param item a playlist item.
+     * @return <code>true</code> if item was successfully added, else <code>false</code>.
+     */
+    public boolean addItem(PlaylistItem item) {
+        boolean added = playlist.add(item);
+        setModified(added);
+        fireItemAddedEvent(item);
+        return added;
     }
 
     /**
      * Adds item at a given position in the playlist.
-     * @param pli a playlist item.
+     * @param item a playlist item.
      * @param pos the position of the item.
      */
-    public void addItemAt(int pos, PlaylistItem pli) {
-        playlist.add(pos, pli);
-        setModified(true);
+    public void addItemAt(int pos, PlaylistItem item) {
+        playlist.add(pos, item);
+        setModified((item == null) ? false : true);
+        fireItemAddedEvent(item);
+    }
+
+    public boolean addAll(Collection<? extends PlaylistItem> c) {
+        boolean added = playlist.addAll(c);
+        setModified(added);
+        for (PlaylistItem item : c) {
+            fireItemAddedEvent(item);
+        }
+        return added;
     }
 
     /**
      * Removes the specified item from the playlist.
-     * @param pli a playlist item.
+     * @param item a playlist item.
      * @return <code>true</code> if item was successfully removed, else <code>false</code>.
      */
-    public boolean removeItem(PlaylistItem pli) {
-        boolean removed = playlist.remove(pli);
+    public boolean removeItem(PlaylistItem item) {
+        boolean removed = playlist.remove(item);
         setModified(removed);
+        fireItemRemovedEvent(item);
         return removed;
     }
 
@@ -69,19 +98,23 @@ public class Playlist {
      * @return item that was removed.
      */
     public PlaylistItem removeItemAt(int pos) {
-        PlaylistItem pli = playlist.remove(pos);
-        setModified((pli == null) ? false : true);
-        return pli;
+        PlaylistItem item = playlist.remove(pos);
+        setModified((item == null) ? false : true);
+        fireItemRemovedEvent(item);
+        return item;
     }
 
     /**
      * Removes a collection of items from the playlist.
-     * @param v a collection of items.
+     * @param c a collection of items.
      * @return <code>true</code> if this playlist changed as a result of the call
      */
-    public boolean removeAll(List<PlaylistItem> v) {
-        boolean removed = playlist.removeAll(v);
+    public boolean removeAll(Collection<? extends PlaylistItem> c) {
+        boolean removed = playlist.removeAll(c);
         setModified(removed);
+        for (PlaylistItem item : c) {
+            fireItemRemovedEvent(item);
+        }
         return removed;
     }
 
@@ -89,20 +122,15 @@ public class Playlist {
      * Removes all items from the playlist.
      */
     public void clear() {
-        playlist.clear();
-        cursorPos = -1;
-        setModified(true);
-    }
-
-    /**
-     * Append item at the end of the playlist.
-     * @param pli a playlist item.
-     * @return <code>true</code> if item was successfully added, else <code>false</code>.
-     */
-    public boolean addItem(PlaylistItem pli) {
-        boolean added = playlist.add(pli);
-        setModified(added);
-        return added;
+        synchronized (playlist) {
+            Iterator<PlaylistItem> iterator = playlist.iterator();
+            while (iterator.hasNext()) {
+                PlaylistItem item = iterator.next();
+                iterator.remove();
+                fireItemRemovedEvent(item);
+            }
+        }
+        begin();
     }
 
     /**
@@ -236,5 +264,29 @@ public class Playlist {
      */
     public boolean isEmpty() {
         return playlist.isEmpty();
+    }
+
+    public void addPlaylistListener(PlaylistListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removePlaylistListener(PlaylistListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void fireItemAddedEvent(PlaylistItem item) {
+        PlaylistEvent event = new PlaylistEvent(this, item);
+
+        for (PlaylistListener listener : listeners) {
+            listener.playlistItemAdded(event);
+        }
+    }
+
+    private void fireItemRemovedEvent(PlaylistItem item) {
+        PlaylistEvent event = new PlaylistEvent(this, item);
+
+        for (PlaylistListener listener : listeners) {
+            listener.playlistItemRemoved(event);
+        }
     }
 }

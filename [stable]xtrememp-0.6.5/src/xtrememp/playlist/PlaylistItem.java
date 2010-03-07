@@ -18,6 +18,8 @@
  */
 package xtrememp.playlist;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xtrememp.tag.TagInfo;
 import xtrememp.tag.TagInfoFactory;
 import xtrememp.util.Utilities;
@@ -29,7 +31,7 @@ import xtrememp.util.Utilities;
  */
 public class PlaylistItem {
 
-//    private static final Log log = LogFactory.getLog(PlaylistItem.class);
+    private static final Logger logger = LoggerFactory.getLogger(PlaylistItem.class);
     private TagInfo tagInfo;
     private String name;
     private String displayName;

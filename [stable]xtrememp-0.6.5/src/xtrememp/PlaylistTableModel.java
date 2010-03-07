@@ -37,24 +37,22 @@ public class PlaylistTableModel extends AbstractTableModel {
 //    public static final int GENRE_COLUMN = 4;
     public static final int COLUMN_COUNT = 2;
     private final Playlist playlist;
-    private final List<PlaylistItem> playlistItems;
     private final String[] columnNames = {"Title - Artist", "Duration"};
 
     public PlaylistTableModel(Playlist playlist) {
         this.playlist = playlist;
-        this.playlistItems = playlist.listItems();
     }
 
     public void add(List<PlaylistItem> newItems) {
-        int first = playlistItems.size();
+        int first = playlist.size();
         int last = first + newItems.size() - 1;
-        playlistItems.addAll(newItems);
+        playlist.addAll(newItems);
         this.fireTableRowsInserted(first, last);
     }
 
     public void add(PlaylistItem item) {
-        int index = playlistItems.size();
-        playlistItems.add(item);
+        int index = playlist.size();
+        playlist.addItem(item);
         this.fireTableRowsInserted(index, index);
     }
 
@@ -79,7 +77,7 @@ public class PlaylistTableModel extends AbstractTableModel {
     }
 
     public PlaylistItem getPlaylistItem(int rowIndex) {
-        return playlistItems.get(rowIndex);
+        return playlist.getItemAt(rowIndex);
     }
 
     @Override
@@ -89,7 +87,7 @@ public class PlaylistTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        return playlistItems.size();
+        return playlist.size();
     }
 
     @Override
@@ -104,8 +102,8 @@ public class PlaylistTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        if (!playlistItems.isEmpty()) {
-            PlaylistItem item = playlistItems.get(rowIndex);
+        if (!playlist.isEmpty()) {
+            PlaylistItem item = playlist.getItemAt(rowIndex);
             switch (columnIndex) {
                 case TITLE_ARTIST_COLUMN:
                     return " " + item.getFormattedDisplayName();
@@ -132,7 +130,7 @@ public class PlaylistTableModel extends AbstractTableModel {
             first = start;
             last = to + end - start;
         }
-        Collections.rotate(playlistItems.subList(first, last + 1), shift);
+        Collections.rotate(playlist.listItems().subList(first, last + 1), shift);
         fireTableRowsUpdated(first, last);
     }
 }
