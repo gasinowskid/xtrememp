@@ -204,8 +204,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
             @Override
             public void keyPressed(KeyEvent e) {
-                // Select all
-                if (e.getKeyCode() == KeyEvent.VK_A && e.getModifiers() == KeyEvent.CTRL_MASK) {
+                // View Media Info
+                if (e.getKeyCode() == KeyEvent.VK_I && e.getModifiers() == KeyEvent.CTRL_MASK) {
+                    viewMediaInfo();
+                } // Select all
+                else if (e.getKeyCode() == KeyEvent.VK_A && e.getModifiers() == KeyEvent.CTRL_MASK) {
                     playlistTable.selectAll();
                 } // Select previous track
                 else if (e.getKeyCode() == KeyEvent.VK_UP && playlistTable.getSelectedRow() > 0) {
@@ -471,6 +474,15 @@ public class PlaylistManager extends JPanel implements ActionListener,
         colorizeRow();
     }
 
+    private void viewMediaInfo() {
+        int selectedRow = playlistTable.getSelectedRow();
+        if (selectedRow != -1) {
+            PlaylistItem pli = playlistTableModel.getPlaylistItem(playlistTable.convertRowIndexToModel(selectedRow));
+            MediaInfoWorker mediaInfoWorker = new MediaInfoWorker(pli);
+            mediaInfoWorker.execute();
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
@@ -490,12 +502,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
         } else if (source.equals(moveDownButton)) {
             moveDown();
         } else if (source.equals(mediaInfoButton)) {
-            int selectedRow = playlistTable.getSelectedRow();
-            if (selectedRow != -1) {
-                PlaylistItem pli = playlistTableModel.getPlaylistItem(playlistTable.convertRowIndexToModel(selectedRow));
-                MediaInfoWorker mediaInfoWorker = new MediaInfoWorker(pli);
-                mediaInfoWorker.execute();
-            }
+            viewMediaInfo();
         }
     }
 
