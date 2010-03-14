@@ -746,7 +746,22 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playbackEndOfMedia(PlaybackEvent pe) {
-        acNext();
+        switch (playlist.getPlayingMode()) {
+            case REPEAT_OFF:
+                if (playlist.getCursorPosition() == playlist.size() - 1) {
+                    acStop();
+                } else {
+                    acNext();
+                }
+                break;
+            case REPEAT_ONE:
+                acStop();
+                acPlayPause();
+                break;
+            case REPEAT_ALL:
+                acNext();
+                break;
+        }
     }
 
     @Override
@@ -949,6 +964,10 @@ public class XtremeMP implements ActionListener, ControlListener,
                 });
             }
         }
+    }
+
+    @Override
+    public void playingModeChanged(PlaylistEvent e) {
     }
 
     @Override

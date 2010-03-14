@@ -35,8 +35,26 @@ import org.slf4j.LoggerFactory;
 public class Playlist {
 
     private static Logger logger = LoggerFactory.getLogger(Playlist.class);
+
+    public enum PlayingMode {
+
+        REPEAT_OFF("Repeat off"),
+        REPEAT_ONE("Repeat one"),
+        REPEAT_ALL("Repeat all");
+        private String pmString;
+
+        PlayingMode(String pmString) {
+            this.pmString = pmString;
+        }
+
+        @Override
+        public String toString() {
+            return pmString;
+        }
+    }
     protected final List<PlaylistItem> playlist;
     protected final List<PlaylistListener> listeners;
+    protected PlayingMode playingMode = PlayingMode.REPEAT_OFF;
     protected int cursorPos = -1;
     protected boolean isModified = false;
 
@@ -46,6 +64,21 @@ public class Playlist {
     public Playlist() {
         playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>(1));
         listeners = new ArrayList<PlaylistListener>(1);
+    }
+
+    /**
+     * @return the playingMode
+     */
+    public PlayingMode getPlayingMode() {
+        return playingMode;
+    }
+
+    /**
+     * @param playingMode the playingMode to set
+     */
+    public void setPlayingMode(PlayingMode playingMode) {
+        this.playingMode = playingMode;
+        firePlayingModeChangedEvent(getCursor());
     }
 
     /**
@@ -293,6 +326,14 @@ public class Playlist {
 
         for (PlaylistListener listener : listeners) {
             listener.playlistItemRemoved(event);
+        }
+    }
+
+    private void firePlayingModeChangedEvent(PlaylistItem item) {
+        PlaylistEvent event = new PlaylistEvent(this, item);
+
+        for (PlaylistListener listener : listeners) {
+            listener.playingModeChanged(event);
         }
     }
 }

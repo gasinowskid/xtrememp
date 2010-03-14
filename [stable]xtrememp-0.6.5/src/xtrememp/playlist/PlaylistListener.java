@@ -29,4 +29,6 @@ public interface PlaylistListener extends EventListener {
     void playlistItemAdded(PlaylistEvent e);
 
     void playlistItemRemoved(PlaylistEvent e);
+
+    void playingModeChanged(PlaylistEvent e);
 }

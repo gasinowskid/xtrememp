@@ -211,9 +211,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 else if (e.getKeyCode() == KeyEvent.VK_A && e.getModifiers() == KeyEvent.CTRL_MASK) {
                     playlistTable.selectAll();
                 } else if (e.getKeyCode() == KeyEvent.VK_UP) {
-                    if (e.getModifiers() == KeyEvent.ALT_MASK) { // Move selected track(s) up
+                    // Move selected track(s) up
+                    if (e.getModifiers() == KeyEvent.ALT_MASK) {
                         moveUp();
-                    } else {// Select previous track
+                    } // Select previous track
+                    else {
                         if (playlistTable.getSelectedRow() > 0) {
                             int previousRowIndex = playlistTable.getSelectedRow() - 1;
                             playlistTable.clearSelection();
@@ -222,9 +224,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
                         }
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    if (e.getModifiers() == KeyEvent.ALT_MASK) { // Move selected track(s) down
+                    // Move selected track(s) down
+                    if (e.getModifiers() == KeyEvent.ALT_MASK) {
                         moveDown();
-                    } else { // Select next track
+                    } // Select next track
+                    else {
                         if (playlistTable.getSelectedRow() < playlistTable.getRowCount() - 1) {
                             int nextRowIndex = playlistTable.getSelectedRow() + 1;
                             playlistTable.clearSelection();
