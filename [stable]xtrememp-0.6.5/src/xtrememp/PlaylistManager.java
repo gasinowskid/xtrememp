@@ -210,19 +210,29 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 } // Select all
                 else if (e.getKeyCode() == KeyEvent.VK_A && e.getModifiers() == KeyEvent.CTRL_MASK) {
                     playlistTable.selectAll();
-                } // Select previous track
-                else if (e.getKeyCode() == KeyEvent.VK_UP && playlistTable.getSelectedRow() > 0) {
-                    int previousRowIndex = playlistTable.getSelectedRow() - 1;
-                    playlistTable.clearSelection();
-                    playlistTable.addRowSelectionInterval(previousRowIndex, previousRowIndex);
-                    makeRowVisible(previousRowIndex);
-                } // Select next track
-                else if (e.getKeyCode() == KeyEvent.VK_DOWN && playlistTable.getSelectedRow() < playlistTable.getRowCount() - 1) {
-                    int nextRowIndex = playlistTable.getSelectedRow() + 1;
-                    playlistTable.clearSelection();
-                    playlistTable.addRowSelectionInterval(nextRowIndex, nextRowIndex);
-                    makeRowVisible(nextRowIndex);
-                } // Play selected track
+                } else if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    if (e.getModifiers() == KeyEvent.ALT_MASK) { // Move selected track(s) up
+                        moveUp();
+                    } else {// Select previous track
+                        if (playlistTable.getSelectedRow() > 0) {
+                            int previousRowIndex = playlistTable.getSelectedRow() - 1;
+                            playlistTable.clearSelection();
+                            playlistTable.addRowSelectionInterval(previousRowIndex, previousRowIndex);
+                            makeRowVisible(previousRowIndex);
+                        }
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    if (e.getModifiers() == KeyEvent.ALT_MASK) { // Move selected track(s) down
+                        moveDown();
+                    } else { // Select next track
+                        if (playlistTable.getSelectedRow() < playlistTable.getRowCount() - 1) {
+                            int nextRowIndex = playlistTable.getSelectedRow() + 1;
+                            playlistTable.clearSelection();
+                            playlistTable.addRowSelectionInterval(nextRowIndex, nextRowIndex);
+                            makeRowVisible(nextRowIndex);
+                        }
+                    }
+                }// Play selected track
                 else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     int selectedRow = playlistTable.getSelectedRow();
                     if (selectedRow != -1) {
