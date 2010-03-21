@@ -376,18 +376,21 @@ public class XtremeMP implements ActionListener, ControlListener,
         stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
         stopMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
 //        stopMenuItem.setIcon(Utilities.MEDIA_STOP_ICON);
+        stopMenuItem.setEnabled(false);
         stopMenuItem.addActionListener(this);
         playerMenu.add(stopMenuItem);
 
         previousMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Previous"));
         previousMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
 //        previousMenuItem.setIcon(Utilities.MEDIA_PREVIOUS_ICON);
+        previousMenuItem.setEnabled(false);
         previousMenuItem.addActionListener(this);
         playerMenu.add(previousMenuItem);
 
         nextMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Next"));
         nextMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
 //        nextMenuItem.setIcon(Utilities.MEDIA_NEXT_ICON);
+        nextMenuItem.setEnabled(false);
         nextMenuItem.addActionListener(this);
         playerMenu.add(nextMenuItem);
 
@@ -396,6 +399,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         randomizePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Randomize"));
         randomizePlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
         randomizePlaylistMenuItem.setIcon(Utilities.PLAYLIST_SHUFFLE_ICON);
+        randomizePlaylistMenuItem.setEnabled(false);
         randomizePlaylistMenuItem.addActionListener(this);
         playerMenu.add(randomizePlaylistMenuItem);
 
@@ -475,6 +479,7 @@ public class XtremeMP implements ActionListener, ControlListener,
 
         controlPanel = new JPanel(new MigLayout("gap 0, ins 0", "[center]"));
         stopButton = new StopButton();
+        stopButton.setEnabled(false);
         stopButton.addActionListener(this);
         controlPanel.add(stopButton);
         previousButton = new PreviousButton();
@@ -588,6 +593,14 @@ public class XtremeMP implements ActionListener, ControlListener,
                 }
             });
         }
+    }
+
+    protected void enableControlButtons(boolean flag) {
+        previousButton.setEnabled(flag);
+        previousMenuItem.setEnabled(flag);
+        nextButton.setEnabled(flag);
+        nextMenuItem.setEnabled(flag);
+        randomizePlaylistMenuItem.setEnabled(flag);
     }
 
     @Override
@@ -740,6 +753,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 stopButton.setEnabled(true);
+                stopMenuItem.setEnabled(true);
             }
         });
     }
@@ -827,6 +841,7 @@ public class XtremeMP implements ActionListener, ControlListener,
                 playPauseButton.setPlayIcon();
                 stopButton.setEnabled(false);
                 playPauseMenuItem.setText(tr("MainFrame.Menu.Player.Play"));
+                stopMenuItem.setEnabled(false);
                 acUpdateTime(0);
                 statusLabel.setText("");
             }
@@ -926,20 +941,8 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playlistItemAdded(PlaylistEvent e) {
-        if (!playlist.isEmpty()) {
-            if (EventQueue.isDispatchThread()) {
-                previousButton.setEnabled(true);
-                nextButton.setEnabled(true);
-            } else {
-                EventQueue.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        previousButton.setEnabled(true);
-                        nextButton.setEnabled(true);
-                    }
-                });
-            }
+        if (!playlist.isEmpty() && !previousButton.isEnabled()) {
+            enableControlButtons(true);
         }
     }
 
@@ -950,19 +953,7 @@ public class XtremeMP implements ActionListener, ControlListener,
                     && audioPlayer.getState() != AudioPlayer.PAUSE) {
                 audioPlayer.stop();
             }
-            if (EventQueue.isDispatchThread()) {
-                previousButton.setEnabled(false);
-                nextButton.setEnabled(false);
-            } else {
-                EventQueue.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        previousButton.setEnabled(false);
-                        nextButton.setEnabled(false);
-                    }
-                });
-            }
+            enableControlButtons(false);
         }
     }
 
