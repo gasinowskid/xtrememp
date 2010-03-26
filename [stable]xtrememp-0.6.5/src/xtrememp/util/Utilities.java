@@ -62,6 +62,10 @@ public final class Utilities {
     public static final String VISUALIZATION_PANEL = "VISUALIZATION_PANEL";
     public static final String PLAYLIST_MANAGER = "PLAYLIST_MANAGER";
     public static final String DEFAULT_PLAYLIST = "default.xspf";
+    public static final String PLAYING_MODE_REPEAT_NONE = "REPEAT_NONE";
+    public static final String PLAYING_MODE_REPEAT_SINGLE = "REPEAT_SINGLE";
+    public static final String PLAYING_MODE_REPEAT_ALL = "REPEAT_ALL";
+    public static final String PLAYING_MODE_SHUFFLE = "SHUFFLE";
     //
     public static final Icon APP_256_ICON = getIcon("icon_256.png");
     //
@@ -74,7 +78,10 @@ public final class Utilities {
     public static final Icon MEDIA_STOP_ICON = getIcon("media-playback-stop.png");
     public static final Icon MEDIA_PREVIOUS_ICON = getIcon("media-skip-backward.png");
     public static final Icon MEDIA_NEXT_ICON = getIcon("media-skip-forward.png");
+    public static final Icon PLAYLIST_REPEAT_ICON = getIcon("media-playlist-repeat.png");
+    public static final Icon PLAYLIST_REPEATALL_ICON = getIcon("media-playlist-repeat_all.png");
     public static final Icon PLAYLIST_SHUFFLE_ICON = getIcon("media-playlist-shuffle.png");
+    public static final Icon PLAYLIST_SHUFFLE_ALT_ICON = getIcon("media-playlist-shuffle-alt.png");
     public static final Icon AUDIO_VOLUME_HIGH_ICON = getIcon("audio-volume-high.png");
     public static final Icon AUDIO_VOLUME_MEDIUM_ICON = getIcon("audio-volume-medium.png");
     public static final Icon AUDIO_VOLUME_LOW_ICON = getIcon("audio-volume-low.png");

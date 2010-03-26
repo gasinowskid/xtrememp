@@ -46,6 +46,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -119,6 +120,7 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenu playerMenu;
+    private JMenu playModeSubMenu;
     private JMenu viewMenu;
     private JMenu helpMenu;
     private JMenuItem openMenuItem;
@@ -132,8 +134,12 @@ public class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem stopMenuItem;
     private JMenuItem previousMenuItem;
     private JMenuItem randomizePlaylistMenuItem;
+    private JCheckBoxMenuItem playModeShuffleMenuItem;
     private JRadioButtonMenuItem playlistManagerMenuItem;
     private JRadioButtonMenuItem visualizationMenuItem;
+    private JRadioButtonMenuItem playModeRepeatNoneMenuItem;
+    private JRadioButtonMenuItem playModeRepeatSingleMenuItem;
+    private JRadioButtonMenuItem playModeRepeatAllMenuItem;
     private JMenuItem updateMenuItem;
     private JMenuItem aboutMenuItem;
     private JXBusyLabel busyLabel;
@@ -246,6 +252,31 @@ public class XtremeMP implements ActionListener, ControlListener,
                 }
                 playlist = playlistManager.getPlaylist();
                 playlist.addPlaylistListener(XtremeMP.this);
+            }
+        });
+
+        // Restore playlist settings
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (Settings.getRepeatMode().equalsIgnoreCase(Utilities.PLAYING_MODE_REPEAT_NONE)) {
+                    playlist.setPlayingMode(Playlist.PlayingMode.REPEAT_NONE);
+                    playModeRepeatNoneMenuItem.setSelected(true);
+                } else if (Settings.getRepeatMode().equalsIgnoreCase(Utilities.PLAYING_MODE_REPEAT_SINGLE)) {
+                    playlist.setPlayingMode(Playlist.PlayingMode.REPEAT_SINGLE);
+                    playModeRepeatSingleMenuItem.setSelected(true);
+                } else if (Settings.getRepeatMode().equalsIgnoreCase(Utilities.PLAYING_MODE_REPEAT_ALL)) {
+                    playlist.setPlayingMode(Playlist.PlayingMode.REPEAT_ALL);
+                    playModeRepeatAllMenuItem.setSelected(true);
+                }
+                if (Settings.getShuffleState()) {
+                    playlist.setPlayingMode(Playlist.PlayingMode.SHUFFLE);
+                    playModeShuffleMenuItem.setState(true);
+                    playModeRepeatNoneMenuItem.setEnabled(false);
+                    playModeRepeatSingleMenuItem.setEnabled(false);
+                    playModeRepeatAllMenuItem.setEnabled(false);
+                }
             }
         });
     }
@@ -393,6 +424,38 @@ public class XtremeMP implements ActionListener, ControlListener,
         nextMenuItem.setEnabled(false);
         nextMenuItem.addActionListener(this);
         playerMenu.add(nextMenuItem);
+
+        playerMenu.addSeparator();
+
+        //PlayMode submenu
+        String playModeSubMenuStr = tr("MainFrame.Menu.Player.PlayMode");
+        playModeSubMenu = new JMenu(playModeSubMenuStr);
+
+        playModeRepeatNoneMenuItem = new JRadioButtonMenuItem(tr("MainFrame.Menu.Player.PlayMode.RepeatNone"));
+        playModeRepeatNoneMenuItem.addActionListener(this);
+        playModeSubMenu.add(playModeRepeatNoneMenuItem);
+        playModeRepeatSingleMenuItem = new JRadioButtonMenuItem(tr("MainFrame.Menu.Player.PlayMode.RepeatSingle"));
+        playModeRepeatSingleMenuItem.setIcon(Utilities.PLAYLIST_REPEAT_ICON);
+        playModeRepeatSingleMenuItem.addActionListener(this);
+        playModeSubMenu.add(playModeRepeatSingleMenuItem);
+        playModeRepeatAllMenuItem = new JRadioButtonMenuItem(tr("MainFrame.Menu.Player.PlayMode.RepeatAll"));
+        playModeRepeatAllMenuItem.setIcon(Utilities.PLAYLIST_REPEATALL_ICON);
+        playModeRepeatAllMenuItem.addActionListener(this);
+        playModeSubMenu.add(playModeRepeatAllMenuItem);
+
+        ButtonGroup playModeBG = new ButtonGroup();
+        playModeBG.add(playModeRepeatNoneMenuItem);
+        playModeBG.add(playModeRepeatSingleMenuItem);
+        playModeBG.add(playModeRepeatAllMenuItem);
+
+        playModeSubMenu.addSeparator();
+
+        playModeShuffleMenuItem = new JCheckBoxMenuItem(tr("MainFrame.Menu.Player.PlayMode.Shuffle"));
+        playModeShuffleMenuItem.setIcon(Utilities.PLAYLIST_SHUFFLE_ALT_ICON);
+        playModeShuffleMenuItem.addActionListener(this);
+        playModeSubMenu.add(playModeShuffleMenuItem);
+
+        playerMenu.add(playModeSubMenu);
 
         playerMenu.addSeparator();
 
@@ -726,6 +789,20 @@ public class XtremeMP implements ActionListener, ControlListener,
                     logger.error(ex.getMessage(), ex);
                 }
             }
+        } else if (source.equals(playModeRepeatNoneMenuItem)) {
+            playlist.setPlayingMode(Playlist.PlayingMode.REPEAT_NONE);
+        } else if (source.equals(playModeRepeatSingleMenuItem)) {
+            playlist.setPlayingMode(Playlist.PlayingMode.REPEAT_SINGLE);
+        } else if (source.equals(playModeRepeatAllMenuItem)) {
+            playlist.setPlayingMode(Playlist.PlayingMode.REPEAT_ALL);
+        } else if (source.equals(playModeShuffleMenuItem)) {
+            //@TODO: code the missing stuff to manage shuffle
+            //In other words, guess what to do when shuffle mode is turned on and when an event like {next, prev} or endOfMedia occurs...
+            if (playModeShuffleMenuItem.getState()) {
+                playlist.setPlayingMode(Playlist.PlayingMode.SHUFFLE);
+            } else {
+                playlist.setPlayingMode(Playlist.PlayingMode.getPlayingModeByStringId(Settings.getRepeatMode()));
+            }
         }
     }
 
@@ -761,19 +838,22 @@ public class XtremeMP implements ActionListener, ControlListener,
     @Override
     public void playbackEndOfMedia(PlaybackEvent pe) {
         switch (playlist.getPlayingMode()) {
-            case REPEAT_OFF:
+            case REPEAT_NONE:
                 if (playlist.getCursorPosition() == playlist.size() - 1) {
                     acStop();
                 } else {
                     acNext();
                 }
                 break;
-            case REPEAT_ONE:
+            case REPEAT_SINGLE:
                 acStop();
                 acPlayPause();
                 break;
             case REPEAT_ALL:
                 acNext();
+                break;
+            case SHUFFLE:
+                //@Todo: Jump to a random track...
                 break;
         }
     }
@@ -959,6 +1039,37 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playingModeChanged(PlaylistEvent e) {
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (playlist.getPlayingMode().equals(Playlist.PlayingMode.SHUFFLE)) {
+                    Settings.setPlayingModeShuffle(true);
+                    //Disable Repeat functionality
+                    playModeRepeatNoneMenuItem.setEnabled(false);
+                    playModeRepeatSingleMenuItem.setEnabled(false);
+                    playModeRepeatAllMenuItem.setEnabled(false);
+                } else {
+                    Settings.setPlayingModeShuffle(false);
+                    //Otherwise, enable it
+                    playModeRepeatNoneMenuItem.setEnabled(true);
+                    playModeRepeatSingleMenuItem.setEnabled(true);
+                    playModeRepeatAllMenuItem.setEnabled(true);
+                    switch (playlist.getPlayingMode()) {
+                        case REPEAT_NONE:
+                            Settings.setRepeatMode(Utilities.PLAYING_MODE_REPEAT_NONE);
+                            break;
+                        case REPEAT_SINGLE:
+                            Settings.setRepeatMode(Utilities.PLAYING_MODE_REPEAT_SINGLE);
+                            break;
+                        case REPEAT_ALL:
+                            Settings.setRepeatMode(Utilities.PLAYING_MODE_REPEAT_ALL);
+                            break;
+                    }
+                }
+            }
+        });
+
     }
 
     @Override

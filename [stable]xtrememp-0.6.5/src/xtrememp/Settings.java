@@ -46,6 +46,8 @@ public final class Settings {
     private static final String PROPERTY_PLAYER_AUDIO_PAN = "xtrememp.player.audio.pan";
     private static final String PROPERTY_PLAYER_AUDIO_MUTE = "xtrememp.player.audio.mute";
     private static final String PROPERTY_PLAYER_AUDIO_MIXERNAME = "xtrememp.player.audio.mixer.name";
+    private static final String PROPERTY_PLAYLIST_REPEATMODE = "xtrememp.playlist.repeatmode";
+    private static final String PROPERTY_PLAYLIST_SHUFFLE = "xtrememp.playlist.shuffle";
     private static final String PROPERTY_EQUILAZER_PRESET_INDEX = "xtrememp.equilazer.preset.index";
     private static final String PROPERTY_LAST_DIR = "xtrememp.last.dir";
     private static final String PROPERTY_LAST_VIEW = "xtrememp.last.view";
@@ -59,6 +61,26 @@ public final class Settings {
     private static final String PROPERTY_MAINFRAME_WIDTH = "xtrememp.mainframe.width";
     private static final String PROPERTY_MAINFRAME_HEIGHT = "xtrememp.mainframe.height";
     private static final Properties properties = new Properties();
+
+    public static void setRepeatMode(String mode) {
+        properties.setProperty(PROPERTY_PLAYLIST_REPEATMODE, mode);
+    }
+
+    public static String getRepeatMode() {
+        return properties.getProperty(PROPERTY_PLAYLIST_REPEATMODE, Utilities.PLAYING_MODE_REPEAT_ALL);
+    }
+
+    public static void setPlayingModeShuffle(boolean aFlag) {
+        properties.setProperty(PROPERTY_PLAYLIST_SHUFFLE, Boolean.toString(aFlag));
+    }
+
+    /**
+     * Get the previously stored shuffle state
+     * @return true when shuffle was on, false otherwise. Default value is false.
+     */
+    public static boolean getShuffleState() {
+        return Boolean.parseBoolean(properties.getProperty(PROPERTY_PLAYLIST_SHUFFLE, Boolean.toString(false)));
+    }
 
     public static void setLanguageIndex(int value) {
         properties.setProperty(PROPERTY_LANGUAGE_INDEX, Integer.toString(value));

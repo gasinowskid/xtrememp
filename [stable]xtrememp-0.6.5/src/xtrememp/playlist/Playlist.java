@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xtrememp.Settings;
+import xtrememp.util.Utilities;
 
 /**
  * Playlist implementation.
@@ -38,9 +40,10 @@ public class Playlist {
 
     public enum PlayingMode {
 
-        REPEAT_OFF("Repeat off"),
-        REPEAT_ONE("Repeat one"),
-        REPEAT_ALL("Repeat all");
+        REPEAT_NONE(Utilities.PLAYING_MODE_REPEAT_NONE),
+        REPEAT_SINGLE(Utilities.PLAYING_MODE_REPEAT_SINGLE),
+        REPEAT_ALL(Utilities.PLAYING_MODE_REPEAT_ALL),
+        SHUFFLE(Utilities.PLAYING_MODE_SHUFFLE);
         private String pmString;
 
         PlayingMode(String pmString) {
@@ -51,10 +54,24 @@ public class Playlist {
         public String toString() {
             return pmString;
         }
+
+        public static PlayingMode getPlayingModeByStringId(String identifier) {
+            if (identifier.equals(Utilities.PLAYING_MODE_REPEAT_NONE)) {
+                return REPEAT_NONE;
+            } else if (identifier.equals(Utilities.PLAYING_MODE_REPEAT_SINGLE)) {
+                return REPEAT_SINGLE;
+            } else if (identifier.equals(Utilities.PLAYING_MODE_REPEAT_ALL)) {
+                return REPEAT_ALL;
+            } else if (identifier.equals(Utilities.PLAYING_MODE_SHUFFLE)) {
+                return SHUFFLE;
+            } else {
+                return null;
+            }
+        }
     }
     protected final List<PlaylistItem> playlist;
     protected final List<PlaylistListener> listeners;
-    protected PlayingMode playingMode = PlayingMode.REPEAT_OFF;
+    protected PlayingMode playingMode = PlayingMode.getPlayingModeByStringId(Settings.getRepeatMode());
     protected int cursorPos = -1;
     protected boolean isModified = false;
 
