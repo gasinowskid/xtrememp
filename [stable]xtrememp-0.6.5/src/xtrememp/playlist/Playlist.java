@@ -23,10 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import xtrememp.Settings;
-import xtrememp.util.Utilities;
+import java.util.Random;
 
 /**
  * Playlist implementation.
@@ -36,43 +33,21 @@ import xtrememp.util.Utilities;
  */
 public class Playlist {
 
-    private static Logger logger = LoggerFactory.getLogger(Playlist.class);
+//    private static Logger logger = LoggerFactory.getLogger(Playlist.class);
+    public enum PlayMode {
 
-    public enum PlayingMode {
-
-        REPEAT_NONE(Utilities.PLAYING_MODE_REPEAT_NONE),
-        REPEAT_SINGLE(Utilities.PLAYING_MODE_REPEAT_SINGLE),
-        REPEAT_ALL(Utilities.PLAYING_MODE_REPEAT_ALL),
-        SHUFFLE(Utilities.PLAYING_MODE_SHUFFLE);
-        private String pmString;
-
-        PlayingMode(String pmString) {
-            this.pmString = pmString;
-        }
-
-        @Override
-        public String toString() {
-            return pmString;
-        }
-
-        public static PlayingMode getPlayingModeByStringId(String identifier) {
-            if (identifier.equals(Utilities.PLAYING_MODE_REPEAT_NONE)) {
-                return REPEAT_NONE;
-            } else if (identifier.equals(Utilities.PLAYING_MODE_REPEAT_SINGLE)) {
-                return REPEAT_SINGLE;
-            } else if (identifier.equals(Utilities.PLAYING_MODE_REPEAT_ALL)) {
-                return REPEAT_ALL;
-            } else if (identifier.equals(Utilities.PLAYING_MODE_SHUFFLE)) {
-                return SHUFFLE;
-            } else {
-                return null;
-            }
-        }
+        REPEAT_NONE,
+        REPEAT_SINGLE,
+        REPEAT_ALL,
+        SHUFFLE
     }
     protected final List<PlaylistItem> playlist;
     protected final List<PlaylistListener> listeners;
-    protected PlayingMode playingMode = PlayingMode.getPlayingModeByStringId(Settings.getRepeatMode());
+    protected final Random rnd;
+    protected List<Integer> shuffledPosList;
+    protected PlayMode playMode = PlayMode.REPEAT_ALL;
     protected int cursorPos = -1;
+    protected int shuffledPos = -1;
     protected boolean isModified = false;
 
     /**
@@ -81,21 +56,22 @@ public class Playlist {
     public Playlist() {
         playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>(1));
         listeners = new ArrayList<PlaylistListener>(1);
+        rnd = new Random();
     }
 
     /**
-     * @return the playingMode
+     * @return the playMode.
      */
-    public PlayingMode getPlayingMode() {
-        return playingMode;
+    public PlayMode getPlayMode() {
+        return playMode;
     }
 
     /**
-     * @param playingMode the playingMode to set
+     * @param playMode the playMode to set.
      */
-    public void setPlayingMode(PlayingMode playingMode) {
-        this.playingMode = playingMode;
-        firePlayingModeChangedEvent(getCursor());
+    public void setPlayMode(PlayMode playMode) {
+        this.playMode = playMode;
+        firePlayModeChangedEvent(getCursor());
     }
 
     /**
@@ -107,6 +83,7 @@ public class Playlist {
         boolean added = playlist.add(item);
         setModified(added);
         fireItemAddedEvent(item);
+        shuffledPosList = null;
         return added;
     }
 
@@ -119,6 +96,7 @@ public class Playlist {
         playlist.add(pos, item);
         setModified((item == null) ? false : true);
         fireItemAddedEvent(item);
+        shuffledPosList = null;
     }
 
     /**
@@ -133,6 +111,7 @@ public class Playlist {
         for (PlaylistItem item : c) {
             fireItemAddedEvent(item);
         }
+        shuffledPosList = null;
         return added;
     }
 
@@ -145,6 +124,7 @@ public class Playlist {
         boolean removed = playlist.remove(item);
         setModified(removed);
         fireItemRemovedEvent(item);
+        shuffledPosList = null;
         return removed;
     }
 
@@ -157,6 +137,7 @@ public class Playlist {
         PlaylistItem item = playlist.remove(pos);
         setModified((item == null) ? false : true);
         fireItemRemovedEvent(item);
+        shuffledPosList = null;
         return item;
     }
 
@@ -171,6 +152,7 @@ public class Playlist {
         for (PlaylistItem item : c) {
             fireItemRemovedEvent(item);
         }
+        shuffledPosList = null;
         return removed;
     }
 
@@ -186,6 +168,7 @@ public class Playlist {
                 fireItemRemovedEvent(item);
             }
         }
+        shuffledPosList = null;
         begin();
     }
 
@@ -245,9 +228,13 @@ public class Playlist {
      * Computes cursor position (next).
      */
     public void nextCursor() {
-        cursorPos++;
-        if (cursorPos > playlist.size() - 1) {
-            cursorPos = 0;
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            cursorPos = getShuffledCursorPosistion();
+        } else {
+            cursorPos++;
+            if (cursorPos > playlist.size() - 1) {
+                cursorPos = 0;
+            }
         }
     }
 
@@ -255,9 +242,13 @@ public class Playlist {
      * Computes cursor position (previous).
      */
     public void previousCursor() {
-        cursorPos--;
-        if (cursorPos < 0) {
-            cursorPos = playlist.size() - 1;
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            cursorPos = getShuffledCursorPosistion();
+        } else {
+            cursorPos--;
+            if (cursorPos < 0) {
+                cursorPos = playlist.size() - 1;
+            }
         }
     }
 
@@ -290,24 +281,52 @@ public class Playlist {
     }
 
     /**
-     * Returns item position matching to the cursor.
-     * @return the cursor position.
+     * Returns the position matching to the cursor.
+     * @return an integer value.
      */
     public int getCursorPosition() {
         return cursorPos;
     }
 
     /**
-     * Returns index of playlist item.
+     * Returns a randomly generated cursor position. This method makes sure that
+     * all playlist items of this playlist will be selected once before
+     * selecting the same item twice.
+     * @return an integer value between [0, playlist size - 1], otherwise -1 if
+     *         this playlist is empty.
+     */
+    private int getShuffledCursorPosistion() {
+        if (shuffledPosList == null || shuffledPos == shuffledPosList.size()) {
+            if (!isEmpty()) {
+                int size = playlist.size();
+                shuffledPosList = new ArrayList<Integer>(size);
+                for (int i = 0; i < size; i++) {
+                    shuffledPosList.add(i);
+                }
+                // Prevent the current playlist item to be played twice.
+                shuffledPosList.remove(Integer.valueOf(cursorPos));
+                Collections.shuffle(shuffledPosList);
+                shuffledPos = 0;
+            }
+        }
+        if (shuffledPosList != null) {
+            return shuffledPosList.get(shuffledPos++);
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Returns index of the specified playlist item.
      * @param pli a playlist item.
-     * @return the index value.
+     * @return an integer value.
      */
     public int indexOf(PlaylistItem pli) {
         return playlist.indexOf(pli);
     }
 
     /**
-     * Checks the modification flag
+     * Checks the modification flag.
      * @return <code>true</code> if the playlist is modified, else <code>false</code>.
      */
     public boolean isModified() {
@@ -315,18 +334,39 @@ public class Playlist {
     }
 
     /**
-     * Checks if playlist is empty
+     * Checks if playlist is empty.
      * @return <code>true</code> if the playlist is empty, else <code>false</code>.
      */
     public boolean isEmpty() {
         return playlist.isEmpty();
     }
 
+    /**
+     * Adds the specified playlist listener to receive mouse events from this
+     * playlist. If the listener is <code>null</code>, no exception is thrown
+     * and no action is performed.
+     * @param listener the playlist listener.
+     */
     public void addPlaylistListener(PlaylistListener listener) {
+        if (listener == null) {
+            return;
+        }
         listeners.add(listener);
     }
 
+    /**
+     * Removes the specified playlist listener so that it no longer receives
+     * playlist events from this playlist. This method performs no function,
+     * nor does it throw an exception, if the listener specified by the argument
+     * was not previously added to this playlist.
+     * If the listener is <code>null</code>, no exception is thrown and no
+     * action is performed.
+     * @param listener the playlist listener.
+     */
     public void removePlaylistListener(PlaylistListener listener) {
+        if (listener == null) {
+            return;
+        }
         listeners.remove(listener);
     }
 
@@ -346,11 +386,11 @@ public class Playlist {
         }
     }
 
-    private void firePlayingModeChangedEvent(PlaylistItem item) {
+    private void firePlayModeChangedEvent(PlaylistItem item) {
         PlaylistEvent event = new PlaylistEvent(this, item);
 
         for (PlaylistListener listener : listeners) {
-            listener.playingModeChanged(event);
+            listener.playModeChanged(event);
         }
     }
 }

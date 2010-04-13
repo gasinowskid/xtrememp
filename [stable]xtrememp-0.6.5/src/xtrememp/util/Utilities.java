@@ -62,10 +62,6 @@ public final class Utilities {
     public static final String VISUALIZATION_PANEL = "VISUALIZATION_PANEL";
     public static final String PLAYLIST_MANAGER = "PLAYLIST_MANAGER";
     public static final String DEFAULT_PLAYLIST = "default.xspf";
-    public static final String PLAYING_MODE_REPEAT_NONE = "REPEAT_NONE";
-    public static final String PLAYING_MODE_REPEAT_SINGLE = "REPEAT_SINGLE";
-    public static final String PLAYING_MODE_REPEAT_ALL = "REPEAT_ALL";
-    public static final String PLAYING_MODE_SHUFFLE = "SHUFFLE";
     //
     public static final Icon APP_256_ICON = getIcon("icon_256.png");
     //
@@ -102,7 +98,7 @@ public final class Utilities {
     /**
      * Close dialog with ESC key.
      *
-     * @param dialog a JDialog instance
+     * @param dialog a {@link JDialog} instance.
      */
     public static void closeOnEscape(final JDialog dialog) {
         JRootPane rootPane = dialog.getRootPane();
@@ -120,12 +116,12 @@ public final class Utilities {
     }
 
     /**
-     * Returns a {@link FloatBuffer} as the result
-     * of merging the left and right channel buffers.
+     * Returns a {@link FloatBuffer} as the result of merging the left and
+     * right channel buffers.
      *
-     * @param leftChannel the left channel buffer
-     * @param rightChannel the right channel buffer
-     * @return a <code>FloatBuffer</code> object
+     * @param leftChannel the left channel buffer.
+     * @param rightChannel the right channel buffer.
+     * @return a {@link FloatBuffer} object.
      */
     public static FloatBuffer stereoMerge(FloatBuffer leftChannel, FloatBuffer rightChannel) {
         int capacity = Math.max(leftChannel.capacity(), rightChannel.capacity());
@@ -138,7 +134,7 @@ public final class Utilities {
     }
 
     /**
-     * Creates info object on a single skin.
+     * Creates an info object on a single skin.
      *
      * @param displayName
      *            Skin display name.
@@ -146,7 +142,7 @@ public final class Utilities {
      *            Skin class.
      * @param isDefault
      *            Indication whether the specified skin is default.
-     * @return Info object on the specified skin.
+     * @return SkinInfo object on the specified skin.
      */
     private static SkinInfo create(String displayName, Class<?> skinClass,
             boolean isDefault) {
@@ -161,28 +157,51 @@ public final class Utilities {
         return result;
     }
 
+    /**
+     * Verify if the current operating system is Windows.
+     *
+     * @return <code>true</code> if the current OS is Windows,
+     *         else <code>false</code>.
+     */
     public static boolean isWindowsOS() {
         String os = System.getProperty("os.name").toLowerCase();
         return os != null && os.indexOf("windows") != -1;
     }
 
+    /**
+     * Verify if the current operating system is Linux.
+     *
+     * @return <code>true</code> if the current OS is Linux,
+     *         else <code>false</code>.
+     */
     public static boolean isLinuxOS() {
         String os = System.getProperty("os.name").toLowerCase();
         return os != null && os.indexOf("linux") != -1;
     }
 
+    /**
+     * Verify if the current operating system is running on 64-bit.
+     *
+     * @return <code>true</code> if the current OS has x64 architecture,
+     *         else <code>false</code>.
+     */
     public static boolean isRunningX64() {
         String arch = System.getProperty("sun.arch.data.model").toLowerCase();
         return arch != null && arch.indexOf("64") != -1;
     }
 
     /**
-     * @see LanguageBundle#getString(java.lang.String)
+     * @see LanguageBundle#getString(java.lang.String).
      */
     public static String tr(String key) {
         return LanguageBundle.getString(key);
     }
 
+    /**
+     * Returns an array of supported locales including the system locale.
+     *
+     * @return an array of {@link Locale} objects.
+     */
     public static Locale[] getLanguages() {
         Locale[] locales = {getSystemLocale(),
             Locale.ENGLISH, Locale.FRENCH, Locale.ITALIAN};
@@ -200,7 +219,7 @@ public final class Utilities {
      * </blockquote>
      * method is ever called.
      *
-     * @return the default locale for this instance of the Java Virtual Machine
+     * @return the default locale for this instance of the Java Virtual Machine.
      */
     public static Locale getSystemLocale() {
         if (systemLocale == null) {
@@ -213,7 +232,7 @@ public final class Utilities {
      * Returns a {@link BufferedImage} as the result of decoding
      * an image with the given name.
      *
-     * @param name the image name
+     * @param name the image name.
      * @return a <code>BufferedImage</code> object, or <code>null</code>.
      */
     public static BufferedImage getImage(String name) {
@@ -229,19 +248,19 @@ public final class Utilities {
     }
 
     /**
-     * Returns an {@link Icon}.
+     * Returns an {@link Icon} wrapping the image with the given name.
      *
-     * @param name the icon name
-     * @return an <code>Icon</code> object, or <code>null</code>.
+     * @param name the icon name.
+     * @return an {@link Icon} object, or <code>null</code>.
      */
     public static Icon getIcon(String name) {
         return new ImageIcon(getImage(name));
     }
 
     /**
-     * Returns a list of icon images.
+     * Returns a list containing the application icon images in different sizes.
      *
-     * @return an <code>List</code> object containing the images.
+     * @return a {@link List} object.
      */
     public static List<Image> getIconImages() {
         List<Image> icons = new ArrayList<Image>(3);
@@ -252,10 +271,11 @@ public final class Utilities {
     }
 
     /**
-     * Check if the provided string is <code>null</code> or empty.
+     * Check if the provided {@link String} is <code>null</code> or empty.
      *
-     * @param value the string to check
-     * @return <code>true</code> if the string is null or empty, else <code>false</code>
+     * @param value the {@link String} to check.
+     * @return <code>true</code> if the {@link String} is <code>null</code>
+     *         or empty, else <code>false</code>.
      */
     public static boolean isNullOrEmpty(String value) {
         if (value != null) {
@@ -265,10 +285,12 @@ public final class Utilities {
     }
 
     /**
-     * Check if the provided string start with one supported protocol strings.
+     * Check if the provided {@link String} start with one supported
+     * protocol strings.
      *
-     * @param input the string to check
-     * @return <code>true</code> if the string start with a protocol, else <code>false</code>
+     * @param input the {@link String} to check.
+     * @return <code>true</code> if the {@link String} start with a protocol,
+     *         else <code>false</code>.
      */
     public static boolean startWithProtocol(String input) {
         if (input != null) {
@@ -286,8 +308,8 @@ public final class Utilities {
      * Returns a human-readable version of the file size, where the input
      * represents a specific number of bytes.
      *
-     * @param size the number of bytes
-     * @return a human-readable display value (includes units)
+     * @param size the number of bytes.
+     * @return a human-readable display value (includes units).
      */
     public static String byteCountToDisplaySize(long size) {
         long ONE_KB = 1024;
@@ -306,11 +328,13 @@ public final class Utilities {
     }
 
     /**
-     * Check if the provided string start with a specified protocol string.
+     * Check if the provided {@link String} start with a specified
+     * protocol {@link String}.
      *
-     * @param input the string to check
-     * @param input the protocol string
-     * @return <code>true</code> if the string start with the specified protocol, else <code>false</code>
+     * @param input the {@link String} to check.
+     * @param input the protocol {@link String}.
+     * @return <code>true</code> if the {@link String} start with the
+     *         specified protocol, else <code>false</code>.
      */
     public static boolean startWithProtocol(String input, String protocol) {
         if (input != null) {

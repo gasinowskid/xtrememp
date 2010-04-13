@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xtrememp.playlist.Playlist.PlayMode;
 import xtrememp.ui.skin.DarkSapphireSkin;
 import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.Utilities;
@@ -46,12 +47,11 @@ public final class Settings {
     private static final String PROPERTY_PLAYER_AUDIO_PAN = "xtrememp.player.audio.pan";
     private static final String PROPERTY_PLAYER_AUDIO_MUTE = "xtrememp.player.audio.mute";
     private static final String PROPERTY_PLAYER_AUDIO_MIXERNAME = "xtrememp.player.audio.mixer.name";
-    private static final String PROPERTY_PLAYLIST_REPEATMODE = "xtrememp.playlist.repeatmode";
-    private static final String PROPERTY_PLAYLIST_SHUFFLE = "xtrememp.playlist.shuffle";
     private static final String PROPERTY_EQUILAZER_PRESET_INDEX = "xtrememp.equilazer.preset.index";
     private static final String PROPERTY_LAST_DIR = "xtrememp.last.dir";
     private static final String PROPERTY_LAST_VIEW = "xtrememp.last.view";
     private static final String PROPERTY_PLAYLIST_POSITION = "xtrememp.playlist.position";
+    private static final String PROPERTY_PLAYLIST_PLAYMODE = "xtrememp.playlist.playmode";
     private static final String PROPERTY_VISUALIZATION = "xtrememp.visualization";
     private static final String PROPERTY_LANGUAGE_INDEX = "xtrememp.language.index";
     private static final String PROPERTY_SKIN = "xtrememp.skin";
@@ -62,44 +62,24 @@ public final class Settings {
     private static final String PROPERTY_MAINFRAME_HEIGHT = "xtrememp.mainframe.height";
     private static final Properties properties = new Properties();
 
-    public static void setRepeatMode(String mode) {
-        properties.setProperty(PROPERTY_PLAYLIST_REPEATMODE, mode);
-    }
-
-    public static String getRepeatMode() {
-        return properties.getProperty(PROPERTY_PLAYLIST_REPEATMODE, Utilities.PLAYING_MODE_REPEAT_ALL);
-    }
-
-    public static void setPlayingModeShuffle(boolean aFlag) {
-        properties.setProperty(PROPERTY_PLAYLIST_SHUFFLE, Boolean.toString(aFlag));
-    }
-
-    /**
-     * Get the previously stored shuffle state
-     * @return true when shuffle was on, false otherwise. Default value is false.
-     */
-    public static boolean getShuffleState() {
-        return Boolean.parseBoolean(properties.getProperty(PROPERTY_PLAYLIST_SHUFFLE, Boolean.toString(false)));
-    }
-
-    public static void setLanguageIndex(int value) {
-        properties.setProperty(PROPERTY_LANGUAGE_INDEX, Integer.toString(value));
+    public static void setLanguageIndex(int languageIndex) {
+        properties.setProperty(PROPERTY_LANGUAGE_INDEX, Integer.toString(languageIndex));
     }
 
     public static int getLanguageIndex() {
         return Integer.parseInt(properties.getProperty(PROPERTY_LANGUAGE_INDEX, "0"));
     }
 
-    public static void setLastView(String s) {
-        properties.setProperty(PROPERTY_LAST_VIEW, s);
+    public static void setLastView(String lastView) {
+        properties.setProperty(PROPERTY_LAST_VIEW, lastView);
     }
 
     public static String getLastView() {
         return properties.getProperty(PROPERTY_LAST_VIEW, Utilities.PLAYLIST_MANAGER);
     }
 
-    public static void setLastDir(String s) {
-        properties.setProperty(PROPERTY_LAST_DIR, s);
+    public static void setLastDir(String lastDir) {
+        properties.setProperty(PROPERTY_LAST_DIR, lastDir);
     }
 
     public static String getLastDir() {
@@ -118,8 +98,16 @@ public final class Settings {
         return Integer.parseInt(properties.getProperty(PROPERTY_PLAYLIST_POSITION, "0"));
     }
 
-    public static void setPlaylistPosition(int pos) {
-        properties.setProperty(PROPERTY_PLAYLIST_POSITION, Integer.toString(pos));
+    public static void setPlaylistPosition(int playlistPosition) {
+        properties.setProperty(PROPERTY_PLAYLIST_POSITION, Integer.toString(playlistPosition));
+    }
+
+    public static PlayMode getPlayMode() {
+        return PlayMode.valueOf(properties.getProperty(PROPERTY_PLAYLIST_PLAYMODE, PlayMode.REPEAT_ALL.name()));
+    }
+
+    public static void setPlayMode(PlayMode playMode) {
+        properties.setProperty(PROPERTY_PLAYLIST_PLAYMODE, playMode.name());
     }
 
     public static boolean isMuted() {
@@ -142,24 +130,24 @@ public final class Settings {
         return Integer.parseInt(properties.getProperty(PROPERTY_PLAYER_AUDIO_PAN, "0"));
     }
 
-    public static void setPan(int value) {
-        properties.setProperty(PROPERTY_PLAYER_AUDIO_PAN, Integer.toString(value));
+    public static void setPan(int pan) {
+        properties.setProperty(PROPERTY_PLAYER_AUDIO_PAN, Integer.toString(pan));
     }
 
     public static String getMixerName() {
         return properties.getProperty(PROPERTY_PLAYER_AUDIO_MIXERNAME, "");
     }
 
-    public static void setMixerName(String name) {
-        properties.setProperty(PROPERTY_PLAYER_AUDIO_MIXERNAME, name);
+    public static void setMixerName(String mixerName) {
+        properties.setProperty(PROPERTY_PLAYER_AUDIO_MIXERNAME, mixerName);
     }
 
     public static int getEqualizerPresetIndex() {
         return Integer.parseInt(properties.getProperty(PROPERTY_EQUILAZER_PRESET_INDEX, "0"));
     }
 
-    public static void setEqualizerPresetIndex(int value) {
-        properties.setProperty(PROPERTY_EQUILAZER_PRESET_INDEX, Integer.toString(value));
+    public static void setEqualizerPresetIndex(int eqIndex) {
+        properties.setProperty(PROPERTY_EQUILAZER_PRESET_INDEX, Integer.toString(eqIndex));
     }
 
     public static String getSkin() {
