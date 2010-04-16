@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Playlist implementation.
@@ -33,7 +35,7 @@ import java.util.Random;
  */
 public class Playlist {
 
-//    private static Logger logger = LoggerFactory.getLogger(Playlist.class);
+    private static Logger logger = LoggerFactory.getLogger(Playlist.class);
     public enum PlayMode {
 
         REPEAT_NONE,
@@ -44,17 +46,17 @@ public class Playlist {
     protected final List<PlaylistItem> playlist;
     protected final List<PlaylistListener> listeners;
     protected final Random rnd;
-    protected List<Integer> shuffledPosList;
+    protected List<PlaylistItem> shuffledList;
     protected PlayMode playMode = PlayMode.REPEAT_ALL;
     protected int cursorPos = -1;
-    protected int shuffledPos = -1;
+    protected int shuffledIndex = -1;
     protected boolean isModified = false;
 
     /**
      * Default constructor
      */
     public Playlist() {
-        playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>(1));
+        playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>());
         listeners = new ArrayList<PlaylistListener>(1);
         rnd = new Random();
     }
@@ -71,6 +73,35 @@ public class Playlist {
      */
     public void setPlayMode(PlayMode playMode) {
         this.playMode = playMode;
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            int size = playlist.size();
+            switch (size) {
+                case 0:
+                    shuffledList = new ArrayList<PlaylistItem>();
+                    break;
+                case 1:
+                    shuffledList = new ArrayList<PlaylistItem>();
+                    shuffledList.add(playlist.get(0));
+                    break;
+                case 2:
+                    shuffledList = new ArrayList<PlaylistItem>();
+                    shuffledList.add(getCursor());
+                    shuffledList.add(playlist.get(1 - cursorPos));
+                    break;
+                default:
+                    shuffledList = new ArrayList<PlaylistItem>(size);
+                    for (int i = 0; i < size; i++) {
+                        shuffledList.add(rnd.nextInt(shuffledList.size() + 1),
+                                playlist.get(i));
+                    }
+                    Collections.swap(shuffledList, 0, shuffledList.indexOf(getCursor()));
+                    break;
+            }
+            shuffledIndex = 0;
+        } else {
+            shuffledList = null;
+            shuffledIndex = -1;
+        }
         firePlayModeChangedEvent(getCursor());
     }
 
@@ -82,8 +113,10 @@ public class Playlist {
     public boolean addItem(PlaylistItem item) {
         boolean added = playlist.add(item);
         setModified(added);
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            addToShuffledPosList(item);
+        }
         fireItemAddedEvent(item);
-        shuffledPosList = null;
         return added;
     }
 
@@ -95,8 +128,10 @@ public class Playlist {
     public void addItemAt(int pos, PlaylistItem item) {
         playlist.add(pos, item);
         setModified((item == null) ? false : true);
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            addToShuffledPosList(item);
+        }
         fireItemAddedEvent(item);
-        shuffledPosList = null;
     }
 
     /**
@@ -108,10 +143,14 @@ public class Playlist {
     public boolean addAll(Collection<? extends PlaylistItem> c) {
         boolean added = playlist.addAll(c);
         setModified(added);
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            for (PlaylistItem item : c) {
+                addToShuffledPosList(item);
+            }
+        }
         for (PlaylistItem item : c) {
             fireItemAddedEvent(item);
         }
-        shuffledPosList = null;
         return added;
     }
 
@@ -123,8 +162,10 @@ public class Playlist {
     public boolean removeItem(PlaylistItem item) {
         boolean removed = playlist.remove(item);
         setModified(removed);
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            removeFromShuffledPosList(item);
+        }
         fireItemRemovedEvent(item);
-        shuffledPosList = null;
         return removed;
     }
 
@@ -136,8 +177,10 @@ public class Playlist {
     public PlaylistItem removeItemAt(int pos) {
         PlaylistItem item = playlist.remove(pos);
         setModified((item == null) ? false : true);
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            removeFromShuffledPosList(item);
+        }
         fireItemRemovedEvent(item);
-        shuffledPosList = null;
         return item;
     }
 
@@ -149,10 +192,14 @@ public class Playlist {
     public boolean removeAll(Collection<? extends PlaylistItem> c) {
         boolean removed = playlist.removeAll(c);
         setModified(removed);
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            for (PlaylistItem item : c) {
+                removeFromShuffledPosList(item);
+            }
+        }
         for (PlaylistItem item : c) {
             fireItemRemovedEvent(item);
         }
-        shuffledPosList = null;
         return removed;
     }
 
@@ -168,7 +215,10 @@ public class Playlist {
                 fireItemRemovedEvent(item);
             }
         }
-        shuffledPosList = null;
+        if (playMode.equals(PlayMode.SHUFFLE) && shuffledList != null) {
+            shuffledList.clear();
+            shuffledIndex = 0;
+        }
         begin();
     }
 
@@ -229,7 +279,7 @@ public class Playlist {
      */
     public void nextCursor() {
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            cursorPos = getShuffledCursorPosistion();
+            cursorPos = getShuffledCursorPosistion(true);
         } else {
             cursorPos++;
             if (cursorPos > playlist.size() - 1) {
@@ -243,7 +293,7 @@ public class Playlist {
      */
     public void previousCursor() {
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            cursorPos = getShuffledCursorPosistion();
+            cursorPos = getShuffledCursorPosistion(false);
         } else {
             cursorPos--;
             if (cursorPos < 0) {
@@ -274,10 +324,18 @@ public class Playlist {
 
     /**
      * Set the cursor at the specified index.
-     * @param index the index value.
+     * @param pos the index value.
      */
-    public void setCursor(int index) {
-        cursorPos = index;
+    public void setCursor(int pos) {
+        cursorPos = pos;
+        if (playMode.equals(PlayMode.SHUFFLE) && (cursorPos >= 0 && cursorPos < playlist.size())) {
+            if (shuffledList != null && shuffledList.size() > 1
+                    && shuffledList.get(shuffledIndex) != getCursor()) {
+                shuffledIndex = (++shuffledIndex > shuffledList.size() - 1) ? 0 : shuffledIndex;
+                Collections.swap(shuffledList, shuffledIndex,
+                        shuffledList.indexOf(getCursor()));
+            }
+        }
     }
 
     /**
@@ -288,29 +346,36 @@ public class Playlist {
         return cursorPos;
     }
 
+    private void addToShuffledPosList(PlaylistItem item) {
+        if (shuffledList != null) {
+            int randomIndex = shuffledIndex + rnd.nextInt(shuffledList.size() - shuffledIndex + 1);
+            shuffledList.add(randomIndex, item);
+        }
+    }
+
+    private void removeFromShuffledPosList(PlaylistItem item) {
+        if (shuffledList != null) {
+            shuffledList.remove(item);
+            int maxIndex = shuffledList.size() - 1;
+            shuffledIndex = (shuffledIndex > maxIndex) ? maxIndex : shuffledIndex;
+        }
+    }
+
     /**
      * Returns a randomly generated cursor position. This method makes sure that
      * all playlist items of this playlist will be selected once before
      * selecting the same item twice.
+     * @param next if <code>true</code> retrive the next cursor position value,
+     *             else the previous one.
      * @return an integer value between [0, playlist size - 1], otherwise -1 if
      *         this playlist is empty.
      */
-    private int getShuffledCursorPosistion() {
-        if (shuffledPosList == null || shuffledPos == shuffledPosList.size()) {
-            if (!isEmpty()) {
-                int size = playlist.size();
-                shuffledPosList = new ArrayList<Integer>(size);
-                for (int i = 0; i < size; i++) {
-                    shuffledPosList.add(i);
-                }
-                // Prevent the current playlist item to be played twice.
-                shuffledPosList.remove(Integer.valueOf(cursorPos));
-                Collections.shuffle(shuffledPosList);
-                shuffledPos = 0;
-            }
-        }
-        if (shuffledPosList != null) {
-            return shuffledPosList.get(shuffledPos++);
+    private int getShuffledCursorPosistion(boolean next) {
+        if (shuffledList != null) {
+            shuffledIndex = (next) ? ((++shuffledIndex > shuffledList.size() - 1)
+                    ? 0 : shuffledIndex) : ((--shuffledIndex < 0)
+                    ? shuffledList.size() - 1 : shuffledIndex);
+            return indexOf(shuffledList.get(shuffledIndex));
         } else {
             return -1;
         }
@@ -318,11 +383,11 @@ public class Playlist {
 
     /**
      * Returns index of the specified playlist item.
-     * @param pli a playlist item.
+     * @param item a playlist item.
      * @return an integer value.
      */
-    public int indexOf(PlaylistItem pli) {
-        return playlist.indexOf(pli);
+    public int indexOf(PlaylistItem item) {
+        return playlist.indexOf(item);
     }
 
     /**
@@ -352,6 +417,7 @@ public class Playlist {
             return;
         }
         listeners.add(listener);
+        logger.info("Playlist listener added");
     }
 
     /**
@@ -368,11 +434,11 @@ public class Playlist {
             return;
         }
         listeners.remove(listener);
+        logger.info("Playlist listener removed");
     }
 
     private void fireItemAddedEvent(PlaylistItem item) {
         PlaylistEvent event = new PlaylistEvent(this, item);
-
         for (PlaylistListener listener : listeners) {
             listener.playlistItemAdded(event);
         }
@@ -380,7 +446,6 @@ public class Playlist {
 
     private void fireItemRemovedEvent(PlaylistItem item) {
         PlaylistEvent event = new PlaylistEvent(this, item);
-
         for (PlaylistListener listener : listeners) {
             listener.playlistItemRemoved(event);
         }
@@ -388,9 +453,9 @@ public class Playlist {
 
     private void firePlayModeChangedEvent(PlaylistItem item) {
         PlaylistEvent event = new PlaylistEvent(this, item);
-
         for (PlaylistListener listener : listeners) {
             listener.playModeChanged(event);
         }
+        logger.info("Play mode changed: {}", playMode);
     }
 }

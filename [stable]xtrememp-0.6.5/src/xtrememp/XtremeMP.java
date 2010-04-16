@@ -757,7 +757,7 @@ public class XtremeMP implements ActionListener, ControlListener,
             StringBuffer message = new StringBuffer();
             message.append("<html><b><font color='red' size='5'>" + tr("Application.title"));
             message.append("</font></b><br>" + tr("Application.description"));
-            message.append("<br>Copyright © 2005-2009 The Xtreme Media Player Project");
+            message.append("<br>Copyright © 2005-2010 The Xtreme Media Player Project");
             message.append("<br><br><b>" + tr("Dialog.About.Author") + ": </b>" + tr("Application.author"));
             message.append("<br><b>" + tr("Dialog.About.Version") + ": </b>" + currentVersion);
             message.append("<br><b>" + tr("Dialog.About.ReleaseDate") + ": </b>" + currentVersion.getReleaseDate());
@@ -826,24 +826,28 @@ public class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playbackEndOfMedia(PlaybackEvent pe) {
-        switch (playlist.getPlayMode()) {
-            case REPEAT_NONE:
-                if (playlist.getCursorPosition() == playlist.size() - 1) {
+        if (playlist.isEmpty()) {
+            acStop();
+        } else {
+            switch (playlist.getPlayMode()) {
+                case REPEAT_NONE:
+                    if (playlist.getCursorPosition() == playlist.size() - 1) {
+                        acStop();
+                    } else {
+                        acNext();
+                    }
+                    break;
+                case REPEAT_SINGLE:
                     acStop();
-                } else {
+                    acPlayPause();
+                    break;
+                case REPEAT_ALL:
                     acNext();
-                }
-                break;
-            case REPEAT_SINGLE:
-                acStop();
-                acPlayPause();
-                break;
-            case REPEAT_ALL:
-                acNext();
-                break;
-            case SHUFFLE:
-                acNext();
-                break;
+                    break;
+                case SHUFFLE:
+                    acNext();
+                    break;
+            }
         }
     }
 
