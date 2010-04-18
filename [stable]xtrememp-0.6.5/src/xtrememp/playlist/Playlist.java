@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 public class Playlist {
 
     private static Logger logger = LoggerFactory.getLogger(Playlist.class);
+
     public enum PlayMode {
 
         REPEAT_NONE,
@@ -348,6 +349,10 @@ public class Playlist {
 
     private void addToShuffledPosList(PlaylistItem item) {
         if (shuffledList != null) {
+            //@bugfix: This avoids an ArrayOutOfBounds exception
+            if (shuffledIndex == -1) {//This is the case when pl was emptied, shuffle index takes the value -1
+                shuffledIndex = 0;//because rnd can return 0 we can have list.add(-1, <Obj>)
+            }
             int randomIndex = shuffledIndex + rnd.nextInt(shuffledList.size() - shuffledIndex + 1);
             shuffledList.add(randomIndex, item);
         }
