@@ -35,7 +35,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -77,8 +76,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     private JButton resetButton;
     private JButton closeButton;
 
-    public PreferencesDialog(JFrame mainFrame, AudioPlayer audioPlayer) {
-        super(mainFrame, true);
+    public PreferencesDialog(AudioPlayer audioPlayer) {
+        super(XtremeMP.getInstance().getMainFrame(), true);
         this.audioPlayer = audioPlayer;
         setLayout(new MigLayout("fill"));
         setTitle(tr("Dialog.Preferences"));
@@ -87,7 +86,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
         setResizable(false);
         pack();
-        setLocationRelativeTo(mainFrame);
+        setLocationRelativeTo(getParent());
         getRootPane().setDefaultButton(closeButton);
         closeButton.requestFocusInWindow();
         setVisible(true);
@@ -119,7 +118,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
                     break;
                 } else {
                     Object[] options = {tr("Button.Close")};
-                    JOptionPane.showOptionDialog(XtremeMP.getInstance().getMainFrame(),
+                    JOptionPane.showOptionDialog(this.getParent(),
                             tr("Dialog.Preferences.General.CacheDirectory.NoReadWritePermissions"),
                             tr("Dialog.OptionDialog.Warning"),
                             JOptionPane.OK_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);

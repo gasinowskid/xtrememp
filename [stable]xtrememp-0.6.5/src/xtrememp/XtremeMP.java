@@ -108,7 +108,7 @@ import static xtrememp.util.Utilities.tr;
  * 
  * Special thanks to rom1dep for the changes applied to this class.
  */
-public class XtremeMP implements ActionListener, ControlListener,
+public final class XtremeMP implements ActionListener, ControlListener,
         PlaybackListener, PlaylistListener, IntellitypeListener {
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
@@ -712,7 +712,7 @@ public class XtremeMP implements ActionListener, ControlListener,
         } else if (source == savePlaylistMenuItem) {
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
-            new PreferencesDialog(mainFrame, audioPlayer);
+            new PreferencesDialog(audioPlayer);
         } else if (source == exitMenuItem) {
             exit();
         } else if (source == playPauseMenuItem || source == playPauseButton) {

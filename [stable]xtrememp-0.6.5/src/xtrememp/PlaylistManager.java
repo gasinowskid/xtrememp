@@ -18,7 +18,6 @@
  */
 package xtrememp;
 
-import xtrememp.ui.text.SearchTextField;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -78,15 +77,16 @@ import org.pushingpixels.substance.api.renderers.SubstanceDefaultTableCellRender
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xtrememp.player.audio.AudioPlayer;
-import xtrememp.util.file.AudioFileFilter;
-import xtrememp.util.file.M3uPlaylistFileFilter;
-import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.playlist.Playlist;
 import xtrememp.playlist.PlaylistException;
 import xtrememp.playlist.PlaylistIO;
 import xtrememp.playlist.PlaylistItem;
+import xtrememp.ui.text.SearchTextField;
 import xtrememp.util.AbstractSwingWorker;
 import xtrememp.util.Utilities;
+import xtrememp.util.file.AudioFileFilter;
+import xtrememp.util.file.M3uPlaylistFileFilter;
+import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.util.file.XspfPlaylistFileFilter;
 import static xtrememp.util.Utilities.tr;
 

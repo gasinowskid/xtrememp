@@ -22,7 +22,6 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Map;
-import java.util.Set;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.SwingUtilities;
@@ -31,7 +30,7 @@ import org.pushingpixels.substance.api.SubstanceSkin;
 import org.pushingpixels.substance.api.renderers.SubstanceDefaultComboBoxRenderer;
 import org.pushingpixels.substance.api.skin.SkinInfo;
 import xtrememp.Settings;
-import xtrememp.util.Utilities;
+import xtrememp.ui.skin.DarkSapphireSkin;
 
 /**
  *
@@ -41,24 +40,21 @@ public class SkinComboSelector extends JComboBox {
 
     public SkinComboSelector() {
         super();
-        // populate the combobox
+        // Populate the combobox
         // XtremeMP skins
-        Set<SkinInfo> skinSet = Utilities.getSkins();
-        for (SkinInfo si : skinSet) {
-            this.addItem(si);
-        }
+        this.addItem(create(DarkSapphireSkin.NAME, DarkSapphireSkin.class, false));
         // Substance skins
         Map<String, SkinInfo> skinMap = SubstanceLookAndFeel.getAllSkins();
         SubstanceSkin currentSkin = SubstanceLookAndFeel.getCurrentSkin();
         for (final Map.Entry<String, SkinInfo> entry : skinMap.entrySet()) {
             SkinInfo si = entry.getValue();
             this.addItem(si);
-            // set the current skin as the selected item
+            // Set the current skin as the selected item
             if (si.getDisplayName().compareTo(currentSkin.getDisplayName()) == 0) {
                 this.setSelectedItem(si);
             }
         }
-        // set custom renderer to show the skin display name
+        // Set custom renderer to show the skin display name
         this.setRenderer(new SubstanceDefaultComboBoxRenderer(this) {
 
             @Override
@@ -70,7 +66,7 @@ public class SkinComboSelector extends JComboBox {
                         cellHasFocus);
             }
         });
-        // add an action listener to change skin based on user selection
+        // Add an action listener to change skin based on user selection
         this.addActionListener(new ActionListener() {
 
             @Override
@@ -86,5 +82,23 @@ public class SkinComboSelector extends JComboBox {
                 });
             }
         });
+    }
+
+    /**
+     * Creates an info object on a single skin.
+     *
+     * @param displayName
+     *            Skin display name.
+     * @param skinClass
+     *            Skin class.
+     * @param isDefault
+     *            Indication whether the specified skin is default.
+     * @return SkinInfo object on the specified skin.
+     */
+    private static SkinInfo create(String displayName, Class<?> skinClass,
+            boolean isDefault) {
+        SkinInfo result = new SkinInfo(displayName, skinClass.getName());
+        result.setDefault(isDefault);
+        return result;
     }
 }
