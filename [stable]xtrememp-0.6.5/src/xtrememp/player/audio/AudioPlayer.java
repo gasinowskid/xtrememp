@@ -295,6 +295,7 @@ public class AudioPlayer implements Callable<Void> {
 
     /**
      * Inits Audio ressources from AudioSystem.
+     * @throws PlayerException
      */
     protected void initSourceDataLine() throws PlayerException {
         if (sourceDataLine == null) {
@@ -356,7 +357,7 @@ public class AudioPlayer implements Callable<Void> {
     /**
      * Set SourceDataLine buffer size. It affects audio latency
      * (the delay between SourceDataLine.write(data) and real sound).
-     * @param size if equal to -1 (AudioSystem.NOT_SPECIFIED)
+     * @param bufferSize if equal to -1 (AudioSystem.NOT_SPECIFIED)
      * means maximum buffer size available.
      */
     public void setBufferSize(int bufferSize) {

@@ -32,6 +32,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -251,6 +253,11 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 }
                 playlist = playlistManager.getPlaylist();
                 playlist.addPlaylistListener(XtremeMP.this);
+
+                //Test some fancy effects from substance L&F
+                //org.pushingpixels.lafwidget.animation.AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
+                org.pushingpixels.lafwidget.animation.AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+                org.pushingpixels.lafwidget.animation.AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
 
                 // Restore playlist settings : play mode
                 Playlist.PlayMode playMode = Settings.getPlayMode();
@@ -550,6 +557,26 @@ public final class XtremeMP implements ActionListener, ControlListener,
         nextButton.addActionListener(this);
         controlPanel.add(nextButton);
         volumeButton = new VolumeButton(Settings.isMuted());
+        volumeButton.addMouseWheelListener(new MouseWheelListener() {
+
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                try {
+                    int volumeValue = volumeSlider.getValue() - 5 * e.getWheelRotation();
+                    if (volumeValue < 0) {
+                        volumeValue = 0;
+                    } else if (volumeValue > 100) {
+                        volumeValue = 100;
+                    }
+                    volumeButton.setVolumeIcon(volumeValue);
+                    audioPlayer.setGain(volumeValue / 100.0F);
+                    Settings.setGain(volumeValue);
+                    volumeSlider.setValue(volumeValue);
+                } catch (PlayerException ex) {
+                    logger.debug(ex.getMessage(), ex);
+                }
+            }
+        });
         JPopupMenu volumePopupMenu = volumeButton.getPopupMenu();
         volumeSlider = new JSlider(JSlider.VERTICAL, 0, 100, Settings.getGain());
         volumeSlider.setMajorTickSpacing(25);
