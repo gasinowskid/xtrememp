@@ -304,7 +304,7 @@ public final class Utilities {
      * protocol {@link String}.
      *
      * @param input the {@link String} to check.
-     * @param input the protocol {@link String}.
+     * @param protocol the protocol {@link String}.
      * @return <code>true</code> if the {@link String} start with the
      *         specified protocol, else <code>false</code>.
      */

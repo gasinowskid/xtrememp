@@ -90,7 +90,15 @@ public class VisualizationManager extends JPanel implements ActionListener,
         initComponents();
     }
 
-    protected void initComponents() {
+    private void initVisualizations() {
+        visSet = new TreeSet<Visualization>();
+        visSet.add(new Spectrogram());
+        visSet.add(new SpectrumBars());
+        visSet.add(new VolumeMeter());
+        visSet.add(new Waveform());
+    }
+
+    private void initComponents() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         fullScreenButton = new JButton(Utilities.VIEW_FULLSCREEN_ICON);
@@ -129,14 +137,6 @@ public class VisualizationManager extends JPanel implements ActionListener,
         this.add(visPanel, BorderLayout.CENTER);
 
         fullscreenWindow = new FullscreenWindow();
-    }
-
-    public void initVisualizations() {
-        visSet = new TreeSet<Visualization>();
-        visSet.add(new Spectrogram());
-        visSet.add(new SpectrumBars());
-        visSet.add(new VolumeMeter());
-        visSet.add(new Waveform());
     }
 
     @Override

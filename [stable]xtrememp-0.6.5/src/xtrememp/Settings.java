@@ -184,7 +184,7 @@ public final class Settings {
      * Gets the bounds of the application main frame in the form of a
      * <code>Rectangle</code> object.
      * 
-     * @returna a rectangle indicating this component's bounds
+     * @return a rectangle indicating this component's bounds
      */
     public static Rectangle getMainFrameBounds() {
         String x = properties.getProperty(PROPERTY_MAINFRAME_X, "200");

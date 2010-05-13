@@ -49,15 +49,15 @@ public class Version implements Comparable<Version> {
         }
     }
     /** 
-     * Major number.
+     * Major version number.
      */
     private int majorNumber;
     /** 
-     * Minor number.
+     * Minor version number.
      */
     private int minorNumber;
     /** 
-     * Micro number.
+     * Micro version number.
      */
     private int microNumber;
     /**
@@ -110,7 +110,8 @@ public class Version implements Comparable<Version> {
 
     @Override
     public int hashCode() {
-        return new String(majorNumber + "." + minorNumber + "." + microNumber + "." + (versionType != VersionType.FINAL ? versionType : "")).hashCode();
+        return new String(majorNumber + "." + minorNumber + "." + microNumber +
+                "." + (versionType != VersionType.FINAL ? versionType : "")).hashCode();
     }
 
     @Override
@@ -240,9 +241,9 @@ public class Version implements Comparable<Version> {
     }
 
     /**
-     * Sets the version type value
+     * Sets the version type value.
      * 
-     * @param version the version type
+     * @param versionType the version type
      */
     protected void setVersionType(VersionType versionType) {
         this.versionType = versionType;

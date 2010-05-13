@@ -84,18 +84,16 @@ public class Playlist {
                     shuffledList = new ArrayList<PlaylistItem>();
                     shuffledList.add(playlist.get(0));
                     break;
-                case 2:
-                    shuffledList = new ArrayList<PlaylistItem>();
-                    shuffledList.add(getCursor());
-                    shuffledList.add(playlist.get(1 - cursorPos));
-                    break;
                 default:
                     shuffledList = new ArrayList<PlaylistItem>(size);
                     for (int i = 0; i < size; i++) {
                         shuffledList.add(rnd.nextInt(shuffledList.size() + 1),
                                 playlist.get(i));
                     }
-                    Collections.swap(shuffledList, 0, shuffledList.indexOf(getCursor()));
+                    int cursorShuffledIndex = shuffledList.indexOf(getCursor());
+                    if (cursorShuffledIndex != -1) {
+                        Collections.swap(shuffledList, 0, cursorShuffledIndex);
+                    }
                     break;
             }
             shuffledIndex = 0;
@@ -349,10 +347,6 @@ public class Playlist {
 
     private void addToShuffledPosList(PlaylistItem item) {
         if (shuffledList != null) {
-            //@bugfix: This avoids an ArrayOutOfBounds exception
-            if (shuffledIndex == -1) {//This is the case when pl was emptied, shuffle index takes the value -1
-                shuffledIndex = 0;//because rnd can return 0 we can have list.add(-1, <Obj>)
-            }
             int randomIndex = shuffledIndex + rnd.nextInt(shuffledList.size() - shuffledIndex + 1);
             shuffledList.add(randomIndex, item);
         }

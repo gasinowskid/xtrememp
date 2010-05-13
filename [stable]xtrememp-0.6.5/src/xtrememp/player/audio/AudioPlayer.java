@@ -98,11 +98,6 @@ public class AudioPlayer implements Callable<Void> {
         reset();
     }
 
-    public AudioPlayer(PlaybackListener listener) {
-        this();
-        addPlaybackListener(listener);
-    }
-
     public void addPlaybackListener(PlaybackListener listener) {
         if (listener != null && !listeners.contains(listener)) {
             listeners.add(listener);
@@ -131,7 +126,7 @@ public class AudioPlayer implements Callable<Void> {
         logger.info("{}", state);
     }
 
-    protected void reset() {
+    private void reset() {
         if (sourceDataLine != null) {
             sourceDataLine.flush();
             sourceDataLine.close();

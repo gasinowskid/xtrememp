@@ -37,7 +37,7 @@ public abstract class Visualization implements Comparable<Visualization> {
     /**
      * Defines the rendering method.
      * 
-     * @param g a Graphics object used for painting.
+     * @param g2d a Graphics object used for painting.
      * @param width width of the rendering area.
      * @param height height of the rendering area.
      * @param dssContext

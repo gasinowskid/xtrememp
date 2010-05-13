@@ -89,7 +89,6 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         setLocationRelativeTo(getParent());
         getRootPane().setDefaultButton(closeButton);
         closeButton.requestFocusInWindow();
-        setVisible(true);
     }
 
     @Override

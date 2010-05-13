@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -130,11 +129,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
         initSortingFiltering();
     }
 
-    protected void initModel() {
+    private void initModel() {
         playlistTableModel = new PlaylistTableModel(playlist);
     }
 
-    protected void initComponents() {
+    private void initComponents() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         openPlaylistButton = new JButton(Utilities.DOCUMENT_OPEN_ICON);
@@ -259,7 +258,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
         this.add(ptScrollPane, BorderLayout.CENTER);
     }
 
-    protected void initSortingFiltering() {
+    private void initSortingFiltering() {
         tableRowSorter = new TableRowSorter<PlaylistTableModel>(playlistTableModel);
         playlistTable.setRowSorter(tableRowSorter);
         searchFilter = new RowFilter<PlaylistTableModel, Integer>() {
@@ -416,7 +415,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
     public void remove() {
         if (playlistTable.getSelectedRowCount() > 0) {
             PlaylistItem pli = playlist.getCursor();
-            Vector<PlaylistItem> items = new Vector<PlaylistItem>();
+            List<PlaylistItem> items = new ArrayList<PlaylistItem>();
             int[] selectedRows = playlistTable.getSelectedRows();
             for (int i = 0, len = selectedRows.length; i < len; i++) {
                 selectedRows[i] = playlistTable.convertRowIndexToModel(selectedRows[i]);
@@ -663,7 +662,6 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 clearSelection();
                 setSearchString(document.getText(0, document.getLength()));
             } catch (Exception ex) {
-                ex.printStackTrace();
             }
         }
 
@@ -816,7 +814,8 @@ public class PlaylistManager extends JPanel implements ActionListener,
         protected void done() {
             setProgress(100);
             if (pli != null) {
-                new MediaInfoDialog(pli);
+                MediaInfoDialog mediaInfoDialog = new MediaInfoDialog(pli);
+                mediaInfoDialog.setVisible(true);
             }
         }
     }

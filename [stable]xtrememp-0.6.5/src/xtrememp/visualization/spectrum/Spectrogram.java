@@ -73,7 +73,7 @@ public class Spectrogram extends Visualization {
     /**
      * Sets the numbers of bands rendered by the spectrum analyser.
      *
-     * @param pCount Cannot be more than half the "FFT sample size".
+     * @param count Cannot be more than half the "FFT sample size".
      */
     public synchronized void setBandCount(int count) {
         bands = count;
@@ -84,7 +84,7 @@ public class Spectrogram extends Visualization {
      * Sets the FFT sample size to be just for calculating the spectrum analyser
      * values. The default is 512.
      *
-     * @param pSize Cannot be more than the size of the sample provided by the DSP.
+     * @param size Cannot be more than the size of the sample provided by the DSP.
      */
     public synchronized void setFFTSampleSize(int size) {
         fftSampleSize = size;

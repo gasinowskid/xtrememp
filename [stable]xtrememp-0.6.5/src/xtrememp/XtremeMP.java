@@ -198,7 +198,8 @@ public final class XtremeMP implements ActionListener, ControlListener,
         }
 
         // Initialize audio engine
-        audioPlayer = new AudioPlayer(this);
+        audioPlayer = new AudioPlayer();
+        audioPlayer.addPlaybackListener(this);
         String mixerName = Settings.getMixerName();
         if (!Utilities.isNullOrEmpty(mixerName)) {
             audioPlayer.setMixerName(mixerName);
@@ -739,7 +740,8 @@ public final class XtremeMP implements ActionListener, ControlListener,
         } else if (source == savePlaylistMenuItem) {
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
-            new PreferencesDialog(audioPlayer);
+            PreferencesDialog preferencesDialog = new PreferencesDialog(audioPlayer);
+            preferencesDialog.setVisible(true);
         } else if (source == exitMenuItem) {
             exit();
         } else if (source == playPauseMenuItem || source == playPauseButton) {
@@ -782,21 +784,21 @@ public final class XtremeMP implements ActionListener, ControlListener,
             }
             Version currentVersion = Version.getCurrentVersion();
             StringBuffer message = new StringBuffer();
-            message.append("<html><b><font color='red' size='5'>" + tr("Application.title"));
-            message.append("</font></b><br>" + tr("Application.description"));
+            message.append("<html><b><font color='red' size='5'>").append(tr("Application.title"));
+            message.append("</font></b><br>").append(tr("Application.description"));
             message.append("<br>Copyright © 2005-2010 The Xtreme Media Player Project");
-            message.append("<br><br><b>" + tr("Dialog.About.Author") + ": </b>" + tr("Application.author"));
-            message.append("<br><b>" + tr("Dialog.About.Version") + ": </b>" + currentVersion);
-            message.append("<br><b>" + tr("Dialog.About.ReleaseDate") + ": </b>" + currentVersion.getReleaseDate());
-            message.append("<br><b>" + tr("Dialog.About.Homepage") + ": </b>" + tr("Application.homepage"));
-            message.append("<br><br><b>" + tr("Dialog.About.JavaVersion") + ": </b>" + System.getProperty("java.version"));
-            message.append("<br><b>" + tr("Dialog.About.JavaVendor") + ": </b>" + System.getProperty("java.vendor"));
-            message.append("<br><b>" + tr("Dialog.About.JavaHome") + ": </b>" + System.getProperty("java.home"));
-            message.append("<br><b>" + tr("Dialog.About.OSName") + ": </b>" + System.getProperty("os.name"));
-            message.append("<br><b>" + tr("Dialog.About.OSArch") + ": </b>" + System.getProperty("os.arch"));
-            message.append("<br><b>" + tr("Dialog.About.UserName") + ": </b>" + System.getProperty("user.name"));
-            message.append("<br><b>" + tr("Dialog.About.UserHome") + ": </b>" + System.getProperty("user.home"));
-            message.append("<br><b>" + tr("Dialog.About.UserDir") + ": </b>" + System.getProperty("user.dir"));
+            message.append("<br><br><b>").append(tr("Dialog.About.Author")).append(": </b>").append(tr("Application.author"));
+            message.append("<br><b>").append(tr("Dialog.About.Version")).append(": </b>").append(currentVersion);
+            message.append("<br><b>").append(tr("Dialog.About.ReleaseDate")).append(": </b>").append(currentVersion.getReleaseDate());
+            message.append("<br><b>").append(tr("Dialog.About.Homepage")).append(": </b>").append(tr("Application.homepage"));
+            message.append("<br><br><b>").append(tr("Dialog.About.JavaVersion")).append(": </b>").append(System.getProperty("java.version"));
+            message.append("<br><b>").append(tr("Dialog.About.JavaVendor")).append(": </b>").append(System.getProperty("java.vendor"));
+            message.append("<br><b>").append(tr("Dialog.About.JavaHome")).append(": </b>").append(System.getProperty("java.home"));
+            message.append("<br><b>").append(tr("Dialog.About.OSName")).append(": </b>").append(System.getProperty("os.name"));
+            message.append("<br><b>").append(tr("Dialog.About.OSArch")).append(": </b>").append(System.getProperty("os.arch"));
+            message.append("<br><b>").append(tr("Dialog.About.UserName")).append(": </b>").append(System.getProperty("user.name"));
+            message.append("<br><b>").append(tr("Dialog.About.UserHome")).append(": </b>").append(System.getProperty("user.home"));
+            message.append("<br><b>").append(tr("Dialog.About.UserDir")).append(": </b>").append(System.getProperty("user.dir"));
             message.append("</html>");
             int n = JOptionPane.showOptionDialog(mainFrame, message, tr("Dialog.About"),
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,

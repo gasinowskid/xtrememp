@@ -18,10 +18,10 @@
  */
 package xtrememp;
 
+import java.util.Collection;
 import xtrememp.playlist.*;
 import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -61,8 +61,8 @@ public class PlaylistTableModel extends AbstractTableModel {
         this.fireTableRowsDeleted(index, index);
     }
 
-    public void removeAll(Vector<PlaylistItem> v) {
-        playlist.removeAll(v);
+    public void removeAll(Collection<? extends PlaylistItem> c) {
+        playlist.removeAll(c);
         this.fireTableDataChanged();
     }
 
