@@ -158,6 +158,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JSlider volumeSlider;
     private JLabel timeLabel;
     private JLabel statusLabel;
+    private JLabel playModeLabel;
     private SeekSlider seekSlider;
     private PlaylistItem currentPli;
 
@@ -644,8 +645,32 @@ public final class XtremeMP implements ActionListener, ControlListener,
         statusBar.add(timeLabel, "gap 8 4 0 0");
         statusLabel = new JLabel();
         statusBar.add(statusLabel, "gap 4 8 0 0, wmin 0");
+        playModeLabel = new JLabel();
+        statusBar.add(playModeLabel, "east");
+        updatePlayModeIcon();
         southPanel.add(statusBar, "south");
         mainFrame.getContentPane().add(southPanel, "south");
+    }
+
+    protected void updatePlayModeIcon() {
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                Playlist.PlayMode playMode = Settings.getPlayMode();
+                switch (playMode) {
+                    case REPEAT_SINGLE:
+                        playModeLabel.setIcon(Utilities.PLAYLIST_REPEAT_ICON);
+                        break;
+                    case REPEAT_ALL:
+                        playModeLabel.setIcon(Utilities.PLAYLIST_REPEATALL_ICON);
+                        break;
+                    case SHUFFLE:
+                        playModeLabel.setIcon(Utilities.PLAYLIST_SHUFFLE_ALT_ICON);
+                }
+            }
+        });
+
     }
 
     protected void setTime(final String timeText, final int seekSliderValue) {
@@ -1062,6 +1087,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     @Override
     public void playModeChanged(PlaylistEvent e) {
         Settings.setPlayMode(playlist.getPlayMode());
+        updatePlayModeIcon();
     }
 
     @Override
