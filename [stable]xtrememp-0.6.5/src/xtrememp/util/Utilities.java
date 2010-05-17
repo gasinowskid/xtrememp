@@ -68,6 +68,7 @@ public final class Utilities {
     public static final Icon MEDIA_PLAY_ICON = getIcon("media-playback-start.png");
     public static final Icon MEDIA_PAUSE_ICON = getIcon("media-playback-pause.png");
     public static final Icon MEDIA_STOP_ICON = getIcon("media-playback-stop.png");
+    public static final Icon MEDIA_STOP_SMALL_ICON = getIcon("media-playback-stop_small.png");
     public static final Icon MEDIA_PREVIOUS_ICON = getIcon("media-skip-backward.png");
     public static final Icon MEDIA_NEXT_ICON = getIcon("media-skip-forward.png");
     public static final Icon PLAYLIST_REPEAT_ICON = getIcon("media-playlist-repeat.png");

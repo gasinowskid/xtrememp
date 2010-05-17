@@ -59,9 +59,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -645,6 +647,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         statusBar.add(timeLabel, "gap 8 4 0 0");
         statusLabel = new JLabel();
         statusBar.add(statusLabel, "gap 4 8 0 0, wmin 0");
+        statusBar.add(new JSeparator(SwingConstants.VERTICAL));
         playModeLabel = new JLabel();
         statusBar.add(playModeLabel, "east");
         updatePlayModeIcon();
@@ -658,16 +661,29 @@ public final class XtremeMP implements ActionListener, ControlListener,
             @Override
             public void run() {
                 Playlist.PlayMode playMode = Settings.getPlayMode();
+                String toolTipMessage = "<html><b>" + tr("MainFrame.Menu.Player.PlayMode") + "</b><br>";
                 switch (playMode) {
+                    case REPEAT_NONE:
+                        playModeLabel.setIcon(Utilities.MEDIA_STOP_SMALL_ICON);
+                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatNone"));
+                        break;
                     case REPEAT_SINGLE:
                         playModeLabel.setIcon(Utilities.PLAYLIST_REPEAT_ICON);
+                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatSingle"));
                         break;
                     case REPEAT_ALL:
                         playModeLabel.setIcon(Utilities.PLAYLIST_REPEATALL_ICON);
+                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatAll"));
                         break;
                     case SHUFFLE:
                         playModeLabel.setIcon(Utilities.PLAYLIST_SHUFFLE_ALT_ICON);
+                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.Shuffle"));
+                        break;
+                    default:
+                        playModeLabel.setIcon(null);
                 }
+                toolTipMessage = toolTipMessage.concat("</html>");
+                playModeLabel.setToolTipText(toolTipMessage);
             }
         });
 
