@@ -258,11 +258,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 playlist = playlistManager.getPlaylist();
                 playlist.addPlaylistListener(XtremeMP.this);
 
-                //Test some fancy effects from substance L&F
-                //org.pushingpixels.lafwidget.animation.AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
-                org.pushingpixels.lafwidget.animation.AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
-                org.pushingpixels.lafwidget.animation.AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
-
                 // Restore playlist settings : play mode
                 Playlist.PlayMode playMode = Settings.getPlayMode();
                 switch (playMode) {
@@ -312,6 +307,11 @@ public final class XtremeMP implements ActionListener, ControlListener,
         Locale locale = Utilities.getLanguages()[Settings.getLanguageIndex()];
         Locale.setDefault(locale);
         LanguageBundle.setLanguage(locale);
+
+        //Test some fancy effects from substance L&F
+        //AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
+        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
 
         // Animation configurations
         AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW, JTable.class);
@@ -664,7 +664,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 String toolTipMessage = "<html><b>" + tr("MainFrame.Menu.Player.PlayMode") + "</b><br>";
                 switch (playMode) {
                     case REPEAT_NONE:
-                        playModeLabel.setIcon(Utilities.MEDIA_STOP_SMALL_ICON);
                         toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatNone"));
                         break;
                     case REPEAT_SINGLE:
