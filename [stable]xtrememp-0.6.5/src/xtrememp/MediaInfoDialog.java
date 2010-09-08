@@ -179,10 +179,10 @@ public class MediaInfoDialog extends JDialog implements ActionListener {
         centerPanel.add(new JScrollPane(commentTextArea), "span, growx, width min:150, height min:100");
         container.add(centerPanel, "spany, grow, center");
 
-        JPanel eastPanel = new JPanel(new MigLayout("fill"));
+        JPanel eastPanel = new JPanel(new MigLayout("fill", "[leading]", "[top]"));
         eastPanel.setBorder(BorderFactory.createTitledBorder(tr("Dialog.MediaInformation.CodecDetails")));
         cdLabel = new JLabel();
-        eastPanel.add(cdLabel, "grow, width 150:null:null");
+        eastPanel.add(cdLabel, "width 150:null:null");
         container.add(eastPanel, "east");
     }
 
