@@ -18,20 +18,22 @@
  */
 package xtrememp;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.StatusPrinter;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xtrememp.playlist.Playlist.PlayMode;
 import xtrememp.ui.skin.DarkSapphireSkin;
-import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.Utilities;
-import xtrememp.visualization.spectrum.Spectrogram;
+import xtrememp.visualization.Spectrogram;
 
 /**
  *
@@ -168,8 +170,22 @@ public final class Settings {
 
     public static void setCacheDir(File parent) {
         properties.setProperty(PROPERTY_CACHE_DIR, parent.getPath());
-        // Reload log4j properties
-        PropertyConfigurator.configure(new Log4jProperties());
+        configureLogback();
+    }
+
+    public static void configureLogback() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        try {
+            JoranConfigurator jc = new JoranConfigurator();
+            jc.setContext(context);
+            context.reset();
+            context.putProperty("CACHE_DIR", getCacheDir().getPath());
+            // override default configuration
+            jc.doConfigure("logback.xml");
+        } catch (JoranException ex) {
+            logger.error(ex.getMessage());
+        }
+        StatusPrinter.printInCaseOfErrorsOrWarnings(context);
     }
 
     public static boolean isAutomaticUpdatesEnabled() {

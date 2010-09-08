@@ -69,7 +69,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 import net.miginfocom.swing.MigLayout;
-import org.apache.log4j.PropertyConfigurator;
 import org.jdesktop.swingx.JXBusyLabel;
 import org.jdesktop.swingx.painter.BusyPainter;
 import org.pushingpixels.lafwidget.animation.AnimationConfigurationManager;
@@ -101,7 +100,6 @@ import xtrememp.update.Version;
 import xtrememp.util.AbstractSwingWorker;
 import xtrememp.util.LanguageBundle;
 import xtrememp.util.file.AudioFileFilter;
-import xtrememp.util.log.Log4jProperties;
 import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.util.Utilities;
 import static xtrememp.util.Utilities.tr;
@@ -284,10 +282,12 @@ public final class XtremeMP implements ActionListener, ControlListener,
     public static void main(String[] args) throws Exception {
         List<String> arguments = Arrays.asList(args);
 //        boolean debug = arguments.contains("-debug");
+
         // Load Settings
         Settings.loadSettings();
-        // Load log4j properties
-        PropertyConfigurator.configure(new Log4jProperties());
+        // Configure logback
+        Settings.configureLogback();
+
         // Enable uncaught exception catching
         try {
             Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -300,6 +300,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         } catch (Throwable t) {
             logger.error(t.getMessage(), t);
         }
+
         // Close error stream
         System.err.close();
 
@@ -309,9 +310,9 @@ public final class XtremeMP implements ActionListener, ControlListener,
         LanguageBundle.setLanguage(locale);
 
         //Test some fancy effects from substance L&F
-        //AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
-        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
-        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
+//        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
+//        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+//        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
 
         // Animation configurations
         AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW, JTable.class);
@@ -1109,16 +1110,23 @@ public final class XtremeMP implements ActionListener, ControlListener,
     public void onIntellitype(int command) {
         switch (command) {
             case JIntellitype.APPCOMMAND_MEDIA_PLAY_PAUSE:
+                logger.debug("APPCOMMAND_MEDIA_PLAY_PAUSE command received: " + Integer.toString(command));
                 acPlayPause();
                 break;
             case JIntellitype.APPCOMMAND_MEDIA_PREVIOUSTRACK:
+                logger.debug("APPCOMMAND_MEDIA_PREVIOUSTRACK command received: " + Integer.toString(command));
                 acPrevious();
                 break;
             case JIntellitype.APPCOMMAND_MEDIA_NEXTTRACK:
+                logger.debug("APPCOMMAND_MEDIA_NEXTTRACK command received: " + Integer.toString(command));
                 acNext();
                 break;
             case JIntellitype.APPCOMMAND_MEDIA_STOP:
+                logger.debug("APPCOMMAND_MEDIA_STOP command received: " + Integer.toString(command));
                 acStop();
+                break;
+            default:
+                logger.debug("Undefined INTELLITYPE command received: " + Integer.toString(command));
                 break;
         }
     }
