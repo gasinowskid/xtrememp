@@ -755,8 +755,8 @@ public final class XtremeMP implements ActionListener, ControlListener,
             }
         } else if (source == openURLMenuItem) {
             String url = JOptionPane.showInputDialog(mainFrame,
-                    tr("Dialog.OpenURL"),
                     tr("Dialog.OpenURL.Message"),
+                    tr("Dialog.OpenURL"),
                     JOptionPane.INFORMATION_MESSAGE);
             if (url != null && Utilities.startWithProtocol(url)) {
                 boolean isPlaylistFile = false;
