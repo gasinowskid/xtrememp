@@ -113,7 +113,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
     private ControlListener controlListener;
     private Playlist playlist;
     private PlaylistTableModel playlistTableModel;
-    private SearchTextField searchWidget;
+    private SearchTextField searchTextField;
     private TableRowSorter<PlaylistTableModel> tableRowSorter;
     private RowFilter<PlaylistTableModel, Integer> searchFilter;
     private String searchString;
@@ -177,10 +177,10 @@ public class PlaylistManager extends JPanel implements ActionListener,
         mediaInfoButton.setEnabled(false);
         toolBar.add(mediaInfoButton);
         toolBar.add(Box.createHorizontalGlue());
-        searchWidget = new SearchTextField(15);
-        searchWidget.setMaximumSize(new Dimension(120, searchWidget.getPreferredSize().height));
-        searchWidget.getTextField().getDocument().addDocumentListener(new SearchFilterListener());
-        toolBar.add(searchWidget);
+        searchTextField = new SearchTextField(15);
+        searchTextField.setMaximumSize(new Dimension(120, searchTextField.getPreferredSize().height));
+        searchTextField.getTextField().getDocument().addDocumentListener(new SearchFilterListener());
+        toolBar.add(searchTextField);
         toolBar.add(Box.createHorizontalStrut(6));
         this.add(toolBar, BorderLayout.NORTH);
 
