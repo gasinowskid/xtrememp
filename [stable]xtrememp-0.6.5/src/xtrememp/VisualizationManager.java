@@ -58,8 +58,8 @@ import xtrememp.util.Utilities;
 import xtrememp.visualization.Visualization;
 import xtrememp.visualization.VolumeMeter;
 import xtrememp.visualization.Waveform;
-import xtrememp.visualization.spectrum.Spectrogram;
-import xtrememp.visualization.spectrum.SpectrumBars;
+import xtrememp.visualization.Spectrogram;
+import xtrememp.visualization.SpectrumBars;
 import static xtrememp.util.Utilities.tr;
 
 /**
@@ -71,7 +71,7 @@ public class VisualizationManager extends JPanel implements ActionListener,
 
     private JPopupMenu selectionMenu;
     private JButton fullScreenButton;
-    private JButton previousVisButton;
+    private JButton prevVisButton;
     private JButton nextVisButton;
     private PopupButton visMenuButton;
     private ButtonGroup visButtonGroup;
@@ -106,10 +106,10 @@ public class VisualizationManager extends JPanel implements ActionListener,
         fullScreenButton.addActionListener(this);
         toolBar.add(fullScreenButton);
         toolBar.addSeparator();
-        previousVisButton = new JButton(Utilities.GO_PREVIOUS_ICON);
-        previousVisButton.setToolTipText(tr("MainFrame.VisualizationManager.PreviousVisualization"));
-        previousVisButton.addActionListener(this);
-        toolBar.add(previousVisButton);
+        prevVisButton = new JButton(Utilities.GO_PREVIOUS_ICON);
+        prevVisButton.setToolTipText(tr("MainFrame.VisualizationManager.PreviousVisualization"));
+        prevVisButton.addActionListener(this);
+        toolBar.add(prevVisButton);
         nextVisButton = new JButton(Utilities.GO_NEXT_ICON);
         nextVisButton.setToolTipText(tr("MainFrame.VisualizationManager.NextVisualization"));
         nextVisButton.addActionListener(this);
@@ -153,31 +153,41 @@ public class VisualizationManager extends JPanel implements ActionListener,
 
         if (source.equals(fullScreenButton)) {
             fullscreenWindow.setFullScreen(true);
-        } else if (source.equals(previousVisButton)) {
-            Visualization previousVis = visSet.lower(currentVis);
-            if (previousVis == null) {
-                previousVis = visSet.last();
+        } else if (source.equals(prevVisButton)) {
+            Visualization prevVis = visSet.lower(currentVis);
+            if (prevVis == null && !visSet.isEmpty()) {
+                prevVis = visSet.last();
             }
-            currentVis = previousVis;
-            for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
-                AbstractButton aButton = abEnum.nextElement();
-                if (aButton.getText().equals(currentVis.getDisplayName())) {
-                    aButton.setSelected(true);
-                    break;
+            currentVis = prevVis;
+            if (currentVis != null) {
+                String visDisplayName = currentVis.getDisplayName();
+                for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
+                    AbstractButton aButton = abEnum.nextElement();
+                    if (aButton.getText().equals(visDisplayName)) {
+                        aButton.setSelected(true);
+                        break;
+                    }
                 }
+                Settings.setVisualization(visDisplayName);
+                visPanel.repaint();
             }
         } else if (source.equals(nextVisButton)) {
             Visualization nextVis = visSet.higher(currentVis);
-            if (nextVis == null) {
+            if (nextVis == null && !visSet.isEmpty()) {
                 nextVis = visSet.first();
             }
             currentVis = nextVis;
-            for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
-                AbstractButton aButton = abEnum.nextElement();
-                if (aButton.getText().equals(currentVis.getDisplayName())) {
-                    aButton.setSelected(true);
-                    break;
+            if (currentVis != null) {
+                String visDisplayName = currentVis.getDisplayName();
+                for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
+                    AbstractButton aButton = abEnum.nextElement();
+                    if (aButton.getText().equals(visDisplayName)) {
+                        aButton.setSelected(true);
+                        break;
+                    }
                 }
+                Settings.setVisualization(visDisplayName);
+                visPanel.repaint();
             }
         } else {
             actionCommand = e.getActionCommand();
@@ -265,7 +275,7 @@ public class VisualizationManager extends JPanel implements ActionListener,
             device = env.getDefaultScreenDevice();
             displayMode = device.getDisplayMode();
             int refreshRate = displayMode.getRefreshRate();
-            if(refreshRate == DisplayMode.REFRESH_RATE_UNKNOWN) {
+            if (refreshRate == DisplayMode.REFRESH_RATE_UNKNOWN) {
                 refreshRate = DigitalSignalSynchronizer.DEFAULT_FPS;
             }
             delay = Math.round(1000 / refreshRate);
