@@ -625,6 +625,7 @@ public class AudioPlayer implements Callable<Void> {
                         }
                     } else if (state == INIT || state == PAUSE) {
                         if (sourceDataLine != null && sourceDataLine.isRunning()) {
+                            sourceDataLine.flush();
                             sourceDataLine.stop();
                         }
                         pauseCondition.awaitUninterruptibly();
@@ -728,11 +729,8 @@ public class AudioPlayer implements Callable<Void> {
             logger.info("Bytes to skip: {}", bytes);
             oldPosition = getPosition();
             int oldState = state;
-            if (sourceDataLine != null) {
-                if (state == PLAY) {
-                    state = PAUSE;
-                }
-                sourceDataLine.flush();
+            if (state == PLAY) {
+                state = PAUSE;
             }
             lock.lock();
             try {
