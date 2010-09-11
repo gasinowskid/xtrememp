@@ -110,12 +110,11 @@ public class Waveform extends Visualization {
             int sampleSize = dssContext.getSampleSize();
             float leftLevel = 0.0f;
             float rightLevel = 0.0f;
-            FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
-            FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
+            FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
 
             for (int i = 0; i < sampleSize; i++) {
-                leftLevel -= Math.abs(leftChannel.get(i));
-                rightLevel += Math.abs(rightChannel.get(i));
+                leftLevel -= Math.abs(channelsBuffer[0].get(i));
+                rightLevel += Math.abs(channelsBuffer[1].get(i));
             }
 
             // clear previous last lines

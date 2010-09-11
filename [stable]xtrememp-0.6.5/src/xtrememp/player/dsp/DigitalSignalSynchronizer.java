@@ -80,6 +80,7 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
     public void add(DigitalSignalProcessor dsp) {
         synchronized (dspList) {
             dspList.add(dsp);
+            dspList.notifyAll();
         }
     }
 
@@ -112,19 +113,32 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
 
     protected void start() {
         long delay = Math.round(1000 / framesPerSecond);
-        schedFuture = execService.scheduleAtFixedRate(this, 0, delay, TimeUnit.MILLISECONDS);
+        schedFuture = execService.scheduleWithFixedDelay(this, 0, delay, TimeUnit.MILLISECONDS);
+    }
+
+    protected boolean isRunning() {
+        if (schedFuture != null) {
+            return !schedFuture.isDone();
+        }
+        return false;
     }
 
     /**
      * Stop monitoring the currect SourceDataLine and release resources.
      */
     protected void stop() {
-        schedFuture.cancel(true);
+        if (schedFuture != null) {
+            schedFuture.cancel(true);
+        }
     }
 
     protected void close() {
-        schedFuture.cancel(true);
-        audioDataBuffer.clear();
+        if (schedFuture != null) {
+            schedFuture.cancel(true);
+        }
+        if (audioDataBuffer != null) {
+            audioDataBuffer.clear();
+        }
     }
 
     /**
@@ -152,16 +166,24 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
 
     @Override
     public void run() {
-        rLock.lock();
-        try {
-            dssContext.normalizeData(audioDataBuffer);
-        } finally {
-            rLock.unlock();
-        }
-        // -- Dispatch sample data to digtal signal processors.
         synchronized (dspList) {
-            for (DigitalSignalProcessor dsp : dspList) {
-                dsp.process(dssContext);
+            if (!dspList.isEmpty()) {
+                rLock.lock();
+                try {
+                    dssContext.normalizeData(audioDataBuffer);
+                } finally {
+                    rLock.unlock();
+                }
+                // -- Dispatch sample data to digtal signal processors.
+                for (DigitalSignalProcessor dsp : dspList) {
+                    dsp.process(dssContext);
+                }
+            } else {
+                try {
+                    dspList.wait();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace(System.err);
+                }
             }
         }
     }

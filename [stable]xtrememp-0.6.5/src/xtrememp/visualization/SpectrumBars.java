@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package xtrememp.visualization.spectrum;
+package xtrememp.visualization;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -26,9 +26,7 @@ import java.awt.Point;
 import java.nio.FloatBuffer;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
 import xtrememp.player.dsp.DssContext;
-import xtrememp.util.Utilities;
-import xtrememp.visualization.Visualization;
-import xtrememp.visualization.fourier.FFT;
+import xtrememp.visualization.spectrum.FFT;
 
 /**
  *
@@ -70,7 +68,7 @@ public class SpectrumBars extends Visualization {
      *
      * @param count Cannot be more than half the "FFT sample size".
      */
-    public synchronized void setBandCount(int count) {
+    public final synchronized void setBandCount(int count) {
         bands = count;
         computeSAMTable();
     }
@@ -81,7 +79,7 @@ public class SpectrumBars extends Visualization {
      *
      * @param size Cannot be more than the size of the sample provided by the DSP.
      */
-    public synchronized void setFFTSampleSize(int size) {
+    public final synchronized void setFFTSampleSize(int size) {
         fftSampleSize = size;
         fft = new FFT(fftSampleSize);
         old_FFT = new float[bands];
@@ -99,10 +97,8 @@ public class SpectrumBars extends Visualization {
 
     @Override
     public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
-        FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
-        FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
-        FloatBuffer stereoChannel = Utilities.stereoMerge(leftChannel, rightChannel);
-        float[] _fft = fft.calculate(stereoChannel);
+        FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
+        float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
         float barWidth = (float) width / (float) bands;
         float c = 0;
         int i = 0;

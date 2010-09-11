@@ -16,13 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package xtrememp.visualization.fourier;
+package xtrememp.visualization.spectrum;
 
 import java.nio.FloatBuffer;
 
 /**
  * @author Kris Fudalewski
  * @author Besmir Beqiri
+ *
+ * @version 1.3
  *
  * Fast Fourier Transformation class used for calculating the realtime spectrum analyzer.
  */
@@ -37,17 +39,16 @@ public class FFT {
     private int ss, ss2, nu;
 
     /**
-     * @param sampleSize the amount of the sample provided to the "calculate"
-     *        method to use during FFT calculations, this is used to prepare
-     *        the calculation tables in advance.
+     * @param sampleSize The amount of the sample provided to the "calculate"
+     * method to use during FFT calculations, this is used to prepare the
+     * calculation tables in advance. This value is automatically rounded up to
+     * the nearest power of 2.
      */
     public FFT(int sampleSize) {
-
-        nu = (int) Math.ceil(Math.log(sampleSize) / Math.log(2));
+        nu = (int) Math.ceil(Math.log(sampleSize) / Math.log(2.0D));
 
         // -- Calculate the nearest sample size to a power of 2.
-        ss = (int) Math.pow(2, nu);
-
+        ss = (int) Math.pow(2.0D, nu);
         ss2 = ss >> 1;
 
         // -- Allocate calculation buffers.
@@ -60,16 +61,17 @@ public class FFT {
         fftCos = new float[nu * ss2];
 
         prepareTables();
-
     }
-    
-    private int bitrev(int pJ, int pNu) {
-        int j1 = pJ;
-        int j2;
+
+    /**
+     * Bit swapping method.
+     */
+    private int bitrev(int j, int nu) {
+        int j1 = j;
         int k = 0;
 
-        for (int i = 0; i < pNu; i++) {
-            j2 = j1 >> 1;
+        for (int i = 0; i < nu; i++) {
+            int j2 = j1 >> 1;
             k = (k << 1) + j1 - (j2 << 1);
             j1 = j2;
         }
@@ -84,7 +86,6 @@ public class FFT {
      * @return the results of the calculation, normalized between 0.0 and 1.0.
      */
     public float[] calculate(FloatBuffer sample) {
-
         int n2 = ss2;
 
         // -- Fill buffer.
@@ -99,27 +100,18 @@ public class FFT {
             xim[a] = 0.0f;
         }
 
-        float tr, ti, c, s;
-        int k, kn2, x = 0;
-
+        int x = 0;
         for (int l = 0; l < nu; l++) {
-
-            k = 0;
-
-            while (k < ss) {
-
+            for (int k = 0; k < ss; k += n2) {
                 for (int i = 0; i < n2; i++) {
-
                     // -- Tabled sin/cos
-                    c = fftCos[x];
-                    s = fftSin[x];
+                    final float c = fftCos[x];
+                    final float s = fftSin[x];
 
-                    kn2 = k + n2;
+                    final int kn2 = k + n2;
 
-//                    System.out.println( "kn2: " + kn2 );
-
-                    tr = xre[kn2] * c + xim[kn2] * s;
-                    ti = xim[kn2] * c - xre[kn2] * s;
+                    final float tr = xre[kn2] * c + xim[kn2] * s;
+                    final float ti = xim[kn2] * c - xre[kn2] * s;
 
                     xre[kn2] = xre[k] - tr;
                     xim[kn2] = xim[k] - ti;
@@ -128,39 +120,24 @@ public class FFT {
 
                     k++;
                     x++;
-
                 }
-
-                k += n2;
-
             }
-
             n2 >>= 1;
-
         }
 
-        int r;
-
         // -- Reorder output.
-        for (k = 0; k < ss; k++) {
-
+        for (int k = 0; k < ss; k++) {
             // -- Use tabled BR values.
-            r = fftBr[k];
-
+            final int r = fftBr[k];
             if (r > k) {
-
-                tr = xre[k];
-
+                final float tr = xre[k];
                 xre[k] = xre[r];
                 xre[r] = tr;
 
-                ti = xim[k];
-
+                final float ti = xim[k];
                 xim[k] = xim[r];
                 xim[r] = ti;
-
             }
-
         }
 
         // -- Calculate magnitude.
@@ -169,29 +146,80 @@ public class FFT {
         }
 
         return mag;
-
     }
 
-    private void prepareTables() {
+    /**
+     * Calculates a table of frequencies represented by the amplitude data
+     * returned by the 'calculate' method. Each element states the end of the
+     * frequency range of the corresponding FFT band (or bin). For example:
+     *
+     * Range of band 0 =                 0.0 hz to frequencyTable[ 0 ] hz
+     * Range of band 1 = frequencyTable[ 0 ] hz to frequencyTable[ 1 ] hz
+     * Range of band 2 = frequencyTable[ 1 ] hz to frequencyTable[ 2 ] hz
+     *   ... and so on.
+     *
+     * Calculation uses the sample size rounded to the nearest power of 2 of
+     * the FFT instance and the sample rate parameter to build this table.
+     *
+     * @param  sampleRate The sample rate used to calculate the frequency table.
+     *                    Usually the sample rate of the input to the FFT
+     *                    calculate method.
+     * @return An array of frequency limits for each band.
+     */
+    public float[] calculateFrequencyTable(float sampleRate) {
+        float wFr = sampleRate / 2.0f;
 
+        // -- Calculate band width.
+        float wBw = wFr / ss2;
+
+        // -- Store for frequency table.
+        float[] wFt = new float[(int) ss2];
+
+        // -- Build band range table.
+        int b = 0;
+        for (float wFp = (wBw / 2.0f); wFp <= wFr; wFp += wBw) {
+            wFt[b] = wFp;
+            b++;
+        }
+
+        return wFt;
+    }
+
+    /**
+     * Returns the sample size this FFT instance uses for processing.
+     * It is automatically rounded to the nearest power of 2.
+     *
+     * @return The sample size used by the calculate method.
+     */
+    public int getInputSampleSize() {
+        return ss;
+    }
+
+    /**
+     * Returns the sample size this FFT instance returns after processing.
+     * It is automatically rounded to the nearest power of 2.
+     *
+     * @return The sample size returned by the calculate method.
+     */
+    public int getOutputSampleSize() {
+        return ss2;
+    }
+
+    /**
+     * Pre-calculates SIN/COS and bitrev tables in memory.
+     */
+    private void prepareTables() {
         int n2 = ss2;
         int nu1 = nu - 1;
-
-        float p, arg;
-        int k = 0, x = 0;
+        int k = 0;
+        int x = 0;
 
         // -- Prepare SIN/COS tables.
         for (int l = 0; l < nu; l++) {
-
-            k = 0;
-
             while (k < ss) {
-
                 for (int i = 0; i < n2; i++) {
-
-                    p = bitrev(k >> nu1, nu);
-
-                    arg = 2 * (float) Math.PI * p / ss;
+                    double p = bitrev(k >> nu1, nu);
+                    double arg = (Math.PI * p * 2.0D) / (double) ss;
 
                     fftSin[x] = (float) Math.sin(arg);
                     fftCos[x] = (float) Math.cos(arg);
@@ -199,18 +227,15 @@ public class FFT {
                     k++;
                     x++;
                 }
-
                 k += n2;
             }
-
+            k = 0;
             nu1--;
             n2 >>= 1;
-
         }
 
         // -- Prepare bitrev table.
         fftBr = new int[ss];
-
         for (k = 0; k < ss; k++) {
             fftBr[k] = bitrev(k, nu);
         }

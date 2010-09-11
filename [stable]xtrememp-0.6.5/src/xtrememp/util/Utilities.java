@@ -23,7 +23,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,24 +111,6 @@ public final class Utilities {
     }
 
     /**
-     * Returns a {@link FloatBuffer} as the result of merging the left and
-     * right channel buffers.
-     *
-     * @param leftChannel the left channel buffer.
-     * @param rightChannel the right channel buffer.
-     * @return a {@link FloatBuffer} object.
-     */
-    public static FloatBuffer stereoMerge(FloatBuffer leftChannel, FloatBuffer rightChannel) {
-        int capacity = Math.max(leftChannel.capacity(), rightChannel.capacity());
-        FloatBuffer stereoBuffer = FloatBuffer.allocate(capacity);
-        for (int i = 0, len = leftChannel.capacity(); i < len; i++) {
-            float average = (leftChannel.get(i) + rightChannel.get(i)) / 2.0f;
-            stereoBuffer.put(average);
-        }
-        return stereoBuffer.asReadOnlyBuffer();
-    }
-
-    /**
      * Verify if the current operating system is Windows.
      *
      * @return <code>true</code> if the current OS is Windows,
@@ -213,7 +194,7 @@ public final class Utilities {
             try {
                 image = ImageIO.read(Utilities.class.getResourceAsStream("/xtrememp/resources/images/" + name));
             } catch (IOException ex) {
-                ex.printStackTrace();
+                ex.printStackTrace(System.err);
             }
         }
         return image;

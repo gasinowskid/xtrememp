@@ -19,6 +19,7 @@
 package xtrememp.visualization;
 
 import java.awt.Graphics2D;
+import java.nio.FloatBuffer;
 import xtrememp.player.dsp.DssContext;
 
 /**
@@ -40,12 +41,31 @@ public abstract class Visualization implements Comparable<Visualization> {
      * @param g2d a Graphics object used for painting.
      * @param width width of the rendering area.
      * @param height height of the rendering area.
-     * @param dssContext
+     * @param dssContext a DssContext object containing a reference to the sample data.
      */
     public abstract void render(Graphics2D g2d, int width, int height, DssContext dssContext);
 
+    /**
+     * Returns a {@link FloatBuffer} as the result of merging the channels
+     * buffers.
+     *
+     * @param channelsBufffer the channels buffers.
+     * @return A {@link FloatBuffer} object.
+     */
+    public FloatBuffer channelsMerge(FloatBuffer[] channelsBufffer) {
+        int ch = channelsBufffer.length;
+        for (int a = 0, cap = channelsBufffer[0].capacity(); a < cap; a++) {
+            float mcd = 0;
+            for (int b = 0; b < ch; b++) {
+                mcd += channelsBufffer[b].get(a);
+            }
+            channelsBufffer[0].put(a, mcd / (float) ch);
+        }
+        return channelsBufffer[0].asReadOnlyBuffer();
+    }
+
     @Override
-    public int compareTo(Visualization obj) {
-        return this.getDisplayName().compareTo(obj.getDisplayName());
+    public int compareTo(Visualization vis) {
+        return this.getDisplayName().compareTo(vis.getDisplayName());
     }
 }

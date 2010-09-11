@@ -30,71 +30,62 @@ import javax.sound.sampled.SourceDataLine;
 public class DssContext {
 
     private SourceDataLine sourceDataLine;
-    private FloatBuffer leftChannel;
-    private FloatBuffer rightChannel;
-    private int offset = 0;
-    private int sampleSize = 0;
+    private AudioFormat audioFormat;
+    private FloatBuffer[] channelsBuffer;
+    private int offset;
+    private int sampleSize;
+    private int channels;
+    private int frameSize;
+    private int ssib;
+    private int channelSize;
+    private float audioSampleSize;
 
     /**
-     * Create a DSS context with a fixed sample length.
+     * Create a DSS context from a source data line with a fixed sample size.
      *
+     * @param sourceDataLine The source data line.
      * @param sampleSize The sample size.
      */
     public DssContext(SourceDataLine sourceDataLine, int sampleSize) {
         this.sourceDataLine = sourceDataLine;
+        this.audioFormat = sourceDataLine.getFormat();
         this.sampleSize = sampleSize;
-        this.leftChannel = FloatBuffer.allocate(sampleSize);
-        this.rightChannel = FloatBuffer.allocate(sampleSize);
+
+        channels = audioFormat.getChannels();
+        frameSize = audioFormat.getFrameSize();
+        ssib = audioFormat.getSampleSizeInBits();
+        channelSize = frameSize / channels;
+        audioSampleSize = (1 << (ssib - 1));
+
+        this.channelsBuffer = new FloatBuffer[channels];
+        for (int ch = 0; ch < channels; ch++) {
+            channelsBuffer[ch] = FloatBuffer.allocate(sampleSize);
+        }
     }
 
     public void normalizeData(ByteBuffer audioDataBuffer) {
-        AudioFormat audioFormat = sourceDataLine.getFormat();
-        int ch = audioFormat.getChannels();
-        int fs = audioFormat.getFrameSize();
-        int ss = audioFormat.getSampleSizeInBits();
         long lfp = sourceDataLine.getLongFramePosition();
-        offset = (int) ((long) (lfp * fs) % (long) (audioDataBuffer.capacity()));
-        if (ch == 1) {
-            if (ss == 8) {
-                for (int a = 0, c = offset; a < sampleSize; a++, c += fs) {
-                    if (c >= audioDataBuffer.capacity()) {
-                        c = 0;
-                    }
+        offset = (int) ((long) (lfp * frameSize) % (long) (audioDataBuffer.capacity()));
 
-                    float value = (float) ((int) audioDataBuffer.get(c) / 128.0f);
-                    leftChannel.put(a, value);
-                    rightChannel.put(a, value);
-                }
-            } else if (ss == 16) {
-                for (int a = 0, c = offset; a < sampleSize; a++, c += fs) {
-                    if (c >= audioDataBuffer.capacity()) {
-                        c = 0;
-                    }
-
-                    float value = (float) (((int) audioDataBuffer.get(c + 1) << 8) + audioDataBuffer.get(c)) / 32767.0f;
-                    leftChannel.put(a, value);
-                    rightChannel.put(a, value);
-                }
+        // -- Loop through audio data.
+        for (int sp = 0, pos = offset; sp < sampleSize; sp++, pos += frameSize) {
+            if (pos >= audioDataBuffer.capacity()) {
+                pos = 0;
             }
-        } else if (ch == 2) {
-            if (ss == 8) {
-                for (int a = 0, c = offset; a < sampleSize; a++, c += fs) {
-                    if (c >= audioDataBuffer.capacity()) {
-                        c = 0;
-                    }
 
-                    leftChannel.put(a, (float) ((int) audioDataBuffer.get(c) / 128.0f));
-                    rightChannel.put(a, (float) ((int) audioDataBuffer.get(c + 1) / 128.0f));
-                }
-            } else if (ss == 16) {
-                for (int a = 0, c = offset; a < sampleSize; a++, c += fs) {
-                    if (c >= audioDataBuffer.capacity()) {
-                        c = 0;
-                    }
+            // -- Loop through channels.
+            for (int ch = 0, cdp = 0; ch < channels; ch++, cdp += channelSize) {
 
-                    leftChannel.put(a, (float) (((int) audioDataBuffer.get(c + 1) << 8) + audioDataBuffer.get(c)) / 32767.0f);
-                    rightChannel.put(a, (float) (((int) audioDataBuffer.get(c + 3) << 8) + audioDataBuffer.get(c + 2)) / 32767.0f);
+                // -- Sign least significant byte. (PCM_SIGNED)
+                float sm = (audioDataBuffer.get(pos + cdp) & 0xFF) - 128.0F;
+
+                for (int bt = 8, bp = 1; bt < ssib; bt += 8) {
+                    sm += audioDataBuffer.get(pos + cdp + bp) << bt;
+                    bp++;
                 }
+
+                // -- Store normalized data.
+                channelsBuffer[ch].put(sp, sm / audioSampleSize);
             }
         }
     }
@@ -102,25 +93,16 @@ public class DssContext {
     /**
      * Returns a normalized sample from the DSS data buffer.
      *
-     * @return normalized data.
+     * @return An array of {@link FloatBuffer}.
      */
-    public FloatBuffer getLeftChannelBuffer() {
-        return leftChannel.asReadOnlyBuffer();
-    }
-
-    /**
-     * Returns a normalized sample from the DSS data buffer.
-     *
-     * @return normalized data.
-     */
-    public FloatBuffer getRightChannelBuffer() {
-        return rightChannel.asReadOnlyBuffer();
+    public FloatBuffer[] getDataNormalized() {
+        return channelsBuffer;
     }
 
     /**
      * Returns the sample size to read from the data buffer.
      *
-     * @return int
+     * @return The sample size to read from the data buffer
      */
     public int getSampleSize() {
         return sampleSize;
@@ -129,9 +111,9 @@ public class DssContext {
     /**
      * Returns the data buffer offset to start reading from. Please note that the offset + length
      * can be beyond the buffer length. This simply means, the rest of data sample has rolled over
-     * to the beginning of the data buffer. See the Normalizer inner class for an example.
+     * to the beginning of the data buffer.
      *
-     * @return int
+     * @return The data buffer offset to start reading from.
      */
     public int getOffset() {
         return offset;
@@ -140,7 +122,7 @@ public class DssContext {
     /**
      * Returns the monitored source data line.
      *
-     * @return A source data line.
+     * @return A {@link SourceDataLine} object.
      */
     public SourceDataLine getSourceDataLine() {
         return sourceDataLine;

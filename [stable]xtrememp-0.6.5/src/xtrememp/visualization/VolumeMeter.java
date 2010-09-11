@@ -33,7 +33,7 @@ import xtrememp.player.dsp.DssContext;
 public class VolumeMeter extends Visualization {
 
     public static final String NAME = "Volume Meter";
-    public static final float DEFAULT_VU_METER_DECAY = 0.05f;
+    public static final float DEFAULT_VU_METER_DECAY = 0.02f;
     private LinearGradientPaint lgp;
     private float oldLeft;
     private float oldRight;
@@ -61,12 +61,11 @@ public class VolumeMeter extends Visualization {
         float leftLevel = 0.0f;
         float rightLevel = 0.0f;
         int sampleSize = dssContext.getSampleSize();
-        FloatBuffer leftChannel = dssContext.getLeftChannelBuffer();
-        FloatBuffer rightChannel = dssContext.getRightChannelBuffer();
+        FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
 
         for (int i = 0; i < sampleSize; i++) {
-            leftLevel += Math.abs(leftChannel.get(i));
-            rightLevel += Math.abs(rightChannel.get(i));
+            leftLevel += Math.abs(channelsBuffer[0].get(i));
+            rightLevel += Math.abs(channelsBuffer[1].get(i));
         }
 
         leftLevel = ((leftLevel * 2.0f) / (float) sampleSize);
