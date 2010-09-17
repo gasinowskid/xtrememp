@@ -116,6 +116,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
     private final PlaylistFileFilter playlistFileFilter = new PlaylistFileFilter();
+    private final Version currentVersion = Version.getCurrentVersion();
     private static XtremeMP instance;
     private JFrame mainFrame;
     private JMenuBar menuBar;
@@ -215,7 +216,11 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 UIManager.put(SubstanceLookAndFeel.FOCUS_KIND, SubstanceConstants.FocusKind.NONE);
                 SubstanceLookAndFeel.setSkin(Settings.getSkin());
-                mainFrame = new JFrame(tr("Application.title"));
+
+                StringBuilder appTitle = new StringBuilder(tr("Application.title"));
+                appTitle.append(" ");
+                appTitle.append(currentVersion);
+                mainFrame = new JFrame(appTitle.toString());
                 mainFrame.setIconImages(Utilities.getIconImages());
                 mainFrame.setBounds(Settings.getMainFrameBounds());
                 mainFrame.addWindowListener(new WindowAdapter() {
@@ -823,7 +828,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
                     options = new Object[]{tr("Button.Close"), tr("Button.Website")};
                 }
             }
-            Version currentVersion = Version.getCurrentVersion();
             StringBuffer message = new StringBuffer();
             message.append("<html><b><font color='red' size='5'>").append(tr("Application.title"));
             message.append("</font></b><br>").append(tr("Application.description"));
