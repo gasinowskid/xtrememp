@@ -124,7 +124,7 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
     }
 
     /**
-     * Stop monitoring the currect SourceDataLine and release resources.
+     * Stop monitoring the current SourceDataLine and release resources.
      */
     protected void stop() {
         if (schedFuture != null) {

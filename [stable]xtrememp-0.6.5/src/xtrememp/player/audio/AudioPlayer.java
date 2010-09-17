@@ -33,8 +33,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -169,7 +167,7 @@ public class AudioPlayer implements Callable<Void> {
         notifyEvent(Playback.BUFFERING);
         int oldState = state;
         state = AudioSystem.NOT_SPECIFIED;
-        if (oldState == PAUSE) {
+        if (oldState == INIT || oldState == PAUSE) {
             lock.lock();
             try {
                 pauseCondition.signal();
@@ -267,7 +265,7 @@ public class AudioPlayer implements Callable<Void> {
     }
 
     /**
-     * Inits Audio ressources from file.
+     * Inits Audio resources from file.
      * @param file
      * @throws javax.sound.sampled.UnsupportedAudioFileException
      * @throws java.io.IOException
@@ -278,7 +276,7 @@ public class AudioPlayer implements Callable<Void> {
     }
 
     /**
-     * Inits Audio ressources from URL.
+     * Inits Audio resources from URL.
      * @param url
      * @throws javax.sound.sampled.UnsupportedAudioFileException
      * @throws java.io.IOException
@@ -289,7 +287,7 @@ public class AudioPlayer implements Callable<Void> {
     }
 
     /**
-     * Inits Audio ressources from AudioSystem.
+     * Inits Audio resources from AudioSystem.
      * @throws PlayerException
      */
     protected void initSourceDataLine() throws PlayerException {
@@ -638,7 +636,7 @@ public class AudioPlayer implements Callable<Void> {
                 }
             }
             if (sourceDataLine != null) {
-                sourceDataLine.drain();
+                sourceDataLine.flush();
                 sourceDataLine.stop();
                 sourceDataLine.close();
                 sourceDataLine = null;
@@ -657,13 +655,11 @@ public class AudioPlayer implements Callable<Void> {
     private void awaitTermination() {
         if (future != null && !future.isDone()) {
             try {
-                future.get(1, TimeUnit.SECONDS);
+                future.get();
             } catch (InterruptedException ex) {
                 logger.error(ex.getMessage(), ex);
             } catch (ExecutionException ex) {
                 logger.error(ex.getMessage(), ex);
-            } catch (TimeoutException ex) {
-//                logger.error(ex.getMessage(), ex);
             } finally {
                 // Harmless if task already completed
                 future.cancel(true); // interrupt if running
