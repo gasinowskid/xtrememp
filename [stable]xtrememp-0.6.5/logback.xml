@@ -1,5 +1,5 @@
-<configuration>
 
+<configuration>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${CACHE_DIR}/xtrememp.log</File>
 

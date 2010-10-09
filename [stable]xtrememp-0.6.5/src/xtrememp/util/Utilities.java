@@ -72,7 +72,6 @@ public final class Utilities {
     public static final Icon PLAYLIST_REPEAT_ICON = getIcon("media-playlist-repeat.png");
     public static final Icon PLAYLIST_REPEATALL_ICON = getIcon("media-playlist-repeat_all.png");
     public static final Icon PLAYLIST_SHUFFLE_ICON = getIcon("media-playlist-shuffle.png");
-    public static final Icon PLAYLIST_SHUFFLE_ALT_ICON = getIcon("media-playlist-shuffle-alt.png");
     public static final Icon AUDIO_VOLUME_HIGH_ICON = getIcon("audio-volume-high.png");
     public static final Icon AUDIO_VOLUME_MEDIUM_ICON = getIcon("audio-volume-medium.png");
     public static final Icon AUDIO_VOLUME_LOW_ICON = getIcon("audio-volume-low.png");

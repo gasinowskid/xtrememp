@@ -455,7 +455,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         playModeSubMenu.add(playModeRepeatAllMenuItem);
 
         playModeShuffleMenuItem = new JRadioButtonMenuItem(tr("MainFrame.Menu.Player.PlayMode.Shuffle"));
-        playModeShuffleMenuItem.setIcon(Utilities.PLAYLIST_SHUFFLE_ALT_ICON);
+        playModeShuffleMenuItem.setIcon(Utilities.PLAYLIST_SHUFFLE_ICON);
         playModeShuffleMenuItem.addActionListener(this);
         playModeSubMenu.add(playModeShuffleMenuItem);
 
@@ -471,7 +471,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
 
         randomizePlaylistMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Randomize"));
         randomizePlaylistMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
-        randomizePlaylistMenuItem.setIcon(Utilities.PLAYLIST_SHUFFLE_ICON);
         randomizePlaylistMenuItem.setEnabled(false);
         randomizePlaylistMenuItem.addActionListener(this);
         playerMenu.add(randomizePlaylistMenuItem);
@@ -541,11 +540,12 @@ public final class XtremeMP implements ActionListener, ControlListener,
             mainPanel.add(visualizationPanel, Utilities.VISUALIZATION_PANEL);
             playlistManagerMenuItem.setSelected(true);
         }
-        mainFrame.getContentPane().setLayout(new MigLayout("fill"));
-        mainFrame.getContentPane().add(mainPanel, "grow");
+
+        JPanel framePanel = new JPanel(new MigLayout("fill"));
+        framePanel.add(mainPanel, "grow");
 
         JPanel southPanel = new JPanel(new MigLayout("fill", "[center]"));
-        SubstanceLookAndFeel.setDecorationType(southPanel, DecorationAreaType.TOOLBAR);
+//        SubstanceLookAndFeel.setDecorationType(southPanel, DecorationAreaType.TOOLBAR);
         seekSlider = new SeekSlider(this);
         seekSlider.setEnabled(false);
         southPanel.add(seekSlider, "north, gap 4 4 1 0");
@@ -650,48 +650,16 @@ public final class XtremeMP implements ActionListener, ControlListener,
         SubstanceLookAndFeel.setDecorationType(statusBar, DecorationAreaType.FOOTER);
         timeLabel = new JLabel(Utilities.ZERO_TIMER);
         timeLabel.setFont(timeLabel.getFont().deriveFont(Font.BOLD));
-        statusBar.add(timeLabel, "gap 8 4 0 0");
+        statusBar.add(timeLabel, "gap 6 6 0 0, west");
+        statusBar.add(new JSeparator(SwingConstants.VERTICAL), "hmin 16");
         statusLabel = new JLabel();
-        statusBar.add(statusLabel, "gap 4 8 0 0, wmin 0");
-        statusBar.add(new JSeparator(SwingConstants.VERTICAL));
+        statusBar.add(statusLabel, "gap 0 2 0 0, wmin 0, push");
+        statusBar.add(new JSeparator(SwingConstants.VERTICAL), "hmin 16");
         playModeLabel = new JLabel();
         statusBar.add(playModeLabel, "east");
-        updatePlayModeIcon();
         southPanel.add(statusBar, "south");
-        mainFrame.getContentPane().add(southPanel, "south");
-    }
-
-    protected void updatePlayModeIcon() {
-        EventQueue.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                Playlist.PlayMode playMode = Settings.getPlayMode();
-                String toolTipMessage = "<html><b>" + tr("MainFrame.Menu.Player.PlayMode") + "</b><br>";
-                switch (playMode) {
-                    case REPEAT_NONE:
-                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatNone"));
-                        break;
-                    case REPEAT_SINGLE:
-                        playModeLabel.setIcon(Utilities.PLAYLIST_REPEAT_ICON);
-                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatSingle"));
-                        break;
-                    case REPEAT_ALL:
-                        playModeLabel.setIcon(Utilities.PLAYLIST_REPEATALL_ICON);
-                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.RepeatAll"));
-                        break;
-                    case SHUFFLE:
-                        playModeLabel.setIcon(Utilities.PLAYLIST_SHUFFLE_ALT_ICON);
-                        toolTipMessage = toolTipMessage.concat(tr("MainFrame.Menu.Player.PlayMode.Shuffle"));
-                        break;
-                    default:
-                        playModeLabel.setIcon(null);
-                }
-                toolTipMessage = toolTipMessage.concat("</html>");
-                playModeLabel.setToolTipText(toolTipMessage);
-            }
-        });
-
+        framePanel.add(southPanel, "south");
+        mainFrame.setContentPane(framePanel);
     }
 
     protected void setTime(final String timeText, final int seekSliderValue) {
@@ -1106,8 +1074,34 @@ public final class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playModeChanged(PlaylistEvent e) {
-        Settings.setPlayMode(playlist.getPlayMode());
-        updatePlayModeIcon();
+        Playlist.PlayMode playMode = playlist.getPlayMode();
+
+        Settings.setPlayMode(playMode);
+
+        StringBuilder toolTipMessage = new StringBuilder("<html><b>");
+        toolTipMessage.append(tr("MainFrame.Menu.Player.PlayMode"));
+        toolTipMessage.append("</b><br>");
+        switch (playMode) {
+            case REPEAT_NONE:
+                toolTipMessage.append(tr("MainFrame.Menu.Player.PlayMode.RepeatNone"));
+                break;
+            case REPEAT_SINGLE:
+                playModeLabel.setIcon(Utilities.PLAYLIST_REPEAT_ICON);
+                toolTipMessage.append(tr("MainFrame.Menu.Player.PlayMode.RepeatSingle"));
+                break;
+            case REPEAT_ALL:
+                playModeLabel.setIcon(Utilities.PLAYLIST_REPEATALL_ICON);
+                toolTipMessage.append(tr("MainFrame.Menu.Player.PlayMode.RepeatAll"));
+                break;
+            case SHUFFLE:
+                playModeLabel.setIcon(Utilities.PLAYLIST_SHUFFLE_ICON);
+                toolTipMessage.append(tr("MainFrame.Menu.Player.PlayMode.Shuffle"));
+                break;
+            default:
+                playModeLabel.setIcon(null);
+        }
+        toolTipMessage.append("</html>");
+        playModeLabel.setToolTipText(toolTipMessage.toString());
     }
 
     @Override
