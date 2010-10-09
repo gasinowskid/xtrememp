@@ -69,7 +69,7 @@ public class Version implements Comparable<Version> {
      */
     private String releaseDate;
     /**
-     * Download url string.
+     * Download URL string.
      */
     private String downloadURL;
 
@@ -110,8 +110,7 @@ public class Version implements Comparable<Version> {
 
     @Override
     public int hashCode() {
-        return new String(majorNumber + "." + minorNumber + "." + microNumber +
-                "." + (versionType != VersionType.FINAL ? versionType : "")).hashCode();
+        return toString().hashCode();
     }
 
     @Override
@@ -183,9 +182,9 @@ public class Version implements Comparable<Version> {
     }
 
     /**
-     * Gets download url.
+     * Gets download URL.
      * 
-     * @return the download url
+     * @return the download URL
      */
     public String getDownloadURL() {
         return downloadURL;
@@ -198,7 +197,7 @@ public class Version implements Comparable<Version> {
      */
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(majorNumber);
         sb.append(".");
         sb.append(minorNumber);
@@ -214,8 +213,7 @@ public class Version implements Comparable<Version> {
     /**
      * Sets major number.
      * 
-     * @param majorNumber
-     *            the major number
+     * @param majorNumber the major number
      */
     protected void setMajorNumber(int majorNumber) {
         this.majorNumber = majorNumber;
@@ -224,8 +222,7 @@ public class Version implements Comparable<Version> {
     /**
      * Sets minor number.
      * 
-     * @param minorNumber
-     *            the minor number
+     * @param minorNumber the minor number
      */
     protected void setMinorNumber(int minorNumber) {
         this.minorNumber = minorNumber;
@@ -259,15 +256,15 @@ public class Version implements Comparable<Version> {
     }
 
     /**
-     * Sets download url.
+     * Sets download URL.
      * 
-     * @param downloadURL the download url
+     * @param downloadURL the download URL
      */
     protected void setDownloadURL(String downloadURL) {
         this.downloadURL = downloadURL;
     }
 
-    public static final Version getCurrentVersion() {
+    public static Version getCurrentVersion() {
         int majorNumber = Integer.parseInt(tr("Application.version.majorNumber"));
         int minorNumber = Integer.parseInt(tr("Application.version.minorNumber"));
         int microNumber = Integer.parseInt(tr("Application.version.microNumber"));
