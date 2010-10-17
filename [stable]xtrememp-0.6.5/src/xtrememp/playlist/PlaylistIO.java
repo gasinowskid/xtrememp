@@ -411,10 +411,10 @@ public final class PlaylistIO {
                         if (!Utilities.isNullOrEmpty(album)) {
                             track.setAlbum(album.trim());
                         }
-                        String trackNum = String.valueOf(tagInfo.getTrack()).trim();
-                        if (!trackNum.equals("null")) {
+                        String trackNum = tagInfo.getTrack();
+                        if (!Utilities.isNullOrEmpty(trackNum)) {
                             try {
-                                track.setTrackNum(new BigInteger(trackNum));
+                                track.setTrackNum(new BigInteger(trackNum.trim()));
                             } catch (NumberFormatException ex) {
                                 logger.debug("{} is not a valid number", trackNum, ex);
                             }
