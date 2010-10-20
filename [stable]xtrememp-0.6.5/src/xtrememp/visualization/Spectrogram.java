@@ -24,48 +24,60 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.VolatileImage;
 import java.nio.FloatBuffer;
+import javax.sound.sampled.SourceDataLine;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
-import xtrememp.player.dsp.DssContext;
+import xtrememp.visualization.spectrum.Band;
+import xtrememp.visualization.spectrum.BandDistribution;
+import xtrememp.visualization.spectrum.BandGain;
 import xtrememp.visualization.spectrum.FFT;
+import xtrememp.visualization.spectrum.FlatBandGain;
+import xtrememp.visualization.spectrum.FrequencyBandGain;
+import xtrememp.visualization.spectrum.LinearBandDistribution;
+import xtrememp.visualization.spectrum.LogBandDistribution;
 
 /**
+ * Renders a spectrogram.
+ *
+ * Based on KJ-DSS project by Kristofer Fudalewski (http://sirk.sytes.net).
  *
  * @author Besmir Beqiri
  */
-public class Spectrogram extends Visualization {
+public final class Spectrogram extends Visualization {
 
     public static final String NAME = "Spectrogram";
-    private FFT fft;
+    //
+    public static final BandDistribution BAND_DISTRIBUTION_LINEAR = new LinearBandDistribution();
+    public static final BandDistribution BAND_DISTRIBUTION_LOG = new LogBandDistribution(4, 20.0D);
+    public static final BandGain BAND_GAIN_FLAT = new FlatBandGain(100.0F);
+    public static final BandGain BAND_GAIN_FREQUENCY = new FrequencyBandGain(50.0F);
+    //
+    public static final BandDistribution DEFAULT_SPECTROGRAM_BAND_DISTRIBUTION = BAND_DISTRIBUTION_LINEAR;
+    public static final BandGain DEFAULT_SPECTROGRAM_BAND_GAIN = BAND_GAIN_FREQUENCY;
+    public static final float DEFAULT_SPECTRUM_ANALYSER_GAIN = 1.0F;
+    //
+    protected BandDistribution bandDistribution;
+    protected BandGain bandGain;
+    protected Band[] bdTable;
+    protected float[] bgTable;
+    protected int bands;
+    protected int fftSampleSize;
+    protected float fftSampleRate;
+    protected FFT fft;
+    private float gain;
+    private float bandWidth;
     private Color[] sColors;
-    private int fftSampleSize;
-    private int bands;
-    private int[] samTable;
-    private double[] logTable;
-    private double[] log10Table;
     private GraphicsConfiguration gc;
     private VolatileImage image1;
     private VolatileImage image2;
 
     public Spectrogram() {
-        setBandCount(DigitalSignalSynchronizer.DEFAULT_SAMPLE_SIZE);
-        setFFTSampleSize(DigitalSignalSynchronizer.DEFAULT_SAMPLE_SIZE);
+        this.bandDistribution = DEFAULT_SPECTROGRAM_BAND_DISTRIBUTION;
+        this.bandGain = DEFAULT_SPECTROGRAM_BAND_GAIN;
+        this.gain = DEFAULT_SPECTRUM_ANALYSER_GAIN;
+        this.gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
+                getDefaultScreenDevice().getDefaultConfiguration();
 
-        // Grayscale gradient
-        sColors = new Color[256];
-        for (int i = 0, len = sColors.length; i < len; i++) {
-            int rgb = i * 5;
-            if (rgb > 255) {
-                rgb = 255;
-            }
-            sColors[i] = new Color(rgb, rgb, rgb);
-        }
-
-//        initColors();
-    }
-
-    @Override
-    public String getDisplayName() {
-        return NAME;
+        setBandCount(DigitalSignalSynchronizer.DEFAULT_SAMPLE_SIZE / 2);
     }
 
     /**
@@ -73,60 +85,96 @@ public class Spectrogram extends Visualization {
      *
      * @param count Cannot be more than half the "FFT sample size".
      */
-    public final synchronized void setBandCount(int count) {
+    public synchronized void setBandCount(int count) {
         bands = count;
-        computeSAMTable();
+        computeBandTables();
     }
 
-    /**
-     * Sets the FFT sample size to be just for calculating the spectrum analyser
-     * values. The default is 512.
-     *
-     * @param size Cannot be more than the size of the sample provided by the DSP.
-     */
-    public final synchronized void setFFTSampleSize(int size) {
-        fftSampleSize = size;
-        fft = new FFT(fftSampleSize);
-
-        logTable = new double[size];
-        log10Table = new double[size];
-
-        double r = (double) size / 90.0;
-        for (int a = 0; a < size; a++) {
-            logTable[a] = Math.log(a + 2);
-            log10Table[a] = Math.log10(((double) a / r) + 10.0) - 1.0;
+    private void computeBandTables() {
+        if (bands > 0 && fftSampleSize > 0 & fft != null) {
+            //Create band table.
+            bdTable = bandDistribution.create(bands, fft, fftSampleRate);
+            bands = bdTable.length;
+            //Create gain table.
+            bgTable = bandGain.create(fft, fftSampleRate);
         }
-        computeSAMTable();
     }
 
-    private void computeSAMTable() {
-        if (bands > 0) {
-            // -- Calculate a log based band mapping table.
-            if (logTable != null) {
-                int wHss = (int) fftSampleSize >> 2;
-                double r = ((double) fftSampleSize / (double) wHss);
-                samTable = new int[bands];
+    @Override
+    public void init(int sampleSize, SourceDataLine sourceDataLine) {
+        this.fftSampleSize = sampleSize;
+        this.fftSampleRate = sourceDataLine.getFormat().getFrameRate();
+        this.fft = new FFT(fftSampleSize);
 
-                double a = 0;
+        computeBandTables();
+    }
 
-                int wLb = 0;
-                int wBand = 0;
+    @Override
+    public String getDisplayName() {
+        return NAME;
+    }
 
-                for (int b = 0; b < wHss; b++) {
-                    int wCb = (int) (log10Table[(int) ((double) b * r)] * bands);
-                    if (wCb != wLb) {
-                        samTable[wBand] = b;
-                        wLb = wCb;
-                        wBand++;
+    @Override
+    public synchronized void render(Graphics2D g2d, int width, int height) {
+        if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
+            createImages(width, height);
+        }
+        do {
+            int valCode1 = image1.validate(gc);
+            int valCode2 = image2.validate(gc);
+            if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
+                fillBackground(Color.black);
+            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
+                    || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
+                createImages(width, height);
+            }
+
+            //FFT processing.
+            FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
+            float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
+            bandWidth = (float) height / (float) bands;
+
+            Graphics2D g2d1 = image1.createGraphics();
+            g2d1.drawImage(image2, -1, 0, null);
+
+            float y = height;
+            int width2 = width - 1;
+            int b, bd, i, li = 0, mi;
+            float fs, m;
+            //Group up available bands using band distribution table.
+            for (bd = 0; bd < bands; bd++) {
+                //Get band distribution entry.
+                i = bdTable[bd].distribution;
+                m = 0;
+                mi = 0;
+                //Find loudest band in group. (Group is from 'li' to 'i').
+                for (b = li; b < i; b++) {
+                    float lf = _fft[b];
+                    if (lf > m) {
+                        m = lf;
+                        mi = b;
                     }
                 }
-
-                if (wBand < bands) {
-                    samTable[wBand] = wHss - 1;
-                    bands = wBand + 1;
+                li = i;
+                //Calculate gain using log, then static gain.
+                fs = (m * bgTable[mi]) * gain;
+                //Limit over-saturation.
+                if (fs > 1.0F) {
+                    fs = 1.0F;
                 }
+
+                g2d1.setColor(new Color(fs, fs, fs));
+                g2d1.drawLine(width2, Math.round(y), width2, Math.round(y - bandWidth));
+                y -= bandWidth;
             }
-        }
+            g2d1.dispose();
+
+            Graphics2D g2d2 = image2.createGraphics();
+            g2d2.drawImage(image1, 0, 0, null);
+            g2d2.dispose();
+
+            g2d.drawImage(image2, 0, 0, null);
+        } while (image1.contentsLost() || image2.contentsLost());
     }
 
     private void createImages(int width, int height) {
@@ -142,9 +190,6 @@ public class Spectrogram extends Visualization {
         }
 
         // create images
-        gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
-                getDefaultScreenDevice().getDefaultConfiguration();
-
         image1 = gc.createCompatibleVolatileImage(width, height);
         image2 = gc.createCompatibleVolatileImage(width, height);
 
@@ -172,64 +217,6 @@ public class Spectrogram extends Visualization {
             g2d2.fillRect(0, 0, image2.getWidth(), image2.getHeight());
             g2d2.dispose();
         }
-    }
-
-    @Override
-    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
-        if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
-            createImages(width, height);
-        }
-        do {
-            int valCode1 = image1.validate(gc);
-            int valCode2 = image2.validate(gc);
-            if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
-                fillBackground(Color.black);
-            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
-                    || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
-                createImages(width, height);
-            }
-
-            // rendering
-            FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
-            float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
-            float offset = (float) height / (float) bands;
-
-            Graphics2D g2d1 = image1.createGraphics();
-            g2d1.drawImage(image2, -1, 0, null);
-
-            float y = height;
-            int width2 = width - 1;
-            int i = 0;
-            int li = 0;
-            for (int bd = 0; bd < bands; bd++) {
-                i = samTable[bd];
-                float fs = 0;
-                float m = 0;
-                // Average out nearest bands.
-                for (int b = li; b < i; b++) {
-                    float lf = _fft[b];
-                    if (lf > m) {
-                        m = lf;
-                    }
-                }
-                // Log filter.
-                li = i;
-                fs = (m * (float) (logTable[li])) * 2.0f;
-                if (fs > 1.0f) {
-                    fs = 1.0f;
-                }
-                g2d1.setColor(sColors[(int) (fs * 255)]);
-                g2d1.drawLine(width2, (int) y, width2, (int) (y - offset));
-                y -= offset;
-            }
-            g2d1.dispose();
-
-            Graphics2D g2d2 = image2.createGraphics();
-            g2d2.drawImage(image1, 0, 0, null);
-            g2d2.dispose();
-
-            g2d.drawImage(image2, 0, 0, null);
-        } while (image1.contentsLost() || image2.contentsLost());
     }
 //    private void initColors() {
 //        sColors = new Color[256];

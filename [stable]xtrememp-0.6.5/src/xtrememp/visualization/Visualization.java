@@ -18,15 +18,56 @@
  */
 package xtrememp.visualization;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.nio.FloatBuffer;
+import javax.swing.JComponent;
+import xtrememp.player.dsp.DigitalSignalProcessor;
 import xtrememp.player.dsp.DssContext;
 
 /**
  *
  * @author Besmir Beqiri
  */
-public abstract class Visualization implements Comparable<Visualization> {
+public abstract class Visualization extends JComponent implements Comparable<Visualization>,
+        DigitalSignalProcessor, Runnable {
+
+    protected Color backgroundColor = Color.black;
+    protected Color foregroundColor = Color.white;
+    protected DssContext dssContext;
+
+    public Visualization() {
+        super();
+        setOpaque(false);
+        setIgnoreRepaint(true);
+    }
+
+    @Override
+    public void process(DssContext dssContext) {
+        this.dssContext = dssContext;
+        EventQueue.invokeLater(this);
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        if (dssContext != null) {
+            Dimension size = getSize();
+            render(g2d, size.width, size.height);
+        } else {
+            g2d.setColor(Color.black);
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+        }
+        g2d.dispose();
+    }
+
+    @Override
+    public void run() {
+        repaint();
+    }
 
     /**
      * Returns the display name of <code>this</code> visualization.
@@ -39,29 +80,57 @@ public abstract class Visualization implements Comparable<Visualization> {
      * Defines the rendering method.
      * 
      * @param g2d a Graphics object used for painting.
-     * @param width width of the rendering area.
-     * @param height height of the rendering area.
-     * @param dssContext a DssContext object containing a reference to the sample data.
+     * @param width Width of the rendering area.
+     * @param height Height of the rendering area.
+     * @param dssContext A DssContext object containing a reference to the sample data.
      */
-    public abstract void render(Graphics2D g2d, int width, int height, DssContext dssContext);
+    public abstract void render(Graphics2D g2d, int width, int height);
+
+    /**
+     * @return the backgroundColor
+     */
+    public Color getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    /**
+     * @param backgroundColor the backgroundColor to set
+     */
+    public void setBackgroundColor(Color backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    /**
+     * @return the foregroundColor
+     */
+    public Color getForegroundColor() {
+        return foregroundColor;
+    }
+
+    /**
+     * @param foregroundColor the foregroundColor to set
+     */
+    public void setForegroundColor(Color foregroundColor) {
+        this.foregroundColor = foregroundColor;
+    }
 
     /**
      * Returns a {@link FloatBuffer} as the result of merging the channels
      * buffers.
      *
-     * @param channelsBufffer the channels buffers.
+     * @param channelsBuffer The channels buffer.
      * @return A {@link FloatBuffer} object.
      */
-    public FloatBuffer channelsMerge(FloatBuffer[] channelsBufffer) {
-        int ch = channelsBufffer.length;
-        for (int a = 0, cap = channelsBufffer[0].capacity(); a < cap; a++) {
+    public FloatBuffer channelsMerge(FloatBuffer[] channelsBuffer) {
+        int ch = channelsBuffer.length;
+        for (int a = 0, cap = channelsBuffer[0].capacity(); a < cap; a++) {
             float mcd = 0;
             for (int b = 0; b < ch; b++) {
-                mcd += channelsBufffer[b].get(a);
+                mcd += channelsBuffer[b].get(a);
             }
-            channelsBufffer[0].put(a, mcd / (float) ch);
+            channelsBuffer[0].put(a, mcd / (float) ch);
         }
-        return channelsBufffer[0].asReadOnlyBuffer();
+        return channelsBuffer[0].asReadOnlyBuffer();
     }
 
     @Override

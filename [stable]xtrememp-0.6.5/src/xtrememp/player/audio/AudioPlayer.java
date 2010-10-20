@@ -582,7 +582,7 @@ public class AudioPlayer implements Callable<Void> {
         return state;
     }
 
-    public DigitalSignalSynchronizer getDspAudioDataConsumer() {
+    public DigitalSignalSynchronizer getDSS() {
         return dss;
     }
 

@@ -24,43 +24,71 @@ import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.Point;
 import java.nio.FloatBuffer;
-import xtrememp.player.dsp.DigitalSignalSynchronizer;
-import xtrememp.player.dsp.DssContext;
+import java.text.DecimalFormat;
+import javax.sound.sampled.SourceDataLine;
+import xtrememp.visualization.spectrum.Band;
+import xtrememp.visualization.spectrum.BandDistribution;
+import xtrememp.visualization.spectrum.BandGain;
 import xtrememp.visualization.spectrum.FFT;
+import xtrememp.visualization.spectrum.FlatBandGain;
+import xtrememp.visualization.spectrum.FrequencyBandGain;
+import xtrememp.visualization.spectrum.LinearBandDistribution;
+import xtrememp.visualization.spectrum.LogBandDistribution;
 
 /**
+ * Renders a spectrum analyzer.
+ *
+ * Based on KJ-DSS project by Kristofer Fudalewski (http://sirk.sytes.net).
  *
  * @author Besmir Beqiri
  */
-public class SpectrumBars extends Visualization {
+public final class SpectrumBars extends Visualization {
 
     public static final String NAME = "Spectrum Bars";
+    //
+    public static final BandDistribution BAND_DISTRIBUTION_LINEAR = new LinearBandDistribution();
+    public static final BandDistribution BAND_DISTRIBUTION_LOG = new LogBandDistribution(4, 20.0D);
+    public static final BandGain BAND_GAIN_FLAT = new FlatBandGain(4.0F);
+    public static final BandGain BAND_GAIN_FREQUENCY = new FrequencyBandGain(4.0F);
+    //
+    public static final BandDistribution DEFAULT_SPECTRUM_ANALYSER_BAND_DISTRIBUTION = BAND_DISTRIBUTION_LOG;
+    public static final BandGain DEFAULT_SPECTRUM_ANALYSER_BAND_GAIN = BAND_GAIN_FREQUENCY;
     public static final int DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT = 20;
     public static final int DEFAULT_SPECTRUM_ANALYSER_PEAK_DELAY = 25;
-    public static final float DEFAULT_SPECTRUM_ANALYSER_DECAY = 0.02f;
-    private int[] peaks = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
-    private int[] peaksDelay = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
-    private Color peakColor = Color.white;
+    public static final float DEFAULT_SPECTRUM_ANALYSER_DECAY = 0.02F;
+    public static final float DEFAULT_SPECTRUM_ANALYSER_GAIN = 1.0F;
+    //
+    protected BandDistribution bandDistribution;
+    protected BandGain bandGain;
+    protected Band[] bdTable;
+    protected float[] bgTable;
+    protected int bands;
+    protected int fftSampleSize;
+    protected float fftSampleRate;
+    protected FFT fft;
+    private float decay;
+    private float gain;
+    private int[] peaks;
+    private int[] peaksDelay;
+    private int peakDelay;
+    private Color peakColor;
     private boolean peaksEnabled = true;
-    private float decay = DEFAULT_SPECTRUM_ANALYSER_DECAY;
-    private int peakDelay = DEFAULT_SPECTRUM_ANALYSER_PEAK_DELAY;
-    private int bands;
-    private int fftSampleSize;
-    private FFT fft;
+    private float bandWidth;
+    private boolean showFrequencies = true;
     private float[] old_FFT;
-    private int[] samTable;
-    private double[] logTable;
-    private double[] log10Table;
     private LinearGradientPaint lgp;
 
     public SpectrumBars() {
-        setBandCount(DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT);
-        setFFTSampleSize(DigitalSignalSynchronizer.DEFAULT_SAMPLE_SIZE);
-    }
+        this.bandDistribution = DEFAULT_SPECTRUM_ANALYSER_BAND_DISTRIBUTION;
+        this.bandGain = DEFAULT_SPECTRUM_ANALYSER_BAND_GAIN;
+        this.decay = DEFAULT_SPECTRUM_ANALYSER_DECAY;
+        this.gain = DEFAULT_SPECTRUM_ANALYSER_GAIN;
+        this.peaks = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
+        this.peaksDelay = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
+        this.peakDelay = DEFAULT_SPECTRUM_ANALYSER_PEAK_DELAY;
+        this.peakColor = foregroundColor;
 
-    @Override
-    public String getDisplayName() {
-        return NAME;
+        setBandCount(DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT);
     }
 
     /**
@@ -68,65 +96,93 @@ public class SpectrumBars extends Visualization {
      *
      * @param count Cannot be more than half the "FFT sample size".
      */
-    public final synchronized void setBandCount(int count) {
+    public synchronized void setBandCount(int count) {
         bands = count;
-        computeSAMTable();
+        computeBandTables();
     }
 
-    /**
-     * Sets the FFT sample size to be just for calculating the spectrum analyser
-     * values. The default is 512.
-     *
-     * @param size Cannot be more than the size of the sample provided by the DSP.
-     */
-    public final synchronized void setFFTSampleSize(int size) {
-        fftSampleSize = size;
-        fft = new FFT(fftSampleSize);
-        old_FFT = new float[bands];
-
-        logTable = new double[size];
-        log10Table = new double[size];
-
-        double r = (double) size / 90.0;
-        for (int a = 0; a < size; a++) {
-            logTable[a] = Math.log(a + 2);
-            log10Table[a] = Math.log10(((double) a / r) + 10.0) - 1.0;
+    private void computeBandTables() {
+        if (bands > 0 && fftSampleSize > 0 & fft != null) {
+            //Create band table.
+            bdTable = bandDistribution.create(bands, fft, fftSampleRate);
+            bands = bdTable.length;
+            //Resolve band descriptions.
+            resolveBandDescriptions(bdTable);
+            //Create gain table.
+            bgTable = bandGain.create(fft, fftSampleRate);
         }
-        computeSAMTable();
+    }
+
+    private void resolveBandDescriptions(Band[] bandTable) {
+        DecimalFormat df = new DecimalFormat("###.#");
+
+        for (Band band : bandTable) {
+            if (band.frequency >= 1000.0F) {
+                band.description = df.format(band.frequency / 1000.0F) + "k";
+            } else {
+                band.description = df.format(band.frequency);
+            }
+        }
     }
 
     @Override
-    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
+    public void init(int sampleSize, SourceDataLine sourceDataLine) {
+        this.fftSampleSize = sampleSize;
+        this.fftSampleRate = sourceDataLine.getFormat().getFrameRate();
+        this.fft = new FFT(fftSampleSize);
+        this.old_FFT = new float[bands];
+
+        computeBandTables();
+    }
+
+    @Override
+    public String getDisplayName() {
+        return NAME;
+    }
+
+    @Override
+    public synchronized void render(Graphics2D g2d, int width, int height) {
+        float c = 0;
+        int b, bd, i, li = 0, mi;
+        float fs, m;
+        int bm = 1;
+        //Preparation used for rendering band frequencies.
+        if (showFrequencies) {
+            bm = Math.round(32.0F / bandWidth);
+            if (bm == 0) {
+                bm = 1;
+            }
+        }
+        //FFT processing.
         FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
         float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
-        float barWidth = (float) width / (float) bands;
-        float c = 0;
-        int i = 0;
-        int li = 0;
+        bandWidth = (float) width / (float) bands;
 
         g2d.setColor(Color.black);
         g2d.fillRect(0, 0, width, height);
 
-        for (int bd = 0; bd < bands; bd++) {
-            i = samTable[bd];
-            float fs = 0;
-            float m = 0;
-            // Average out nearest bands.
-            for (int b = li; b < i; b++) {
+        //Group up available bands using band distribution table.
+        for (bd = 0; bd < bands; bd++) {
+            //Get band distribution entry.
+            i = bdTable[bd].distribution;
+            m = 0;
+            mi = 0;
+            //Find loudest band in group. (Group is from 'li' to 'i').
+            for (b = li; b < i; b++) {
                 float lf = _fft[b];
                 if (lf > m) {
                     m = lf;
+                    mi = b;
                 }
             }
-            // Log filter.
-//            fs = (fs * (float) Math.log(bd + 2));
-//            fs = Math.min(fs, 1.0f);
             li = i;
-            fs = (m * (float) (logTable[li])) * 2.0f;
-            if (fs > 1.0f) {
-                fs = 1.0f;
+            //Calculate gain using log, then static gain.
+            fs = (m * bgTable[mi]) * gain;
+            //Limit over-saturation.
+            if (fs > 1.0F) {
+                fs = 1.0F;
             }
-            // Compute decay...
+            //Compute decay.
             if (fs >= (old_FFT[bd] - decay)) {
                 old_FFT[bd] = fs;
             } else {
@@ -140,64 +196,44 @@ public class SpectrumBars extends Visualization {
             if (lgp == null || lgp.getEndPoint().getY() != height) {
                 Point start = new Point(0, 0);
                 Point end = new Point(0, height);
-                float[] dist = {0.0f, 0.25f, 0.75f, 1.0f};
+                float[] dist = {0.0F, 0.25F, 0.75F, 1.0F};
                 Color[] colors = {Color.red, Color.yellow, Color.green, Color.green.darker().darker()};
                 lgp = new LinearGradientPaint(start, end, dist, colors, CycleMethod.REPEAT);
             }
 
             g2d.setPaint(lgp);
-            renderSpectrumBar(g2d, (int) c, height, (int) barWidth - 1, (int) (fs * height), bd);
-            c += barWidth;
+            renderSpectrumBar(g2d, Math.round(c), height, Math.round(bandWidth) - 1,
+                    Math.round(fs * height), bd, bdTable[bd], showFrequencies && (bd % bm) == 0);
+            c += bandWidth;
         }
     }
 
-    private void renderSpectrumBar(Graphics2D g2d, int x, int y, int w, int h, int band) {
+    private void renderSpectrumBar(Graphics2D g2d, int x, int y, int w, int h, int bd, Band band, boolean renderFrequency) {
+        //Render spectrum bar.
         g2d.fillRect(x, y - h, w, y);
+        //Render peak.
         if ((peakColor != null) && (peaksEnabled == true)) {
             g2d.setColor(peakColor);
-            if (h > peaks[band]) {
-                peaks[band] = h;
-                peaksDelay[band] = peakDelay;
+            if (h > peaks[bd]) {
+                peaks[bd] = h;
+                peaksDelay[bd] = peakDelay;
             } else {
-                peaksDelay[band]--;
-                if (peaksDelay[band] < 0) {
-                    peaks[band]--;
+                peaksDelay[bd]--;
+                if (peaksDelay[bd] < 0) {
+                    peaks[bd]--;
                 }
-                if (peaks[band] < 0) {
-                    peaks[band] = 0;
+                if (peaks[bd] < 0) {
+                    peaks[bd] = 0;
                 }
             }
-            g2d.fillRect(x, y - peaks[band], w, 1);
+            g2d.fillRect(x, y - peaks[bd], w, 1);
         }
-    }
-
-    private void computeSAMTable() {
-        if (bands > 0) {
-            // -- Calculate a log based band mapping table.
-            if (logTable != null) {
-                int wHss = (int) fftSampleSize >> 2;
-                double r = ((double) fftSampleSize / (double) wHss);
-                samTable = new int[bands];
-
-                double a = 0;
-
-                int wLb = 0;
-                int wBand = 0;
-
-                for (int b = 0; b < wHss; b++) {
-                    int wCb = (int) (log10Table[(int) ((double) b * r)] * bands);
-                    if (wCb != wLb) {
-                        samTable[wBand] = b;
-                        wLb = wCb;
-                        wBand++;
-                    }
-                }
-
-                if (wBand < bands) {
-                    samTable[wBand] = wHss - 1;
-                    bands = wBand + 1;
-                }
-            }
+        //Render frequency string.
+        if (renderFrequency) {
+            g2d.setColor(Color.white);
+            int sx = x + ((w - g2d.getFontMetrics().stringWidth(band.description)) >> 1);
+            g2d.drawLine(x + (w >> 1), y, x + (w >> 1), y - (g2d.getFontMetrics().getHeight() - g2d.getFontMetrics().getAscent()));
+            g2d.drawString(band.description, sx, y - g2d.getFontMetrics().getHeight());
         }
     }
 }

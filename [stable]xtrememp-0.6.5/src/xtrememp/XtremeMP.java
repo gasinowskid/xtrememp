@@ -146,7 +146,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem aboutMenuItem;
     private JXBusyLabel busyLabel;
     private JPanel mainPanel;
-    private VisualizationManager visualizationPanel;
+    private VisualizationManager visualizationManager;
     private JPanel controlPanel;
     private AudioPlayer audioPlayer;
     private Playlist playlist;
@@ -529,15 +529,15 @@ public final class XtremeMP implements ActionListener, ControlListener,
     protected void createMainPanels() {
         mainPanel = new JPanel(new CardLayout());
         playlistManager = new PlaylistManager(this);
-        visualizationPanel = new VisualizationManager();
+        visualizationManager = new VisualizationManager(audioPlayer.getDSS());
         if (Settings.getLastView().equals(Utilities.VISUALIZATION_PANEL)) {
-            mainPanel.add(visualizationPanel, Utilities.VISUALIZATION_PANEL);
+            mainPanel.add(visualizationManager, Utilities.VISUALIZATION_PANEL);
             mainPanel.add(playlistManager, Utilities.PLAYLIST_MANAGER);
-            audioPlayer.getDspAudioDataConsumer().add(visualizationPanel);
             visualizationMenuItem.setSelected(true);
         } else {
+            visualizationManager.setDssEnabled(false);
             mainPanel.add(playlistManager, Utilities.PLAYLIST_MANAGER);
-            mainPanel.add(visualizationPanel, Utilities.VISUALIZATION_PANEL);
+            mainPanel.add(visualizationManager, Utilities.VISUALIZATION_PANEL);
             playlistManagerMenuItem.setSelected(true);
         }
 
@@ -769,17 +769,17 @@ public final class XtremeMP implements ActionListener, ControlListener,
         } else if (source == stopMenuItem || source == stopButton) {
             acStop();
         } else if (source == playlistManagerMenuItem) {
-            if (visualizationPanel.isVisible()) {
+            if (visualizationManager.isVisible()) {
+                visualizationManager.setDssEnabled(false);
                 CardLayout cardLayout = (CardLayout) (mainPanel.getLayout());
-                audioPlayer.getDspAudioDataConsumer().remove(visualizationPanel);
                 cardLayout.show(mainPanel, Utilities.PLAYLIST_MANAGER);
                 playlistManagerMenuItem.setSelected(true);
                 Settings.setLastView(Utilities.PLAYLIST_MANAGER);
             }
         } else if (source == visualizationMenuItem) {
             if (playlistManager.isVisible()) {
+                visualizationManager.setDssEnabled(true);
                 CardLayout cardLayout = (CardLayout) (mainPanel.getLayout());
-                audioPlayer.getDspAudioDataConsumer().add(visualizationPanel);
                 cardLayout.show(mainPanel, Utilities.VISUALIZATION_PANEL);
                 visualizationMenuItem.setSelected(true);
                 Settings.setLastView(Utilities.VISUALIZATION_PANEL);

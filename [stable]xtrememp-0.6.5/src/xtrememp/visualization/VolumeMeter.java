@@ -24,13 +24,13 @@ import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.Point;
 import java.nio.FloatBuffer;
-import xtrememp.player.dsp.DssContext;
+import javax.sound.sampled.SourceDataLine;
 
 /**
  *
  * @author Besmir Beqiri
  */
-public class VolumeMeter extends Visualization {
+public final class VolumeMeter extends Visualization {
 
     public static final String NAME = "Volume Meter";
     public static final float DEFAULT_VU_METER_DECAY = 0.02f;
@@ -43,21 +43,18 @@ public class VolumeMeter extends Visualization {
         decay = DEFAULT_VU_METER_DECAY;
     }
 
-    /*
-     * 
-     * @see xtrememp.visual.Visualization#getDisplayName
-     */
+    @Override
+    public void init(int sampleSize, SourceDataLine sourceDataLine) {
+
+    }
+
     @Override
     public String getDisplayName() {
         return NAME;
     }
 
-    /*
-     * 
-     * @see xtrememp.visual.Visualization#render
-     */
     @Override
-    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
+    public synchronized void render(Graphics2D g2d, int width, int height) {
         float leftLevel = 0.0f;
         float rightLevel = 0.0f;
         int sampleSize = dssContext.getSampleSize();

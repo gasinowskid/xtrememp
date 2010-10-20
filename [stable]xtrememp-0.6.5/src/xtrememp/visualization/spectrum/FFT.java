@@ -21,12 +21,12 @@ package xtrememp.visualization.spectrum;
 import java.nio.FloatBuffer;
 
 /**
- * @author Kris Fudalewski
+ * Fast Fourier Transformation class used for calculating the realtime spectrum
+ * analyzer.
+ * 
+ * Based on KJ-DSS project by Kristofer Fudalewski (http://sirk.sytes.net).
+ *
  * @author Besmir Beqiri
- *
- * @version 1.3
- *
- * Fast Fourier Transformation class used for calculating the realtime spectrum analyzer.
  */
 public class FFT {
 
@@ -167,22 +167,22 @@ public class FFT {
      * @return An array of frequency limits for each band.
      */
     public float[] calculateFrequencyTable(float sampleRate) {
-        float wFr = sampleRate / 2.0f;
+        float fr = sampleRate / 2.0f;
 
-        // -- Calculate band width.
-        float wBw = wFr / ss2;
+        //Calculate band width.
+        float bw = fr / ss2;
 
-        // -- Store for frequency table.
-        float[] wFt = new float[(int) ss2];
+        //Store for frequency table.
+        float[] ft = new float[(int) ss2];
 
-        // -- Build band range table.
+        //Build band range table.
         int b = 0;
-        for (float wFp = (wBw / 2.0f); wFp <= wFr; wFp += wBw) {
-            wFt[b] = wFp;
+        for (float fp = (bw / 2.0f); fp <= fr; fp += bw) {
+            ft[b] = fp;
             b++;
         }
 
-        return wFt;
+        return ft;
     }
 
     /**

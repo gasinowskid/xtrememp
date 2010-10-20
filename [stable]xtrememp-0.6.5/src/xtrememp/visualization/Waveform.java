@@ -24,13 +24,13 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.VolatileImage;
 import java.nio.FloatBuffer;
-import xtrememp.player.dsp.DssContext;
+import javax.sound.sampled.SourceDataLine;
 
 /**
  *
  * @author Besmir Beqiri
  */
-public class Waveform extends Visualization {
+public final class Waveform extends Visualization {
 
     public static final String NAME = "Waveform";
     private GraphicsConfiguration gc;
@@ -38,57 +38,17 @@ public class Waveform extends Visualization {
     private VolatileImage image2;
 
     @Override
+    public void init(int sampleSize, SourceDataLine sourceDataLine) {
+
+    }
+
+    @Override
     public String getDisplayName() {
         return NAME;
     }
 
-    private void createImages(int width, int height) {
-        // free image resources
-        if (image1 != null) {
-            image1.flush();
-            image1 = null;
-        }
-
-        if (image2 != null) {
-            image2.flush();
-            image2 = null;
-        }
-
-        // create images
-        gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
-                getDefaultScreenDevice().getDefaultConfiguration();
-
-        image1 = gc.createCompatibleVolatileImage(width, height);
-        image2 = gc.createCompatibleVolatileImage(width, height);
-
-        int valCode1 = image1.validate(gc);
-        int valCode2 = image2.validate(gc);
-        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
-                || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
-            createImages(width, height);
-        }
-
-        fillBackground(Color.black);
-    }
-
-    private void fillBackground(Color c) {
-        if (image1 != null) {
-            Graphics2D g2d1 = image1.createGraphics();
-            g2d1.setColor(c);
-            g2d1.fillRect(0, 0, image1.getWidth(), image1.getHeight());
-            g2d1.dispose();
-        }
-
-        if (image2 != null) {
-            Graphics2D g2d2 = image2.createGraphics();
-            g2d2.setColor(c);
-            g2d2.fillRect(0, 0, image2.getWidth(), image2.getHeight());
-            g2d2.dispose();
-        }
-    }
-
     @Override
-    public synchronized void render(Graphics2D g2d, int width, int height, DssContext dssContext) {
+    public synchronized void render(Graphics2D g2d, int width, int height) {
         if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
             createImages(width, height);
         }
@@ -136,5 +96,50 @@ public class Waveform extends Visualization {
 
             g2d.drawImage(image2, 0, 0, null);
         } while (image1.contentsLost() || image2.contentsLost());
+    }
+
+    private void createImages(int width, int height) {
+        // free image resources
+        if (image1 != null) {
+            image1.flush();
+            image1 = null;
+        }
+
+        if (image2 != null) {
+            image2.flush();
+            image2 = null;
+        }
+
+        // create images
+        gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
+                getDefaultScreenDevice().getDefaultConfiguration();
+
+        image1 = gc.createCompatibleVolatileImage(width, height);
+        image2 = gc.createCompatibleVolatileImage(width, height);
+
+        int valCode1 = image1.validate(gc);
+        int valCode2 = image2.validate(gc);
+        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
+                || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
+            createImages(width, height);
+        }
+
+        fillBackground(Color.black);
+    }
+
+    private void fillBackground(Color c) {
+        if (image1 != null) {
+            Graphics2D g2d1 = image1.createGraphics();
+            g2d1.setColor(c);
+            g2d1.fillRect(0, 0, image1.getWidth(), image1.getHeight());
+            g2d1.dispose();
+        }
+
+        if (image2 != null) {
+            Graphics2D g2d2 = image2.createGraphics();
+            g2d2.setColor(c);
+            g2d2.fillRect(0, 0, image2.getWidth(), image2.getHeight());
+            g2d2.dispose();
+        }
     }
 }

@@ -18,16 +18,34 @@
  */
 package xtrememp.player.dsp;
 
+import javax.sound.sampled.SourceDataLine;
+
 /**
+ * Classes must implement this interface in order to be registered with the 
+ * KJDigitalSignalSynchronizer class.
+ *
+ * Based on KJ-DSS project by Kristofer Fudalewski (http://sirk.sytes.net).
+ *
  * @author Besmir Beqiri
  */
 public interface DigitalSignalProcessor {
 
     /**
+     * Called by the DigitalSignalSynchronizer during the call of the 'start'
+     * method. Allows a DSP to prepare any necessary buffers or objects according
+     * to the audio format of the source data line.
+     *
+     * @param sampleSize     The sample size that this DSP should be prepared to handle.
+     * @param sourceDataLine The source data line that will be monitored.
+     */
+    void init(int sampleSize, SourceDataLine sourceDataLine);
+
+    /**
      * Called by the DigitalSignalSynchronizer while the SourceDataLine is active.
      *
-     * @param dssContext A context object containing a reference to the sample data to be processed
-     * 			 as well as other useful references during processing time.
+     * @param dssContext A context object containing a reference to the sample 
+     *                   data to be processed as well as other useful references
+     *                   during processing time.
      */
     void process(DssContext dssContext);
 }

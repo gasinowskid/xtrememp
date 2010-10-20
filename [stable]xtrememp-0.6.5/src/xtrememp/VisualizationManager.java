@@ -19,12 +19,11 @@
 package xtrememp;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.DisplayMode;
-import java.awt.EventQueue;
 import java.awt.Frame;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -50,9 +49,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JToolBar;
-import xtrememp.player.dsp.DigitalSignalProcessor;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
-import xtrememp.player.dsp.DssContext;
 import xtrememp.ui.button.PopupButton;
 import xtrememp.util.Utilities;
 import xtrememp.visualization.Visualization;
@@ -66,8 +63,7 @@ import static xtrememp.util.Utilities.tr;
  *
  * @author Besmir Beqiri
  */
-public class VisualizationManager extends JPanel implements ActionListener,
-        DigitalSignalProcessor {
+public class VisualizationManager extends JPanel implements ActionListener {
 
     private JPopupMenu selectionMenu;
     private JButton fullScreenButton;
@@ -76,15 +72,16 @@ public class VisualizationManager extends JPanel implements ActionListener,
     private PopupButton visMenuButton;
     private ButtonGroup visButtonGroup;
     private FullscreenWindow fullscreenWindow;
-    private VisualizationPanel visPanel;
+    private JPanel visPanel;
+    private DigitalSignalSynchronizer dss;
     private Visualization currentVis;
     private TreeSet<Visualization> visSet;
     private Map<String, Visualization> visMap;
-    private String actionCommand;
-    private DssContext dssContext;
 
-    public VisualizationManager() {
+    public VisualizationManager(DigitalSignalSynchronizer dss) {
         super(new BorderLayout());
+
+        this.dss = dss;
 
         initVisualizations();
         initComponents();
@@ -119,32 +116,75 @@ public class VisualizationManager extends JPanel implements ActionListener,
         visMenuButton.setToolTipText(tr("MainFrame.VisualizationManager.VisualizationsMenu"));
         selectionMenu = visMenuButton.getPopupMenu();
         visButtonGroup = new ButtonGroup();
-        actionCommand = Settings.getVisualization();
         visMap = new HashMap<String, Visualization>();
+        visPanel = new JPanel(new CardLayout());
+        visPanel.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    fullscreenWindow.setFullScreen(true);
+                }
+            }
+        });
         for (Visualization v : visSet) {
             visMap.put(v.getDisplayName(), v);
             JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(v.getDisplayName());
-            menuItem.setSelected(v.getDisplayName().equals(actionCommand));
             menuItem.addActionListener(this);
             visButtonGroup.add(menuItem);
             selectionMenu.add(menuItem);
+            visPanel.add(v, v.getDisplayName());
         }
-        currentVis = visMap.get(actionCommand);
         toolBar.add(visMenuButton);
         this.add(toolBar, BorderLayout.NORTH);
-
-        visPanel = new VisualizationPanel();
         this.add(visPanel, BorderLayout.CENTER);
+
+        showVisualization(Settings.getVisualization());
 
         fullscreenWindow = new FullscreenWindow();
     }
 
-    @Override
-    public void process(DssContext dssContext) {
-        this.dssContext = dssContext;
-        if (!fullscreenWindow.isFullScreen()) {
-            EventQueue.invokeLater(visPanel);
+    public void setDssEnabled(boolean flag) {
+        if (flag) {
+            dss.add(currentVis);
+        } else {
+            dss.remove(currentVis);
         }
+    }
+
+    public void showVisualization(String visDisplayName) {
+        showVisualization(visMap.get(visDisplayName), true);
+    }
+
+    private void showVisualization(Visualization newVis, boolean updateSelected) {
+        if (newVis == null) {
+            throw new IllegalArgumentException("Visualization is null.");
+        }
+        //Remove the old visualization and add the new one to the DSS.
+        if (currentVis != null) {
+            dss.remove(currentVis);
+        }
+        currentVis = newVis;
+        dss.add(currentVis);
+        //Retrieve visualization display name.
+        String visDisplayName = currentVis.getDisplayName();
+        //Show the visualization.
+        CardLayout cardLayout = (CardLayout) (visPanel.getLayout());
+        cardLayout.show(visPanel, visDisplayName);
+        if (updateSelected) {
+            //Set selected state on the button related to this visualization.
+            for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
+                AbstractButton aButton = abEnum.nextElement();
+                if (aButton.getText().equals(visDisplayName)) {
+                    aButton.setSelected(true);
+                    break;
+                }
+            }
+        }
+        //
+        visPanel.repaint();
+        //
+        Settings.setVisualization(visDisplayName);
     }
 
     @Override
@@ -158,79 +198,15 @@ public class VisualizationManager extends JPanel implements ActionListener,
             if (prevVis == null && !visSet.isEmpty()) {
                 prevVis = visSet.last();
             }
-            currentVis = prevVis;
-            if (currentVis != null) {
-                String visDisplayName = currentVis.getDisplayName();
-                for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
-                    AbstractButton aButton = abEnum.nextElement();
-                    if (aButton.getText().equals(visDisplayName)) {
-                        aButton.setSelected(true);
-                        break;
-                    }
-                }
-                Settings.setVisualization(visDisplayName);
-                visPanel.repaint();
-            }
+            showVisualization(prevVis, true);
         } else if (source.equals(nextVisButton)) {
             Visualization nextVis = visSet.higher(currentVis);
             if (nextVis == null && !visSet.isEmpty()) {
                 nextVis = visSet.first();
             }
-            currentVis = nextVis;
-            if (currentVis != null) {
-                String visDisplayName = currentVis.getDisplayName();
-                for (Enumeration<AbstractButton> abEnum = visButtonGroup.getElements(); abEnum.hasMoreElements();) {
-                    AbstractButton aButton = abEnum.nextElement();
-                    if (aButton.getText().equals(visDisplayName)) {
-                        aButton.setSelected(true);
-                        break;
-                    }
-                }
-                Settings.setVisualization(visDisplayName);
-                visPanel.repaint();
-            }
+            showVisualization(nextVis, true);
         } else {
-            actionCommand = e.getActionCommand();
-            currentVis = visMap.get(actionCommand);
-            if (currentVis != null) {
-                Settings.setVisualization(actionCommand);
-                visPanel.repaint();
-            }
-        }
-    }
-
-    private class VisualizationPanel extends JPanel implements Runnable {
-
-        public VisualizationPanel() {
-            super(null, false);
-            setOpaque(false);
-            setIgnoreRepaint(true);
-            addMouseListener(new MouseAdapter() {
-
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        fullscreenWindow.setFullScreen(true);
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void paintComponent(Graphics g) {
-            Graphics2D g2d = (Graphics2D) g.create();
-            if (currentVis != null && dssContext != null) {
-                currentVis.render(g2d, getWidth(), getHeight(), dssContext);
-            } else {
-                g2d.setColor(Color.black);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-            g2d.dispose();
-        }
-
-        @Override
-        public void run() {
-            repaint();
+            showVisualization(visMap.get(e.getActionCommand()), false);
         }
     }
 
@@ -293,8 +269,8 @@ public class VisualizationManager extends JPanel implements ActionListener,
                         if (!bufferStrategy.contentsLost()) {
                             g2d.setColor(Color.black);
                             g2d.fillRect(0, 0, size.width, size.height);
-                            if (currentVis != null && dssContext != null) {
-                                currentVis.render(g2d, size.width, size.height, dssContext);
+                            if (currentVis != null) {
+                                currentVis.render(g2d, size.width, size.height);
                             }
                         }
                         bufferStrategy.show();

@@ -34,14 +34,17 @@ import javax.sound.sampled.LineListener;
 import javax.sound.sampled.SourceDataLine;
 
 /**
- * @author Besmir Beqiri
+ * This class provides synchronization between a digital signal processor and
+ * speaker output.
+ * 
+ * Based on KJ-DSS project by Kristofer Fudalewski (http://sirk.sytes.net).
  *
- * This class provides synchronization between a digital signal processor and speaker output. 
+ * @author Besmir Beqiri
  */
 public class DigitalSignalSynchronizer implements LineListener, Runnable {
 
     public static final int DEFAULT_FPS = 60;
-    public static final int DEFAULT_SAMPLE_SIZE = 2 * 1024;
+    public static final int DEFAULT_SAMPLE_SIZE = 2048;
     private final List<DigitalSignalProcessor> dspList;
     private final ScheduledExecutorService execService;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -78,7 +81,13 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
      * @param dsp A class implementing the DigitalSignalProcessor interface.
      */
     public void add(DigitalSignalProcessor dsp) {
+        if (dsp == null) {
+	    throw new IllegalArgumentException();
+        }
         synchronized (dspList) {
+            if (sourceDataLine != null) {
+                dsp.init(sampleSize, sourceDataLine);
+            }
             dspList.add(dsp);
             dspList.notifyAll();
         }
@@ -90,6 +99,9 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
      * @param dsp A class implementing the DigitalSignalProcessor interface.
      */
     public void remove(DigitalSignalProcessor dsp) {
+        if (dsp == null) {
+	    throw new IllegalArgumentException();
+        }
         synchronized (dspList) {
             dspList.remove(dsp);
         }
@@ -109,6 +121,11 @@ public class DigitalSignalSynchronizer implements LineListener, Runnable {
         sourceDataLine = sdl;
         dssContext = new DssContext(sourceDataLine, sampleSize);
         audioDataBuffer = ByteBuffer.allocate(sdl.getBufferSize());
+
+        //Initialize DSP registered with this DSS.
+        for (DigitalSignalProcessor dsp : dspList) {
+            dsp.init(sampleSize, sourceDataLine);
+        }
     }
 
     protected void start() {
