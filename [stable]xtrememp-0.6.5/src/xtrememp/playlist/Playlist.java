@@ -355,8 +355,12 @@ public class Playlist {
     private void removeFromShuffledPosList(PlaylistItem item) {
         if (shuffledList != null) {
             shuffledList.remove(item);
-            int maxIndex = shuffledList.size() - 1;
-            shuffledIndex = (shuffledIndex > maxIndex) ? maxIndex : shuffledIndex;
+            if (shuffledList.isEmpty()) {
+                shuffledIndex = 0;
+            } else {
+                int maxIndex = shuffledList.size() - 1;
+                shuffledIndex = (shuffledIndex > maxIndex) ? maxIndex : shuffledIndex;
+            }
         }
     }
 
