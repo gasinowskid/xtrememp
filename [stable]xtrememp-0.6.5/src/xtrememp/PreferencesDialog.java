@@ -47,6 +47,7 @@ import net.miginfocom.swing.MigLayout;
 import xtrememp.player.audio.AudioPlayer;
 import xtrememp.ui.combobox.IconComboBox;
 import xtrememp.ui.combobox.SkinComboSelector;
+import xtrememp.ui.skin.GFXUIListener;
 import xtrememp.util.Utilities;
 import static xtrememp.util.Utilities.tr;
 
@@ -60,6 +61,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     private final String AUDIO_PANEL = "AUDIO_PANEL";
     private final String HOTKEYS_PANEL = "HOTKEYS_PANEL";
     private AudioPlayer audioPlayer;
+    private GFXUIListener gfxUIListener;
     private CardLayout cardLayout;
     private JPanel centerPanel;
     private JToggleButton generalButton;
@@ -67,6 +69,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     private JToggleButton hotkeysButton;
     private JComboBox languageComboBox;
     private SkinComboSelector skinComboSelector;
+    private JCheckBox uiEffectsCheckbox;
 //    private JCheckBox instanceCheckBox;
 //    private JCheckBox enqueueCheckBox;
     private JCheckBox updatesCheckBox;
@@ -76,9 +79,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     private JButton resetButton;
     private JButton closeButton;
 
-    public PreferencesDialog(AudioPlayer audioPlayer) {
+    public PreferencesDialog(AudioPlayer audioPlayer, GFXUIListener gfxUIListener) {
         super(XtremeMP.getInstance().getMainFrame(), true);
         this.audioPlayer = audioPlayer;
+        this.gfxUIListener = gfxUIListener;
         setLayout(new MigLayout("fill"));
         setTitle(tr("Dialog.Preferences"));
         initComponents();
@@ -103,6 +107,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
             cardLayout.show(centerPanel, HOTKEYS_PANEL);
         } else if (source.equals(languageComboBox)) {
             Settings.setLanguageIndex(languageComboBox.getSelectedIndex());
+        } else if (source.equals(uiEffectsCheckbox)) {
+            Settings.setUIEffectsEnabled(uiEffectsCheckbox.isSelected());
+            gfxUIListener.guiEffectsStateChanged(uiEffectsCheckbox.isSelected());
         } else if (source.equals(updatesCheckBox)) {
             Settings.setAutomaticUpdatesEnabled(updatesCheckBox.isSelected());
         } else if (source.equals(changeCacheDirButton)) {
@@ -207,6 +214,12 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         generalPanel.add(new JLabel(tr("Dialog.Preferences.General.Interface.Skin"), SwingConstants.LEADING));
         skinComboSelector = new SkinComboSelector();
         generalPanel.add(skinComboSelector, "span,growx");
+        generalPanel.add(new JLabel(tr("Dialog.Preferences.General.Interface.UIEffects"), SwingConstants.LEADING));
+        uiEffectsCheckbox = new JCheckBox();
+        System.out.println(Settings.isUIEffectsEnabled());
+        uiEffectsCheckbox.setSelected(Settings.isUIEffectsEnabled());
+        uiEffectsCheckbox.addActionListener(this);
+        generalPanel.add(uiEffectsCheckbox, "span,growx");
 //        addTextSeparator(generalPanel, tr("Dialog.Preferences.General.Instances"));
 //        instanceCheckBox = new JCheckBox("Allow only one instance");
 //        generalPanel.add(instanceCheckBox, "span,growx");

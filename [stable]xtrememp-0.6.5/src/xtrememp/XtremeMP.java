@@ -95,6 +95,7 @@ import xtrememp.ui.button.StopButton;
 import xtrememp.ui.button.VolumeButton;
 import xtrememp.ui.slider.SeekSlider;
 import xtrememp.tag.TagInfo;
+import xtrememp.ui.skin.GFXUIListener;
 import xtrememp.update.SoftwareUpdate;
 import xtrememp.update.Version;
 import xtrememp.util.AbstractSwingWorker;
@@ -111,7 +112,7 @@ import static xtrememp.util.Utilities.tr;
  * Special thanks to rom1dep for the changes applied to this class.
  */
 public final class XtremeMP implements ActionListener, ControlListener,
-        PlaybackListener, PlaylistListener, IntellitypeListener {
+        PlaybackListener, PlaylistListener, IntellitypeListener, GFXUIListener {
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
@@ -217,6 +218,9 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 UIManager.put(SubstanceLookAndFeel.FOCUS_KIND, SubstanceConstants.FocusKind.NONE);
                 SubstanceLookAndFeel.setSkin(Settings.getSkin());
 
+                //Turn on Substance animations if required
+                guiEffectsStateChanged(Settings.isUIEffectsEnabled());
+
                 StringBuilder appTitle = new StringBuilder(tr("Application.title"));
                 appTitle.append(" ");
                 appTitle.append(currentVersion);
@@ -313,11 +317,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
         Locale locale = Utilities.getLanguages()[Settings.getLanguageIndex()];
         Locale.setDefault(locale);
         LanguageBundle.setLanguage(locale);
-
-        //Test some fancy effects from substance L&F
-//        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
-//        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
-//        AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
 
         // Animation configurations
         AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW, JTable.class);
@@ -754,7 +753,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         } else if (source == savePlaylistMenuItem) {
             playlistManager.savePlaylistDialog();
         } else if (source == preferencesMenuItem) {
-            PreferencesDialog preferencesDialog = new PreferencesDialog(audioPlayer);
+            PreferencesDialog preferencesDialog = new PreferencesDialog(audioPlayer, this);
             preferencesDialog.setVisible(true);
         } else if (source == exitMenuItem) {
             exit();
@@ -1126,6 +1125,19 @@ public final class XtremeMP implements ActionListener, ControlListener,
             default:
                 logger.debug("Undefined INTELLITYPE command received: " + Integer.toString(command));
                 break;
+        }
+    }
+
+    @Override
+    public void guiEffectsStateChanged(boolean newValue) {
+        if (newValue) {
+            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
+            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
+        } else {
+            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW);
+            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
         }
     }
 

@@ -56,6 +56,7 @@ public final class Settings {
     private static final String PROPERTY_PLAYLIST_PLAYMODE = "xtrememp.playlist.playmode";
     private static final String PROPERTY_VISUALIZATION = "xtrememp.visualization";
     private static final String PROPERTY_LANGUAGE_INDEX = "xtrememp.language.index";
+    private static final String PROPERTY_GUI_EFFECTS = "xtrememp.gui.effects";
     private static final String PROPERTY_SKIN = "xtrememp.skin";
     private static final String PROPERTY_UPDATES_AUTOMATIC = "xtrememp.update.automatic";
     private static final String PROPERTY_MAINFRAME_X = "xtrememp.mainframe.x";
@@ -70,6 +71,14 @@ public final class Settings {
 
     public static int getLanguageIndex() {
         return Integer.parseInt(properties.getProperty(PROPERTY_LANGUAGE_INDEX, "0"));
+    }
+
+    public static void setUIEffectsEnabled(boolean gfxUI) {
+        properties.setProperty(PROPERTY_GUI_EFFECTS, Boolean.toString(gfxUI));
+    }
+
+    public static boolean isUIEffectsEnabled() {
+        return Boolean.parseBoolean(properties.getProperty(PROPERTY_GUI_EFFECTS, Boolean.toString(true)));
     }
 
     public static void setLastView(String lastView) {
