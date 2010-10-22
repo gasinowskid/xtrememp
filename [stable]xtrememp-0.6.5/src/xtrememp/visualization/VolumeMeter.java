@@ -33,7 +33,9 @@ import javax.sound.sampled.SourceDataLine;
 public final class VolumeMeter extends Visualization {
 
     public static final String NAME = "Volume Meter";
+    //
     public static final float DEFAULT_VU_METER_DECAY = 0.02f;
+    //
     private LinearGradientPaint lgp;
     private float oldLeft;
     private float oldRight;
@@ -94,7 +96,7 @@ public final class VolumeMeter extends Visualization {
             }
         }
 
-        g2d.setColor(Color.black);
+        g2d.setColor(backgroundColor);
         g2d.fillRect(0, 0, width, height);
 
         if (lgp == null || lgp.getEndPoint().getX() != width) {

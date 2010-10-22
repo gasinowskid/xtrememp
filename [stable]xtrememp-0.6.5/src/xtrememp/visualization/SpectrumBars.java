@@ -71,7 +71,6 @@ public final class SpectrumBars extends Visualization {
     private int[] peaks;
     private int[] peaksDelay;
     private int peakDelay;
-    private Color peakColor;
     private boolean peaksEnabled = true;
     private float bandWidth;
     private boolean showFrequencies = true;
@@ -86,7 +85,6 @@ public final class SpectrumBars extends Visualization {
         this.peaks = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
         this.peaksDelay = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
         this.peakDelay = DEFAULT_SPECTRUM_ANALYSER_PEAK_DELAY;
-        this.peakColor = foregroundColor;
 
         setBandCount(DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT);
     }
@@ -158,7 +156,7 @@ public final class SpectrumBars extends Visualization {
         float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
         bandWidth = (float) width / (float) bands;
 
-        g2d.setColor(Color.black);
+        g2d.setColor(backgroundColor);
         g2d.fillRect(0, 0, width, height);
 
         //Group up available bands using band distribution table.
@@ -212,8 +210,8 @@ public final class SpectrumBars extends Visualization {
         //Render spectrum bar.
         g2d.fillRect(x, y - h, w, y);
         //Render peak.
-        if ((peakColor != null) && (peaksEnabled == true)) {
-            g2d.setColor(peakColor);
+        if ((peaksEnabled == true)) {
+            g2d.setColor(foregroundColor);
             if (h > peaks[bd]) {
                 peaks[bd] = h;
                 peaksDelay[bd] = peakDelay;
@@ -230,7 +228,7 @@ public final class SpectrumBars extends Visualization {
         }
         //Render frequency string.
         if (renderFrequency) {
-            g2d.setColor(Color.white);
+            g2d.setColor(foregroundColor);
             int sx = x + ((w - g2d.getFontMetrics().stringWidth(band.description)) >> 1);
             g2d.drawLine(x + (w >> 1), y, x + (w >> 1), y - (g2d.getFontMetrics().getHeight() - g2d.getFontMetrics().getAscent()));
             g2d.drawString(band.description, sx, y - g2d.getFontMetrics().getHeight());

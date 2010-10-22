@@ -58,7 +58,7 @@ public abstract class Visualization extends JComponent implements Comparable<Vis
             Dimension size = getSize();
             render(g2d, size.width, size.height);
         } else {
-            g2d.setColor(Color.black);
+            g2d.setColor(backgroundColor);
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
         g2d.dispose();

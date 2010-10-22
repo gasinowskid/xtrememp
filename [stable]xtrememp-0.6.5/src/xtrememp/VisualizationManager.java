@@ -18,6 +18,10 @@
  */
 package xtrememp;
 
+import org.pushingpixels.substance.internal.utils.border.SubstanceBorder;
+import org.pushingpixels.substance.api.DecorationAreaType;
+import org.pushingpixels.substance.api.SubstanceColorScheme;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -49,6 +53,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JToolBar;
+import org.pushingpixels.substance.api.skin.SkinChangeListener;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
 import xtrememp.ui.button.PopupButton;
 import xtrememp.util.Utilities;
@@ -63,7 +68,8 @@ import static xtrememp.util.Utilities.tr;
  *
  * @author Besmir Beqiri
  */
-public class VisualizationManager extends JPanel implements ActionListener {
+public final class VisualizationManager extends JPanel implements ActionListener,
+        SkinChangeListener {
 
     private JPopupMenu selectionMenu;
     private JButton fullScreenButton;
@@ -85,6 +91,8 @@ public class VisualizationManager extends JPanel implements ActionListener {
 
         initVisualizations();
         initComponents();
+        skinChanged();
+        SubstanceLookAndFeel.registerSkinChangeListener(this);
     }
 
     private void initVisualizations() {
@@ -93,6 +101,10 @@ public class VisualizationManager extends JPanel implements ActionListener {
         visSet.add(new SpectrumBars());
         visSet.add(new VolumeMeter());
         visSet.add(new Waveform());
+
+        for (Visualization v : visSet) {
+            v.setBorder(new SubstanceBorder());
+        }
     }
 
     private void initComponents() {
@@ -207,6 +219,19 @@ public class VisualizationManager extends JPanel implements ActionListener {
             showVisualization(nextVis, true);
         } else {
             showVisualization(visMap.get(e.getActionCommand()), false);
+        }
+    }
+
+    @Override
+    public void skinChanged() {
+        SubstanceColorScheme activeColorScheme = SubstanceLookAndFeel.getCurrentSkin().getActiveColorScheme(DecorationAreaType.GENERAL);
+        SubstanceColorScheme backgroundColorScheme = SubstanceLookAndFeel.getCurrentSkin().getBackgroundColorScheme(DecorationAreaType.GENERAL);
+        SubstanceColorScheme colorScheme = activeColorScheme.isDark() ? backgroundColorScheme : activeColorScheme;
+
+        for (Visualization v : visSet) {
+            v.setBackgroundColor(colorScheme.getBackgroundFillColor());
+            v.setForegroundColor(colorScheme.getForegroundColor());
+            v.repaint();
         }
     }
 

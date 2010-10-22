@@ -48,12 +48,12 @@ public final class Spectrogram extends Visualization {
     //
     public static final BandDistribution BAND_DISTRIBUTION_LINEAR = new LinearBandDistribution();
     public static final BandDistribution BAND_DISTRIBUTION_LOG = new LogBandDistribution(4, 20.0D);
-    public static final BandGain BAND_GAIN_FLAT = new FlatBandGain(100.0F);
-    public static final BandGain BAND_GAIN_FREQUENCY = new FrequencyBandGain(50.0F);
+    public static final BandGain BAND_GAIN_FLAT = new FlatBandGain(4.0F);
+    public static final BandGain BAND_GAIN_FREQUENCY = new FrequencyBandGain(4.0F);
     //
     public static final BandDistribution DEFAULT_SPECTROGRAM_BAND_DISTRIBUTION = BAND_DISTRIBUTION_LINEAR;
     public static final BandGain DEFAULT_SPECTROGRAM_BAND_GAIN = BAND_GAIN_FREQUENCY;
-    public static final float DEFAULT_SPECTRUM_ANALYSER_GAIN = 1.0F;
+    public static final float DEFAULT_SPECTRUM_ANALYSER_GAIN = 5.0F;
     //
     protected BandDistribution bandDistribution;
     protected BandGain bandGain;
@@ -65,7 +65,8 @@ public final class Spectrogram extends Visualization {
     protected FFT fft;
     private float gain;
     private float bandWidth;
-    private Color[] sColors;
+    private float[] brgb;
+    private float[] frgb;
     private GraphicsConfiguration gc;
     private VolatileImage image1;
     private VolatileImage image2;
@@ -76,6 +77,9 @@ public final class Spectrogram extends Visualization {
         this.gain = DEFAULT_SPECTRUM_ANALYSER_GAIN;
         this.gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
                 getDefaultScreenDevice().getDefaultConfiguration();
+
+        brgb = new float[3];
+        frgb = new float[3];
 
         setBandCount(DigitalSignalSynchronizer.DEFAULT_SAMPLE_SIZE / 2);
     }
@@ -115,6 +119,18 @@ public final class Spectrogram extends Visualization {
     }
 
     @Override
+    public void setBackgroundColor(Color backgroundColor) {
+        super.setBackgroundColor(backgroundColor);
+        image1 = null;
+    }
+
+    @Override
+    public void setForegroundColor(Color foregroundColor) {
+        super.setForegroundColor(foregroundColor);
+        image1 = null;
+    }
+
+    @Override
     public synchronized void render(Graphics2D g2d, int width, int height) {
         if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
             createImages(width, height);
@@ -123,7 +139,7 @@ public final class Spectrogram extends Visualization {
             int valCode1 = image1.validate(gc);
             int valCode2 = image2.validate(gc);
             if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
-                fillBackground(Color.black);
+                fillBackground(backgroundColor);
             } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
                     || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
                 createImages(width, height);
@@ -163,8 +179,16 @@ public final class Spectrogram extends Visualization {
                     fs = 1.0F;
                 }
 
-                g2d1.setColor(new Color(fs, fs, fs));
+                //Calculate spectrogram color shifting between foreground and background colors.
+                float _fs = 1.0F - fs;
+                backgroundColor.getColorComponents(brgb);
+                foregroundColor.getColorComponents(frgb);
+                Color color = new Color(frgb[0] * fs + brgb[0] * _fs,
+                        frgb[1] * fs + brgb[1] * _fs,
+                        frgb[2] * fs + brgb[2] * _fs);
+                g2d1.setColor(color);
                 g2d1.drawLine(width2, Math.round(y), width2, Math.round(y - bandWidth));
+                
                 y -= bandWidth;
             }
             g2d1.dispose();
@@ -200,7 +224,7 @@ public final class Spectrogram extends Visualization {
             createImages(width, height);
         }
 
-        fillBackground(Color.black);
+        fillBackground(backgroundColor);
     }
 
     private void fillBackground(Color c) {
@@ -218,24 +242,4 @@ public final class Spectrogram extends Visualization {
             g2d2.dispose();
         }
     }
-//    private void initColors() {
-//        sColors = new Color[256];
-//        for (int i = 0; i < 32; i++) {
-//            int rgb = i << 4;
-//            if (rgb > 255) {
-//                rgb = 255;
-//            }
-//            sColors[i] = new Color(rgb, 0, 0);
-//        }
-//        for (int i = 0; i < 32; i++) {
-//            int rgb = i << 4;
-//            if (rgb > 255) {
-//                rgb = 255;
-//            }
-//            sColors[i + 32] = new Color(255, rgb, 0);
-//        }
-//        for (int i = 0; i < 192; i++) {
-//            sColors[i + 64] = new Color(255, 255, 0);
-//        }
-//    }
 }

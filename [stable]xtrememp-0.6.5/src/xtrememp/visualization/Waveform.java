@@ -33,6 +33,7 @@ import javax.sound.sampled.SourceDataLine;
 public final class Waveform extends Visualization {
 
     public static final String NAME = "Waveform";
+    //
     private GraphicsConfiguration gc;
     private VolatileImage image1;
     private VolatileImage image2;
@@ -48,6 +49,18 @@ public final class Waveform extends Visualization {
     }
 
     @Override
+    public void setBackgroundColor(Color backgroundColor) {
+        super.setBackgroundColor(backgroundColor);
+        image1 = null;
+    }
+
+    @Override
+    public void setForegroundColor(Color foregroundColor) {
+        super.setForegroundColor(foregroundColor);
+        image1 = null;
+    }
+
+    @Override
     public synchronized void render(Graphics2D g2d, int width, int height) {
         if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
             createImages(width, height);
@@ -56,7 +69,7 @@ public final class Waveform extends Visualization {
             int valCode1 = image1.validate(gc);
             int valCode2 = image2.validate(gc);
             if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
-                fillBackground(Color.black);
+                fillBackground(backgroundColor);
             } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
                     || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
                 createImages(width, height);
@@ -78,10 +91,10 @@ public final class Waveform extends Visualization {
             }
 
             // clear previous last lines
-            g2d1.setColor(Color.black);
+            g2d1.setColor(backgroundColor);
             g2d1.drawLine(width2, 0, width2, height);
             // draw center line
-            g2d1.setColor(Color.blue);
+            g2d1.setColor(foregroundColor);
             g2d1.drawLine(0, height2, width2, height2);
             // draw last lines
             int tmp1 = Math.round(leftLevel / (float) sampleSize * (float) height2) + height2;
@@ -124,7 +137,7 @@ public final class Waveform extends Visualization {
             createImages(width, height);
         }
 
-        fillBackground(Color.black);
+        fillBackground(backgroundColor);
     }
 
     private void fillBackground(Color c) {
