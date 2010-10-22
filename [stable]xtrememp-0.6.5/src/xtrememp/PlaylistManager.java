@@ -413,7 +413,9 @@ public class PlaylistManager extends JPanel implements ActionListener,
     }
 
     public void remove() {
-        if (playlistTable.getSelectedRowCount() > 0) {
+        if(playlistTable.getSelectedRowCount() == playlist.size()) {
+            clearPlaylist();
+        } else if (playlistTable.getSelectedRowCount() > 0) {
             PlaylistItem pli = playlist.getCursor();
             List<PlaylistItem> items = new ArrayList<PlaylistItem>();
             int[] selectedRows = playlistTable.getSelectedRows();
@@ -422,9 +424,6 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 items.add(playlist.getItemAt(selectedRows[i]));
             }
             playlistTableModel.removeAll(items);
-            if (playlist.isEmpty()) {
-                cleanPlaylistButton.setEnabled(false);
-            }
             playlist.setCursor(playlist.indexOf(pli));
             clearSelection();
             colorizeRow();
