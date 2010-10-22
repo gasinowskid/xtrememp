@@ -413,9 +413,10 @@ public class PlaylistManager extends JPanel implements ActionListener,
     }
 
     public void remove() {
-        if(playlistTable.getSelectedRowCount() == playlist.size()) {
+        int selectedRowCount = playlistTable.getSelectedRowCount();
+        if(selectedRowCount == playlist.size()) {
             clearPlaylist();
-        } else if (playlistTable.getSelectedRowCount() > 0) {
+        } else if (selectedRowCount > 0) {
             PlaylistItem pli = playlist.getCursor();
             List<PlaylistItem> items = new ArrayList<PlaylistItem>();
             int[] selectedRows = playlistTable.getSelectedRows();

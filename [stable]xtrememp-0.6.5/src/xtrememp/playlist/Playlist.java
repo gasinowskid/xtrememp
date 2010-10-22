@@ -243,7 +243,11 @@ public class Playlist {
     public void begin() {
         cursorPos = -1;
         if (size() > 0) {
-            cursorPos = 0;
+            if (playMode.equals(PlayMode.SHUFFLE)) {
+                cursorPos = getShuffledCursorPosistion(true);
+            } else {
+                cursorPos = 0;
+            }
         }
         setModified(true);
     }
@@ -374,7 +378,7 @@ public class Playlist {
      *         this playlist is empty.
      */
     private int getShuffledCursorPosistion(boolean next) {
-        if (shuffledList != null) {
+        if (shuffledList != null && !shuffledList.isEmpty()) {
             shuffledIndex = (next) ? ((++shuffledIndex > shuffledList.size() - 1)
                     ? 0 : shuffledIndex) : ((--shuffledIndex < 0)
                     ? shuffledList.size() - 1 : shuffledIndex);

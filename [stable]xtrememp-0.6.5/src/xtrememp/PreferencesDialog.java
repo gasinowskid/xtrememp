@@ -216,7 +216,6 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         generalPanel.add(skinComboSelector, "span,growx");
         generalPanel.add(new JLabel(tr("Dialog.Preferences.General.Interface.UIEffects"), SwingConstants.LEADING));
         uiEffectsCheckbox = new JCheckBox();
-        System.out.println(Settings.isUIEffectsEnabled());
         uiEffectsCheckbox.setSelected(Settings.isUIEffectsEnabled());
         uiEffectsCheckbox.addActionListener(this);
         generalPanel.add(uiEffectsCheckbox, "span,growx");
