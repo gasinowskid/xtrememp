@@ -29,6 +29,7 @@ import xtrememp.player.dsp.DigitalSignalProcessor;
 import xtrememp.player.dsp.DssContext;
 
 /**
+ * Visualization base class.
  *
  * @author Besmir Beqiri
  */
@@ -38,6 +39,7 @@ public abstract class Visualization extends JComponent implements Comparable<Vis
     protected Color backgroundColor = Color.black;
     protected Color foregroundColor = Color.white;
     protected DssContext dssContext;
+    private Dimension size;
 
     public Visualization() {
         super();
@@ -55,7 +57,7 @@ public abstract class Visualization extends JComponent implements Comparable<Vis
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
         if (dssContext != null) {
-            Dimension size = getSize();
+            size = getSize(size);
             render(g2d, size.width, size.height);
         } else {
             g2d.setColor(backgroundColor);
@@ -82,33 +84,32 @@ public abstract class Visualization extends JComponent implements Comparable<Vis
      * @param g2d a Graphics object used for painting.
      * @param width Width of the rendering area.
      * @param height Height of the rendering area.
-     * @param dssContext A DssContext object containing a reference to the sample data.
      */
     public abstract void render(Graphics2D g2d, int width, int height);
 
     /**
-     * @return the backgroundColor
+     * @return the backgroundColor.
      */
     public Color getBackgroundColor() {
         return backgroundColor;
     }
 
     /**
-     * @param backgroundColor the backgroundColor to set
+     * @param backgroundColor the backgroundColor to set.
      */
     public void setBackgroundColor(Color backgroundColor) {
         this.backgroundColor = backgroundColor;
     }
 
     /**
-     * @return the foregroundColor
+     * @return the foregroundColor.
      */
     public Color getForegroundColor() {
         return foregroundColor;
     }
 
     /**
-     * @param foregroundColor the foregroundColor to set
+     * @param foregroundColor the foregroundColor to set.
      */
     public void setForegroundColor(Color foregroundColor) {
         this.foregroundColor = foregroundColor;

@@ -1129,15 +1129,27 @@ public final class XtremeMP implements ActionListener, ControlListener,
     }
 
     @Override
-    public void guiEffectsStateChanged(boolean newValue) {
-        if (newValue) {
-            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
-            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+    public void guiEffectsStateChanged(boolean flag) {
+        if (flag) {
+//            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ARM);
+//            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.FOCUS);
+//            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.FOCUS_LOOP_ANIMATION);
             AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
+            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ICON_GLOW);
+//            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.PRESS);
+//            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.ROLLOVER);
+//            AnimationConfigurationManager.getInstance().allowAnimations(AnimationFacet.SELECTION);
         } else {
-            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW);
-            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+//            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ARM);
+//            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.FOCUS);
+//            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.FOCUS_LOOP_ANIMATION);
             AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.GHOSTING_BUTTON_PRESS);
+            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.GHOSTING_ICON_ROLLOVER);
+            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW);
+//            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.PRESS);
+//            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ROLLOVER);
+//            AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.SELECTION);
         }
     }
 
