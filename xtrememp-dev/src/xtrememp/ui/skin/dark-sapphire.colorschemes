@@ -1,0 +1,21 @@
+Dark Sapphire Active {
+    kind=Dark
+    colorUltraLight=#4B9BFF
+    colorExtraLight=#1A68FF
+    colorLight=#0F55CD
+    colorMid=#0A377F
+    colorDark=#00234B
+    colorUltraDark=#000514
+    colorForeground=#CCCCCC
+}
+
+Dark Sapphire Default {
+    kind=Dark
+    colorUltraLight=#A0A0A0
+    colorExtraLight=#3C3C3C
+    colorLight=#2D2D2D
+    colorMid=#1F1F1F
+    colorDark=#1A1A1A
+    colorUltraDark=#050505
+    colorForeground=#CCCCCC
+}
