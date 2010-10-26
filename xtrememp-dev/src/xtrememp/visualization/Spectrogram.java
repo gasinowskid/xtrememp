@@ -55,14 +55,14 @@ public final class Spectrogram extends Visualization {
     public static final BandGain DEFAULT_SPECTROGRAM_BAND_GAIN = BAND_GAIN_FREQUENCY;
     public static final float DEFAULT_SPECTRUM_ANALYSER_GAIN = 5.0F;
     //
-    protected BandDistribution bandDistribution;
-    protected BandGain bandGain;
-    protected Band[] bdTable;
-    protected float[] bgTable;
-    protected int bands;
-    protected int fftSampleSize;
-    protected float fftSampleRate;
-    protected FFT fft;
+    private BandDistribution bandDistribution;
+    private BandGain bandGain;
+    private Band[] bdTable;
+    private float[] bgTable;
+    private int bands;
+    private int fftSampleSize;
+    private float fftSampleRate;
+    private FFT fft;
     private float gain;
     private float bandWidth;
     private float[] brgb;

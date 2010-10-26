@@ -19,12 +19,15 @@
 package xtrememp.visualization;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
 import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.nio.FloatBuffer;
 import java.text.DecimalFormat;
+import java.util.Map;
 import javax.sound.sampled.SourceDataLine;
 import xtrememp.visualization.spectrum.Band;
 import xtrememp.visualization.spectrum.BandDistribution;
@@ -58,14 +61,14 @@ public final class SpectrumBars extends Visualization {
     public static final float DEFAULT_SPECTRUM_ANALYSER_DECAY = 0.02F;
     public static final float DEFAULT_SPECTRUM_ANALYSER_GAIN = 1.0F;
     //
-    protected BandDistribution bandDistribution;
-    protected BandGain bandGain;
-    protected Band[] bdTable;
-    protected float[] bgTable;
-    protected int bands;
-    protected int fftSampleSize;
-    protected float fftSampleRate;
-    protected FFT fft;
+    private BandDistribution bandDistribution;
+    private BandGain bandGain;
+    private Band[] bdTable;
+    private float[] bgTable;
+    private int bands;
+    private int fftSampleSize;
+    private float fftSampleRate;
+    private FFT fft;
     private float decay;
     private float gain;
     private int[] peaks;
@@ -76,6 +79,8 @@ public final class SpectrumBars extends Visualization {
     private boolean showFrequencies = true;
     private float[] old_FFT;
     private LinearGradientPaint lgp;
+    private Map desktopHints;
+    private Font freqFont;
 
     public SpectrumBars() {
         this.bandDistribution = DEFAULT_SPECTRUM_ANALYSER_BAND_DISTRIBUTION;
@@ -85,6 +90,10 @@ public final class SpectrumBars extends Visualization {
         this.peaks = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
         this.peaksDelay = new int[DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT];
         this.peakDelay = DEFAULT_SPECTRUM_ANALYSER_PEAK_DELAY;
+
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        this.desktopHints = (Map) (tk.getDesktopProperty("awt.font.desktophints"));
+        this.freqFont = new Font("arial", Font.PLAIN, 10);
 
         setBandCount(DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT);
     }
@@ -146,6 +155,8 @@ public final class SpectrumBars extends Visualization {
         int bm = 1;
         //Preparation used for rendering band frequencies.
         if (showFrequencies) {
+            g2d.setRenderingHints(desktopHints);
+            g2d.setFont(freqFont);
             bm = Math.round(32.0F / bandWidth);
             if (bm == 0) {
                 bm = 1;
@@ -200,15 +211,15 @@ public final class SpectrumBars extends Visualization {
             }
 
             g2d.setPaint(lgp);
-            renderSpectrumBar(g2d, Math.round(c), height, Math.round(bandWidth) - 1,
-                    Math.round(fs * height), bd, bdTable[bd], showFrequencies && (bd % bm) == 0);
+            renderSpectrumBar(g2d, Math.round(c), height - 18, Math.round(bandWidth) - 1,
+                    Math.round(fs * (height - 20)), bd, bdTable[bd], showFrequencies && (bd % bm) == 0);
             c += bandWidth;
         }
     }
 
     private void renderSpectrumBar(Graphics2D g2d, int x, int y, int w, int h, int bd, Band band, boolean renderFrequency) {
         //Render spectrum bar.
-        g2d.fillRect(x, y - h, w, y);
+        g2d.fillRect(x, y - h, w, h);
         //Render peak.
         if ((peaksEnabled == true)) {
             g2d.setColor(foregroundColor);
@@ -230,8 +241,8 @@ public final class SpectrumBars extends Visualization {
         if (renderFrequency) {
             g2d.setColor(foregroundColor);
             int sx = x + ((w - g2d.getFontMetrics().stringWidth(band.description)) >> 1);
-            g2d.drawLine(x + (w >> 1), y, x + (w >> 1), y - (g2d.getFontMetrics().getHeight() - g2d.getFontMetrics().getAscent()));
-            g2d.drawString(band.description, sx, y - g2d.getFontMetrics().getHeight());
+//            g2d.drawLine(x + (w >> 1), y, x + (w >> 1), y - (g2d.getFontMetrics().getHeight() - g2d.getFontMetrics().getAscent()));
+            g2d.drawString(band.description, sx, y + g2d.getFontMetrics().getHeight());
         }
     }
 }
