@@ -75,8 +75,6 @@ public final class Spectrogram extends Visualization {
         this.bandDistribution = DEFAULT_SPECTROGRAM_BAND_DISTRIBUTION;
         this.bandGain = DEFAULT_SPECTROGRAM_BAND_GAIN;
         this.gain = DEFAULT_SPECTRUM_ANALYSER_GAIN;
-        this.gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
-                getDefaultScreenDevice().getDefaultConfiguration();
 
         brgb = new float[3];
         frgb = new float[3];
@@ -214,6 +212,9 @@ public final class Spectrogram extends Visualization {
         }
 
         // create images
+        gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
+                getDefaultScreenDevice().getDefaultConfiguration();
+
         image1 = gc.createCompatibleVolatileImage(width, height);
         image2 = gc.createCompatibleVolatileImage(width, height);
 
