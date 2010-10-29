@@ -49,7 +49,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javazoom.spi.PropertiesContainer;
+import xtrememp.audio.spi.PropertiesContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tritonus.share.sampled.TAudioFormat;
@@ -256,6 +256,9 @@ public class AudioPlayer implements Callable<Void> {
                     // Tritonus SPI compliant audio format.
                     properties.putAll(((TAudioFormat) audioFormat).properties());
                 }
+                for (String key : properties.keySet()) {
+                    logger.info("Audio Format Properties: {} = {}", key, properties.get(key));
+                }
             } catch (UnsupportedAudioFileException ex) {
                 throw new PlayerException(ex);
             } catch (IOException ex) {
@@ -306,7 +309,7 @@ public class AudioPlayer implements Callable<Void> {
                 }
                 Mixer mixer = getMixer(mixerName);
                 if (mixer != null) {
-                    logger.info("Mixer: " + mixer.getMixerInfo().toString());
+                    logger.info("Mixer: {}", mixer.getMixerInfo().toString());
                     sourceDataLine = (SourceDataLine) mixer.getLine(lineInfo);
                 } else {
                     sourceDataLine = (SourceDataLine) AudioSystem.getLine(lineInfo);
@@ -315,17 +318,17 @@ public class AudioPlayer implements Callable<Void> {
 
                 sourceDataLine.addLineListener(dss);
 
-                logger.info("Line Info: " + sourceDataLine.getLineInfo().toString());
-                logger.info("Line AudioFormat: " + sourceDataLine.getFormat().toString());
+                logger.info("Line Info: {}", sourceDataLine.getLineInfo().toString());
+                logger.info("Line AudioFormat: {}", sourceDataLine.getFormat().toString());
 
                 if (bufferSize <= 0) {
                     bufferSize = sourceDataLine.getBufferSize();
                 }
                 sourceDataLine.open(audioFormat, bufferSize);
 
-                logger.info("Line: BufferSize = {}", sourceDataLine.getBufferSize());
+                logger.info("Line BufferSize: {}", sourceDataLine.getBufferSize());
                 for (Control c : sourceDataLine.getControls()) {
-                    logger.info("Controls: {}", c);
+                    logger.info("Line Controls: {}", c);
                 }
 
                 if (sourceDataLine.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
@@ -742,11 +745,10 @@ public class AudioPlayer implements Callable<Void> {
 //                        }
 //                    }
                     totalSkipped = audioInputStream.skip(bytes);
-                    logger.info("Skipped: {}/{}", totalSkipped, bytes);
+                    logger.info("Skipped bytes: {}/{}", totalSkipped, bytes);
                     if (totalSkipped == -1) {
                         throw new PlayerException("Seek not supported");
                     }
-                    logger.info("Total skipped bytes: {}", totalSkipped);
                     initSourceDataLine();
                 }
             } catch (IOException ex) {
