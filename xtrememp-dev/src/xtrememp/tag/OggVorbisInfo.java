@@ -106,7 +106,7 @@ public class OggVorbisInfo implements TagInfo {
                 comment = vcTag.getFirst(FieldKey.COMMENT);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(System.err);
         }
     }
 
@@ -268,13 +268,13 @@ public class OggVorbisInfo implements TagInfo {
 
     @Override
     public String getCodecDetails() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("<html><b>Encoding Type: </b>");
         sb.append(getEncodingType().toUpperCase());
         sb.append("<br><b>Sampling rate: </b>");
-        sb.append(getSampleRate() + " Hz");
+        sb.append(getSampleRate()).append(" Hz");
         sb.append("<br><b>Bitrate: </b>");
-        sb.append(getBitRate() + " Kbps");
+        sb.append(getBitRate()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
         sb.append(getChannels());
         sb.append("<br><b>Vendor: </b>");

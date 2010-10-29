@@ -33,8 +33,8 @@ import org.jaudiotagger.audio.flac.FlacInfoReader;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.flac.FlacTag;
-import org.kc7bfi.jflac.FLACDecoder;
-import org.kc7bfi.jflac.metadata.StreamInfo;
+import xtrememp.audio.spi.flac.FLACDecoder;
+import xtrememp.audio.spi.flac.metadata.StreamInfo;
 import xtrememp.util.Utilities;
 
 /**
@@ -105,7 +105,7 @@ public class FlacInfo implements TagInfo {
                 comment = flacTag.getFirst(FieldKey.COMMENT);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(System.err);
         }
     }
 
@@ -173,13 +173,13 @@ public class FlacInfo implements TagInfo {
 
     @Override
     public String getCodecDetails() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("<html><b>Encoding Type: </b>");
         sb.append(getEncodingType().toUpperCase());
         sb.append("<br><b>Sampling rate: </b>");
-        sb.append(getSampleRate() + " Hz");
+        sb.append(getSampleRate()).append(" Hz");
         sb.append("<br><b>Bitrate: </b>");
-        sb.append(getBitRate() + " Kbps");
+        sb.append(getBitRate()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
         sb.append(getChannels());
         if (size != -1) {
