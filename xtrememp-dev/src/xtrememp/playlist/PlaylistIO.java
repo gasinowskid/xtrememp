@@ -350,7 +350,7 @@ public final class PlaylistIO {
                 bw = new BufferedWriter(new FileWriter(location));
                 bw.write("#EXTM3U");
                 bw.newLine();
-                for (PlaylistItem pli : playlist.listItems()) {
+                for (PlaylistItem pli : playlist.listAllItems()) {
                     bw.write("#EXTINF:" + pli.getM3UExtInf());
                     bw.newLine();
                     bw.write(pli.getLocation());
@@ -387,7 +387,7 @@ public final class PlaylistIO {
 
             // Create track list
             XspfPlaylistTrackList tracks = new XspfPlaylistTrackList();
-            for (PlaylistItem pli : playlist.listItems()) {
+            for (PlaylistItem pli : playlist.listAllItems()) {
                 // Create a track and add to list
                 XspfTrack track = new XspfTrack();
                 track.setIdentifier(String.valueOf(playlist.indexOf(pli)));

@@ -720,7 +720,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
                     String fileName = file.getName().substring(0, file.getName().lastIndexOf(".")).trim();
                     PlaylistItem newPli = new PlaylistItem(fileName, file.getAbsolutePath(), -1, true);
                     playlistManager.add(newPli);
-                    playlist.setCursor(playlist.indexOf(newPli));
+                    playlist.setCursor(newPli);
                 }
                 acOpenAndPlay();
                 Settings.setLastDir(file.getParent());
@@ -744,7 +744,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 } else {
                     PlaylistItem newPli = new PlaylistItem(url, url, -1, false);
                     playlistManager.add(newPli);
-                    playlist.setCursor(playlist.indexOf(newPli));
+                    playlist.setCursor(newPli);
                 }
                 acOpenAndPlay();
             }

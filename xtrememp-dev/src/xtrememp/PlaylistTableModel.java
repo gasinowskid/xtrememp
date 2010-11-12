@@ -19,25 +19,26 @@
 package xtrememp;
 
 import java.util.Collection;
-import xtrememp.playlist.*;
-import java.util.Collections;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
+import xtrememp.playlist.Playlist;
+import xtrememp.playlist.PlaylistItem;
 
 /**
+ * Implementation of playlist table model.
  *
  * @author Besmir Beqiri
  */
 public class PlaylistTableModel extends AbstractTableModel {
 
-    public static final int TITLE_ARTIST_COLUMN = 0;
+    public static final int TITLE_COLUMN = 0;
     public static final int TIME_COLUMN = 1;
-//    public static final int ARTIST_COLUMN = 2;
-//    public static final int ALBUM_COLUMN = 3;
-//    public static final int GENRE_COLUMN = 4;
-    public static final int COLUMN_COUNT = 2;
+    public static final int ARTIST_COLUMN = 2;
+    public static final int ALBUM_COLUMN = 3;
+    public static final int GENRE_COLUMN = 4;
+    public static final int COLUMN_COUNT = 5;
+    public static final String[] COLUMN_NAMES = {"Title", "Duration", "Artist", "Album", "Genre"};
     private final Playlist playlist;
-    private final String[] columnNames = {"Title - Artist", "Duration"};
 
     public PlaylistTableModel(Playlist playlist) {
         this.playlist = playlist;
@@ -47,33 +48,33 @@ public class PlaylistTableModel extends AbstractTableModel {
         int first = playlist.size();
         int last = first + newItems.size() - 1;
         playlist.addAll(newItems);
-        this.fireTableRowsInserted(first, last);
+        fireTableRowsInserted(first, last);
     }
 
     public void add(PlaylistItem item) {
         int index = playlist.size();
         playlist.addItem(item);
-        this.fireTableRowsInserted(index, index);
+        fireTableRowsInserted(index, index);
     }
 
     public void removeItemAt(int index) {
         playlist.removeItemAt(index);
-        this.fireTableRowsDeleted(index, index);
+        fireTableRowsDeleted(index, index);
     }
 
     public void removeAll(Collection<? extends PlaylistItem> c) {
         playlist.removeAll(c);
-        this.fireTableDataChanged();
+        fireTableDataChanged();
     }
 
     public void clear() {
         playlist.clear();
-        this.fireTableDataChanged();
+        fireTableDataChanged();
     }
 
     public void randomizePlaylist() {
         playlist.randomize();
-        this.fireTableDataChanged();
+        fireTableDataChanged();
     }
 
     public PlaylistItem getPlaylistItem(int rowIndex) {
@@ -82,7 +83,7 @@ public class PlaylistTableModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(int columnIndex) {
-        return columnNames[columnIndex];
+        return COLUMN_NAMES[columnIndex];
     }
 
     @Override
@@ -105,32 +106,18 @@ public class PlaylistTableModel extends AbstractTableModel {
         if (!playlist.isEmpty()) {
             PlaylistItem item = playlist.getItemAt(rowIndex);
             switch (columnIndex) {
-                case TITLE_ARTIST_COLUMN:
-                    return " " + item.getFormattedDisplayName();
+                case TITLE_COLUMN:
+                    return " " + item.getTagInfo().getTitle();
                 case TIME_COLUMN:
-                    return item.getFormattedLength(item.getDuration()) + " ";
-//                case ARTIST_COLUMN:
-//                    return " " + item.getTagInfo().getArtist();
-//                case ALBUM_COLUMN:
-//                    return " " + item.getTagInfo().getAlbum();
-//                case GENRE_COLUMN:
-//                    return " " + item.getTagInfo().getGenre();
+                    return item.getFormattedLength() + " ";
+                case ARTIST_COLUMN:
+                    return " " + item.getTagInfo().getArtist();
+                case ALBUM_COLUMN:
+                    return " " + item.getTagInfo().getAlbum();
+                case GENRE_COLUMN:
+                    return " " + item.getTagInfo().getGenre();
             }
         }
         return null;
-    }
-
-    public void moveRow(int start, int end, int to) {
-        int shift = to - start;
-        int first,   last;
-        if (shift < 0) {
-            first = to;
-            last = end;
-        } else {
-            first = start;
-            last = to + end - start;
-        }
-        Collections.rotate(playlist.listItems().subList(first, last + 1), shift);
-        fireTableRowsUpdated(first, last);
     }
 }

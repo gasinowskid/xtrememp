@@ -28,6 +28,10 @@ public class PlaylistEvent extends EventObject {
 
     protected PlaylistItem item;
 
+    public PlaylistEvent(Object object) {
+        this(object, null);
+    }
+
     public PlaylistEvent(Object object, PlaylistItem item) {
         super(object);
         this.item = item;

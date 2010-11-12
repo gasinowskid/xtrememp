@@ -21,15 +21,17 @@ package xtrememp.playlist;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xtrememp.playlist.filter.Predicate;
+import xtrememp.playlist.filter.TruePredicate;
 
 /**
  * Playlist implementation.
- * This class implements BasePlaylist interface.
  *
  * @author Besmir Beqiri
  */
@@ -44,53 +46,58 @@ public class Playlist {
         REPEAT_ALL,
         SHUFFLE
     }
-    protected final List<PlaylistItem> playlist;
+    protected final List<PlaylistItem> cachedPlaylist;
+    protected final List<PlaylistItem> filteredPlaylist;
+    protected final List<PlaylistItem> shuffledList;
     protected final List<PlaylistListener> listeners;
     protected final Random rnd;
-    protected List<PlaylistItem> shuffledList;
+    protected Predicate<PlaylistItem> filterPredicate;
     protected PlayMode playMode = PlayMode.REPEAT_ALL;
-    protected int cursorPos = -1;
+    protected PlaylistItem cursor;
     protected int shuffledIndex = -1;
     protected boolean isModified = false;
 
     /**
-     * Default constructor
+     * Default constructor.
      */
     public Playlist() {
-        playlist = Collections.synchronizedList(new ArrayList<PlaylistItem>());
+        cachedPlaylist = new ArrayList<PlaylistItem>();
+        filteredPlaylist = new ArrayList<PlaylistItem>();
+        shuffledList = new ArrayList<PlaylistItem>();
         listeners = new ArrayList<PlaylistListener>(1);
         rnd = new Random();
+        filterPredicate = TruePredicate.INSTANCE;
     }
 
     /**
-     * @return the playMode.
+     * Return the current play mode.
+     * 
+     * @return A {@link PlayMode} object.
      */
     public PlayMode getPlayMode() {
         return playMode;
     }
 
     /**
-     * @param playMode the playMode to set.
+     * Set the play mode for the playlist. It changes the behaviour of the
+     * playlist on determining the next or previous item to be played or not.
+     *
+     * @param playMode The {@link PlayMode} to set.
      */
     public void setPlayMode(PlayMode playMode) {
         this.playMode = playMode;
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            int size = playlist.size();
+            int size = size();
             switch (size) {
-                case 0:
-                    shuffledList = new ArrayList<PlaylistItem>();
-                    break;
                 case 1:
-                    shuffledList = new ArrayList<PlaylistItem>();
-                    shuffledList.add(playlist.get(0));
+                    shuffledList.add(filteredPlaylist.get(0));
                     break;
                 default:
-                    shuffledList = new ArrayList<PlaylistItem>(size);
                     for (int i = 0; i < size; i++) {
                         shuffledList.add(rnd.nextInt(shuffledList.size() + 1),
-                                playlist.get(i));
+                                filteredPlaylist.get(i));
                     }
-                    int cursorShuffledIndex = shuffledList.indexOf(getCursor());
+                    int cursorShuffledIndex = shuffledList.indexOf(cursor);
                     if (cursorShuffledIndex != -1) {
                         Collections.swap(shuffledList, 0, cursorShuffledIndex);
                     }
@@ -98,53 +105,67 @@ public class Playlist {
             }
             shuffledIndex = 0;
         } else {
-            shuffledList = null;
+            shuffledList.clear();
             shuffledIndex = -1;
         }
-        firePlayModeChangedEvent(getCursor());
+        firePlayModeChangedEvent();
     }
 
     /**
-     * Append item at the end of the playlist.
-     * @param item a playlist item.
+     * Appends a playlist item at the end of the playlist.
+     *
+     * @param item A playlist item.
      * @return <code>true</code> if item was successfully added, else <code>false</code>.
      */
     public boolean addItem(PlaylistItem item) {
-        boolean added = playlist.add(item);
+        boolean added = cachedPlaylist.add(item);
+        if (filterPredicate.evaluate(item)) {
+            filteredPlaylist.add(item);
+        }
         setModified(added);
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            addToShuffledPosList(item);
+            addToShuffledList(item);
         }
         fireItemAddedEvent(item);
         return added;
     }
 
     /**
-     * Adds item at a given position in the playlist.
-     * @param item a playlist item.
-     * @param pos the position of the item.
+     * Adds a playlist item at a given position in the playlist.
+     *
+     * @param pos The position of the item.
+     * @param item A playlist item.
      */
     public void addItemAt(int pos, PlaylistItem item) {
-        playlist.add(pos, item);
+        cachedPlaylist.add(pos, item);
+        if (filterPredicate.evaluate(item)) {
+            filteredPlaylist.add(pos, item);
+        }
         setModified((item == null) ? false : true);
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            addToShuffledPosList(item);
+            addToShuffledList(item);
         }
         fireItemAddedEvent(item);
     }
 
     /**
      * Adds a collection of items to the playlist.
-     * @param c a collection of items.
+     *
+     * @param c A collection of items.
      * @return <code>true</code> if the collection was successfully added,
      *         else <code>false</code>.
      */
     public boolean addAll(Collection<? extends PlaylistItem> c) {
-        boolean added = playlist.addAll(c);
+        boolean added = cachedPlaylist.addAll(c);
+        for (PlaylistItem item : c) {
+            if (filterPredicate.evaluate(item)) {
+                filteredPlaylist.add(item);
+            }
+        }
         setModified(added);
         if (playMode.equals(PlayMode.SHUFFLE)) {
             for (PlaylistItem item : c) {
-                addToShuffledPosList(item);
+                addToShuffledList(item);
             }
         }
         for (PlaylistItem item : c) {
@@ -155,29 +176,33 @@ public class Playlist {
 
     /**
      * Removes the specified item from the playlist.
-     * @param item a playlist item.
+     *
+     * @param item A playlist item.
      * @return <code>true</code> if item was successfully removed, else <code>false</code>.
      */
     public boolean removeItem(PlaylistItem item) {
-        boolean removed = playlist.remove(item);
+        boolean removed = cachedPlaylist.remove(item);
+        filteredPlaylist.remove(item);
         setModified(removed);
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            removeFromShuffledPosList(item);
+            removeFromShuffledList(item);
         }
         fireItemRemovedEvent(item);
         return removed;
     }
 
     /**
-     * Removes item at a given position from the playlist.
-     * @param pos the position of the item.
-     * @return item that was removed.
+     * Removes a playlist item at a given position from the playlist.
+     *
+     * @param pos The position of the item.
+     * @return The playlist item that was removed.
      */
     public PlaylistItem removeItemAt(int pos) {
-        PlaylistItem item = playlist.remove(pos);
+        PlaylistItem item = cachedPlaylist.remove(pos);
+        filteredPlaylist.remove(item);
         setModified((item == null) ? false : true);
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            removeFromShuffledPosList(item);
+            removeFromShuffledList(item);
         }
         fireItemRemovedEvent(item);
         return item;
@@ -185,15 +210,17 @@ public class Playlist {
 
     /**
      * Removes a collection of items from the playlist.
-     * @param c a collection of items.
-     * @return <code>true</code> if this playlist changed as a result of the call
+     *
+     * @param c A collection of items.
+     * @return <code>true</code> if this playlist changed as a result of the call.
      */
     public boolean removeAll(Collection<? extends PlaylistItem> c) {
-        boolean removed = playlist.removeAll(c);
+        boolean removed = cachedPlaylist.removeAll(c);
+        filteredPlaylist.removeAll(c);
         setModified(removed);
         if (playMode.equals(PlayMode.SHUFFLE)) {
             for (PlaylistItem item : c) {
-                removeFromShuffledPosList(item);
+                removeFromShuffledList(item);
             }
         }
         for (PlaylistItem item : c) {
@@ -206,26 +233,76 @@ public class Playlist {
      * Removes all items from the playlist.
      */
     public void clear() {
-        synchronized (playlist) {
-            Iterator<PlaylistItem> iterator = playlist.iterator();
-            while (iterator.hasNext()) {
-                PlaylistItem item = iterator.next();
-                iterator.remove();
-                fireItemRemovedEvent(item);
-            }
+        Iterator<PlaylistItem> iterator = cachedPlaylist.iterator();
+        while (iterator.hasNext()) {
+            PlaylistItem item = iterator.next();
+            iterator.remove();
+            fireItemRemovedEvent(item);
         }
-        if (playMode.equals(PlayMode.SHUFFLE) && shuffledList != null) {
-            shuffledList.clear();
-            shuffledIndex = 0;
-        }
+        filteredPlaylist.clear();
+        shuffledList.clear();
+        shuffledIndex = 0;
         begin();
     }
 
     /**
-     * Shuffles items in the playlist randomly
+     * Sorts the entire playlist based on the given comparator.
+     * 
+     * @param comparator A {@link Comparator} object.
+     */
+    public void sort(Comparator<PlaylistItem> comparator) {
+        Collections.sort(cachedPlaylist, comparator);
+        Collections.sort(filteredPlaylist, comparator);
+        setModified(true);
+    }
+
+    /**
+     * Filters the entire playlist based on the given predicate.
+     *
+     * @param filterPredicate A {@link Predicate} object.
+     */
+    public void filter(Predicate<PlaylistItem> filterPredicate) {
+        this.filterPredicate = filterPredicate;
+        filteredPlaylist.clear();
+        if (playMode.equals(PlayMode.SHUFFLE)) {
+            shuffledList.clear();
+            shuffledIndex = 0;
+        }
+        for (PlaylistItem pli : cachedPlaylist) {
+            if (filterPredicate.evaluate(pli)) {
+                filteredPlaylist.add(pli);
+                if (playMode.equals(PlayMode.SHUFFLE)) {
+                    addToShuffledList(pli);
+                }
+            }
+        }
+        setModified(true);
+    }
+
+    /**
+     * Moves a playlist item to a new position.
+     *
+     * @param fromPos The current position.
+     * @param toPos The new position.
+     */
+    public void moveItem(int fromPos, int toPos) {
+        int newIndex = cachedPlaylist.indexOf(filteredPlaylist.get(toPos));
+        PlaylistItem pli = filteredPlaylist.remove(fromPos);
+        if (pli != null) {
+            filteredPlaylist.add(toPos, pli);
+            if (cachedPlaylist.remove(pli)) {
+                cachedPlaylist.add(newIndex, pli);
+            }
+        }
+        setModified(true);
+    }
+
+    /**
+     * Shuffles items in the playlist randomly.
      */
     public void randomize() {
-        Collections.shuffle(playlist);
+        Collections.shuffle(cachedPlaylist);
+        Collections.shuffle(filteredPlaylist);
         setModified(true);
     }
 
@@ -233,7 +310,8 @@ public class Playlist {
      * Reverses the order of the items in the playlist.
      */
     public void reverse() {
-        Collections.reverse(playlist);
+        Collections.reverse(cachedPlaylist);
+        Collections.reverse(filteredPlaylist);
         setModified(true);
     }
 
@@ -241,40 +319,52 @@ public class Playlist {
      * Moves the cursor at the begining of the Playlist.
      */
     public void begin() {
-        cursorPos = -1;
-        if (size() > 0) {
+        cursor = null;
+        if (!filteredPlaylist.isEmpty()) {
             if (playMode.equals(PlayMode.SHUFFLE)) {
-                cursorPos = getShuffledCursorPosistion(true);
+                cursor = getShuffledCursor(true);
             } else {
-                cursorPos = 0;
+                cursor = filteredPlaylist.get(0);
             }
         }
         setModified(true);
     }
 
     /**
-     * Returns item at a given position from the playlist.
-     * @param pos the position of the item.
-     * @return a playlist item.
+     * Returns the playlist item at a given position from the playlist.
+     *
+     * @param pos The position of the item.
+     * @return A playlist item.
      */
     public PlaylistItem getItemAt(int pos) {
-        return playlist.get(pos);
+        return filteredPlaylist.get(pos);
     }
 
     /**
-     * Returns a collection of playlist items.
-     * @return a collection of playlist items.
+     * Returns a list of all playlist items the playlist contains.
+     *
+     * @return A list of playlist items.
+     */
+    public List<PlaylistItem> listAllItems() {
+        return cachedPlaylist;
+    }
+
+    /**
+     * Returns a filtered list of all playlist items based on the applied filter.
+     *
+     * @return A list of playlist items.
      */
     public List<PlaylistItem> listItems() {
-        return playlist;
+        return filteredPlaylist;
     }
 
     /**
-     * Returns the number of items in the playlist.
-     * @return the value of the playlist size.
+     * Returns the number of items (size) in the playlist.
+     *
+     * @return An integer value.
      */
     public int size() {
-        return playlist.size();
+        return filteredPlaylist.size();
     }
 
     /**
@@ -282,12 +372,14 @@ public class Playlist {
      */
     public void nextCursor() {
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            cursorPos = getShuffledCursorPosistion(true);
+            cursor = getShuffledCursor(true);
         } else {
+            int cursorPos = getCursorPosition();
             cursorPos++;
-            if (cursorPos > playlist.size() - 1) {
+            if (cursorPos > size() - 1) {
                 cursorPos = 0;
             }
+            cursor = getItemAt(cursorPos);
         }
     }
 
@@ -296,75 +388,94 @@ public class Playlist {
      */
     public void previousCursor() {
         if (playMode.equals(PlayMode.SHUFFLE)) {
-            cursorPos = getShuffledCursorPosistion(false);
+            cursor = getShuffledCursor(false);
         } else {
+            int cursorPos = getCursorPosition();
             cursorPos--;
             if (cursorPos < 0) {
-                cursorPos = playlist.size() - 1;
+                cursorPos = size() - 1;
             }
+            cursor = getItemAt(cursorPos);
         }
     }
 
     /**
-     * Set the modification flag for the playlist
-     * @param set if <code>true</code>, sets the modification flag as modified,
+     * Set the modification flag for the playlist.
+     *
+     * @param flag if <code>true</code>, sets the modification flag as modified,
      *            if <code>false</code> as not modified.
      */
-    public void setModified(boolean set) {
-        isModified = set;
+    public void setModified(boolean flag) {
+        isModified = flag;
     }
 
     /**
-     * Returns item matching to the cursor.
-     * @return a playlist item.
+     * Returns the playlist item matching to the cursor.
+     * 
+     * @return A playlist item.
      */
     public PlaylistItem getCursor() {
-        if ((cursorPos < 0) || (cursorPos >= playlist.size())) {
-            return null;
-        }
-        return getItemAt(cursorPos);
+        return cursor;
     }
 
     /**
-     * Set the cursor at the specified index.
-     * @param pos the index value.
+     * Replaces the cursor with a new playlist item.
+     *
+     * @param newCursor A playlist item.
      */
-    public void setCursor(int pos) {
-        cursorPos = pos;
-        if (playMode.equals(PlayMode.SHUFFLE) && (cursorPos >= 0 && cursorPos < playlist.size())) {
-            if (shuffledList != null && shuffledList.size() > 1
-                    && shuffledList.get(shuffledIndex) != getCursor()) {
+    public void setCursor(PlaylistItem newCursor) {
+        cursor = newCursor;
+        if (playMode.equals(PlayMode.SHUFFLE) && (cursor != null)) {
+            if (shuffledList.size() > 1
+                    && shuffledList.get(shuffledIndex) != cursor) {
                 shuffledIndex = (++shuffledIndex > shuffledList.size() - 1) ? 0 : shuffledIndex;
                 Collections.swap(shuffledList, shuffledIndex,
-                        shuffledList.indexOf(getCursor()));
+                        shuffledList.indexOf(cursor));
             }
         }
     }
 
     /**
      * Returns the position matching to the cursor.
-     * @return an integer value.
+     *
+     * @return An integer value.
      */
     public int getCursorPosition() {
-        return cursorPos;
+        return indexOf(cursor);
     }
 
-    private void addToShuffledPosList(PlaylistItem item) {
-        if (shuffledList != null) {
-            int randomIndex = shuffledIndex + rnd.nextInt(shuffledList.size() - shuffledIndex + 1);
-            shuffledList.add(randomIndex, item);
-        }
+    /**
+     * Replaces the cursor with a new playlist item specified by its position.
+     *
+     * @param pos An integer value.
+     */
+    public void setCursorPosition(int pos) {
+        cursor = getItemAt(pos);
     }
 
-    private void removeFromShuffledPosList(PlaylistItem item) {
-        if (shuffledList != null) {
-            shuffledList.remove(item);
-            if (shuffledList.isEmpty()) {
-                shuffledIndex = 0;
-            } else {
-                int maxIndex = shuffledList.size() - 1;
-                shuffledIndex = (shuffledIndex > maxIndex) ? maxIndex : shuffledIndex;
-            }
+    /**
+     * Adds the specified playlist item to the shuffled list in a random position.
+     *
+     * @param item A playlist item.
+     */
+    private void addToShuffledList(PlaylistItem item) {
+        int randomIndex = shuffledIndex + rnd.nextInt(shuffledList.size() - shuffledIndex + 1);
+        shuffledList.add(randomIndex, item);
+    }
+
+    /**
+     * Removes the first occurrence of the specified playlist item from the
+     * shuffled list, if it is present.
+     *
+     * @param item A playlist item.
+     */
+    private void removeFromShuffledList(PlaylistItem item) {
+        shuffledList.remove(item);
+        if (shuffledList.isEmpty()) {
+            shuffledIndex = 0;
+        } else {
+            int maxIndex = shuffledList.size() - 1;
+            shuffledIndex = (shuffledIndex > maxIndex) ? maxIndex : shuffledIndex;
         }
     }
 
@@ -372,33 +483,36 @@ public class Playlist {
      * Returns a randomly generated cursor position. This method makes sure that
      * all playlist items of this playlist will be selected once before
      * selecting the same item twice.
-     * @param next if <code>true</code> retrive the next cursor position value,
+     * 
+     * @param next If <code>true</code> retrive the next cursor position value,
      *             else the previous one.
-     * @return an integer value between [0, playlist size - 1], otherwise -1 if
+     * @return An integer value between [0, playlist size - 1], otherwise -1 if
      *         this playlist is empty.
      */
-    private int getShuffledCursorPosistion(boolean next) {
-        if (shuffledList != null && !shuffledList.isEmpty()) {
+    private PlaylistItem getShuffledCursor(boolean next) {
+        if (!shuffledList.isEmpty()) {
             shuffledIndex = (next) ? ((++shuffledIndex > shuffledList.size() - 1)
                     ? 0 : shuffledIndex) : ((--shuffledIndex < 0)
                     ? shuffledList.size() - 1 : shuffledIndex);
-            return indexOf(shuffledList.get(shuffledIndex));
+            return shuffledList.get(shuffledIndex);
         } else {
-            return -1;
+            return null;
         }
     }
 
     /**
-     * Returns index of the specified playlist item.
-     * @param item a playlist item.
-     * @return an integer value.
+     * Returns the index of the specified playlist item.
+     *
+     * @param item A playlist item.
+     * @return An integer value.
      */
     public int indexOf(PlaylistItem item) {
-        return playlist.indexOf(item);
+        return filteredPlaylist.indexOf(item);
     }
 
     /**
      * Checks the modification flag.
+     *
      * @return <code>true</code> if the playlist is modified, else <code>false</code>.
      */
     public boolean isModified() {
@@ -406,18 +520,20 @@ public class Playlist {
     }
 
     /**
-     * Checks if playlist is empty.
+     * Checks if the playlist is empty.
+     *
      * @return <code>true</code> if the playlist is empty, else <code>false</code>.
      */
     public boolean isEmpty() {
-        return playlist.isEmpty();
+        return filteredPlaylist.isEmpty();
     }
 
     /**
-     * Adds the specified playlist listener to receive mouse events from this
+     * Adds the specified playlist listener to receive playlist events from this
      * playlist. If the listener is <code>null</code>, no exception is thrown
      * and no action is performed.
-     * @param listener the playlist listener.
+     *
+     * @param listener A playlist listener.
      */
     public void addPlaylistListener(PlaylistListener listener) {
         if (listener == null) {
@@ -434,7 +550,8 @@ public class Playlist {
      * was not previously added to this playlist.
      * If the listener is <code>null</code>, no exception is thrown and no
      * action is performed.
-     * @param listener the playlist listener.
+     * 
+     * @param listener A playlist listener.
      */
     public void removePlaylistListener(PlaylistListener listener) {
         if (listener == null) {
@@ -444,22 +561,37 @@ public class Playlist {
         logger.info("Playlist listener removed");
     }
 
+    /**
+     * Notifies all listeners that a playlist item has been added.
+     *
+     * @param item The playlist item added.
+     */
     private void fireItemAddedEvent(PlaylistItem item) {
         PlaylistEvent event = new PlaylistEvent(this, item);
         for (PlaylistListener listener : listeners) {
             listener.playlistItemAdded(event);
         }
+        logger.info("Playlist item added: {}", item);
     }
 
+    /**
+     * Notifies all listeners that a playlist item has been removed.
+     *
+     * @param item The playlist item removed.
+     */
     private void fireItemRemovedEvent(PlaylistItem item) {
         PlaylistEvent event = new PlaylistEvent(this, item);
         for (PlaylistListener listener : listeners) {
             listener.playlistItemRemoved(event);
         }
+        logger.info("Playlist item removed: {}", item);
     }
 
-    private void firePlayModeChangedEvent(PlaylistItem item) {
-        PlaylistEvent event = new PlaylistEvent(this, item);
+    /**
+     * Notifies all listeners that the play mode has changed.
+     */
+    private void firePlayModeChangedEvent() {
+        PlaylistEvent event = new PlaylistEvent(this);
         for (PlaylistListener listener : listeners) {
             listener.playModeChanged(event);
         }

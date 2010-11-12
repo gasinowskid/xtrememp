@@ -18,6 +18,10 @@
  */
 package xtrememp;
 
+import xtrememp.playlist.sort.DurationComparator;
+import xtrememp.playlist.sort.GenreComparator;
+import java.util.Comparator;
+import javax.swing.table.TableColumnModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -38,13 +42,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 import javax.sound.sampled.AudioSystem;
@@ -59,7 +64,6 @@ import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
-import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
@@ -68,8 +72,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableRowSorter;
 import javax.swing.text.Document;
 import org.apache.commons.io.FilenameUtils;
 import org.pushingpixels.substance.api.renderers.SubstanceDefaultTableCellRenderer;
@@ -80,6 +84,11 @@ import xtrememp.playlist.Playlist;
 import xtrememp.playlist.PlaylistException;
 import xtrememp.playlist.PlaylistIO;
 import xtrememp.playlist.PlaylistItem;
+import xtrememp.playlist.filter.Predicate;
+import xtrememp.playlist.filter.TruePredicate;
+import xtrememp.playlist.sort.AlbumComparator;
+import xtrememp.playlist.sort.ArtistComparator;
+import xtrememp.playlist.sort.TitleComparator;
 import xtrememp.ui.text.SearchTextField;
 import xtrememp.util.AbstractSwingWorker;
 import xtrememp.util.Utilities;
@@ -90,32 +99,34 @@ import xtrememp.util.file.XspfPlaylistFileFilter;
 import static xtrememp.util.Utilities.tr;
 
 /**
+ * Playlist manager class.
+ * Special thanks to rom1dep for the changes applied to this class.
  *
  * @author Besmir Beqiri
- *
- * Special thanks to rom1dep for the changes applied to this class.
  */
 public class PlaylistManager extends JPanel implements ActionListener,
-        DropTargetListener, ListSelectionListener, MouseListener {
+        DropTargetListener, ListSelectionListener {
 
     private final Logger logger = LoggerFactory.getLogger(PlaylistManager.class);
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
     private final PlaylistFileFilter playlistFileFilter = new PlaylistFileFilter();
+    private final String upArrowChar = "\u25B2";
+    private final String downArrowChar = "\u25BC";
     private JTable playlistTable;
     private JButton openPlaylistButton;
     private JButton savePlaylistButton;
     private JButton addToPlaylistButton;
     private JButton remFromPlaylistButton;
-    private JButton cleanPlaylistButton;
+    private JButton clearPlaylistButton;
     private JButton moveUpButton;
     private JButton moveDownButton;
     private JButton mediaInfoButton;
     private ControlListener controlListener;
     private Playlist playlist;
     private PlaylistTableModel playlistTableModel;
+    private TableColumnModel tableColumnModel;
     private SearchTextField searchTextField;
-    private TableRowSorter<PlaylistTableModel> tableRowSorter;
-    private RowFilter<PlaylistTableModel, Integer> searchFilter;
+    private Predicate<PlaylistItem> searchFilter;
     private String searchString;
     private int doubleSelectedRow = -1;
     private boolean firstPlaylistLoad = true;
@@ -126,7 +137,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
         playlist = new Playlist();
         initModel();
         initComponents();
-        initSortingFiltering();
+        initFiltering();
     }
 
     private void initModel() {
@@ -154,11 +165,11 @@ public class PlaylistManager extends JPanel implements ActionListener,
         remFromPlaylistButton.addActionListener(this);
         remFromPlaylistButton.setEnabled(false);
         toolBar.add(remFromPlaylistButton);
-        cleanPlaylistButton = new JButton(Utilities.EDIT_CLEAR_ICON);
-        cleanPlaylistButton.setToolTipText(tr("MainFrame.PlaylistManager.CleanPlaylist"));
-        cleanPlaylistButton.addActionListener(this);
-        cleanPlaylistButton.setEnabled(false);
-        toolBar.add(cleanPlaylistButton);
+        clearPlaylistButton = new JButton(Utilities.EDIT_CLEAR_ICON);
+        clearPlaylistButton.setToolTipText(tr("MainFrame.PlaylistManager.ClearPlaylist"));
+        clearPlaylistButton.addActionListener(this);
+        clearPlaylistButton.setEnabled(false);
+        toolBar.add(clearPlaylistButton);
         toolBar.addSeparator();
         moveUpButton = new JButton(Utilities.GO_UP_ICON);
         moveUpButton.setToolTipText(tr("MainFrame.PlaylistManager.MoveUp"));
@@ -187,7 +198,52 @@ public class PlaylistManager extends JPanel implements ActionListener,
         playlistTable = new JTable(playlistTableModel);
         playlistTable.setDefaultRenderer(String.class, new PlaylistCellRenderer());
         playlistTable.setActionMap(null);
-        playlistTable.setTableHeader(null);
+        tableColumnModel = playlistTable.getColumnModel();
+        playlistTable.getTableHeader().addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent ev) {
+                int clickedColumn = tableColumnModel.getColumnIndexAtX(ev.getX());
+                TableColumn tableColumn = tableColumnModel.getColumn(clickedColumn);
+                String columnName = PlaylistTableModel.COLUMN_NAMES[clickedColumn];
+                String headerValue = String.valueOf(tableColumn.getHeaderValue());
+
+                Comparator<PlaylistItem> comparator = null;
+                switch (clickedColumn) {
+                    case PlaylistTableModel.TITLE_COLUMN:
+                        comparator = new TitleComparator();
+                        break;
+                    case PlaylistTableModel.TIME_COLUMN:
+                        comparator = new DurationComparator();
+                        break;
+                    case PlaylistTableModel.ARTIST_COLUMN:
+                        comparator = new ArtistComparator();
+                        break;
+                    case PlaylistTableModel.ALBUM_COLUMN:
+                        comparator = new AlbumComparator();
+                        break;
+                    case PlaylistTableModel.GENRE_COLUMN:
+                        comparator = new GenreComparator();
+                        break;
+                }
+
+                resetTableHeaderValues();
+
+                StringBuilder sb = new StringBuilder(columnName);
+                if (headerValue.equals(columnName) || headerValue.contains(upArrowChar)) {
+                    playlist.sort(comparator);
+                    sb.append(" ").append(downArrowChar);
+                    tableColumn.setHeaderValue(sb.toString());
+                } else {
+                    playlist.sort(Collections.reverseOrder(comparator));
+                    sb.append(" ").append(upArrowChar);
+                    tableColumn.setHeaderValue(sb.toString());
+                }
+
+                playlistTable.clearSelection();
+                colorizeRow();
+            }
+        });
         playlistTable.setFillsViewportHeight(true);
         playlistTable.setShowGrid(false);
         playlistTable.setRowSelectionAllowed(true);
@@ -196,7 +252,19 @@ public class PlaylistManager extends JPanel implements ActionListener,
         playlistTable.setFont(playlistTable.getFont().deriveFont(Font.BOLD));
         playlistTable.setIntercellSpacing(new Dimension(0, 0));
         playlistTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        playlistTable.addMouseListener(this);
+        playlistTable.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent ev) {
+                int selectedRow = playlistTable.rowAtPoint(ev.getPoint());
+                if (SwingUtilities.isLeftMouseButton(ev) && ev.getClickCount() == 2) {
+                    if (selectedRow != -1) {
+                        playlist.setCursorPosition(selectedRow);
+                        controlListener.acOpenAndPlay();
+                    }
+                }
+            }
+        });
         playlistTable.getSelectionModel().addListSelectionListener(this);
         playlistTable.getColumnModel().getSelectionModel().addListSelectionListener(this);
         playlistTable.addKeyListener(new KeyAdapter() {
@@ -239,8 +307,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     int selectedRow = playlistTable.getSelectedRow();
                     if (selectedRow != -1) {
-                        selectedRow = playlistTable.convertRowIndexToModel(selectedRow);
-                        playlist.setCursor(selectedRow);
+                        playlist.setCursorPosition(selectedRow);
                         controlListener.acOpenAndPlay();
                     }
                 } // Add new tracks
@@ -258,23 +325,29 @@ public class PlaylistManager extends JPanel implements ActionListener,
         this.add(ptScrollPane, BorderLayout.CENTER);
     }
 
-    private void initSortingFiltering() {
-        tableRowSorter = new TableRowSorter<PlaylistTableModel>(playlistTableModel);
-        playlistTable.setRowSorter(tableRowSorter);
-        searchFilter = new RowFilter<PlaylistTableModel, Integer>() {
+    private void initFiltering() {
+        searchFilter = new Predicate<PlaylistItem>() {
 
             @Override
-            public boolean include(Entry<? extends PlaylistTableModel, ? extends Integer> entry) {
-                PlaylistTableModel playlistModel = entry.getModel();
-                PlaylistItem pli = playlistModel.getPlaylistItem(entry.getIdentifier().intValue());
+            public boolean evaluate(PlaylistItem pli) {
                 boolean matches = false;
                 String titleAndArtist = pli.getFormattedDisplayName();
                 if (titleAndArtist != null) {
-                    matches = titleAndArtist.toLowerCase().contains(searchString.toLowerCase());
+                    matches = titleAndArtist.toLowerCase().contains(
+                            PlaylistManager.this.searchString.toLowerCase());
                 }
                 return matches;
             }
         };
+    }
+
+    /**
+     * Reset header values (column names) to default.
+     */
+    private void resetTableHeaderValues() {
+        for (int i = 0; i < tableColumnModel.getColumnCount(); i++) {
+            tableColumnModel.getColumn(i).setHeaderValue(PlaylistTableModel.COLUMN_NAMES[i]);
+        }
     }
 
     protected void addFiles(List<File> newFiles) {
@@ -296,9 +369,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
     public void randomizePlaylist() {
         if (!playlist.isEmpty()) {
-            PlaylistItem pli = playlist.getCursor();
             playlistTableModel.randomizePlaylist();
-            playlist.setCursor(playlist.indexOf(pli));
             colorizeRow();
         }
     }
@@ -375,26 +446,25 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
     public void moveUp() {
         if (playlistTable.getSelectedRowCount() > 0) {
-            PlaylistItem pli = playlist.getCursor();
             int[] selectedRows = playlistTable.getSelectedRows();
             int minSelectedIndex = selectedRows[0];
             if (minSelectedIndex > 0) {
                 playlistTable.clearSelection();
                 for (int i = 0, len = selectedRows.length; i < len; i++) {
                     int selectedRow = selectedRows[i];
-                    playlistTableModel.moveRow(selectedRow, selectedRow, selectedRow - 1);
-                    playlistTable.addRowSelectionInterval(selectedRow - 1, selectedRow - 1);
+                    int prevRow = selectedRow - 1;
+                    playlist.moveItem(selectedRow, prevRow);
+                    playlistTableModel.fireTableRowsUpdated(prevRow, selectedRow);
+                    playlistTable.addRowSelectionInterval(prevRow, prevRow);
                 }
                 makeRowVisible(minSelectedIndex - 1);
             }
-            playlist.setCursor(playlist.indexOf(pli));
             colorizeRow();
         }
     }
 
     public void moveDown() {
         if (playlistTable.getSelectedRowCount() > 0) {
-            PlaylistItem pli = playlist.getCursor();
             int[] selectedRows = playlistTable.getSelectedRows();
             int maxLength = selectedRows.length - 1;
             int maxSelectedIndex = selectedRows[maxLength];
@@ -402,30 +472,28 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 playlistTable.clearSelection();
                 for (int i = maxLength; i >= 0; i--) {
                     int selectedRow = selectedRows[i];
-                    playlistTableModel.moveRow(selectedRow, selectedRow, selectedRow + 1);
-                    playlistTable.addRowSelectionInterval(selectedRow + 1, selectedRow + 1);
+                    int nextRow = selectedRow + 1;
+                    playlist.moveItem(selectedRow, nextRow);
+                    playlistTableModel.fireTableRowsUpdated(selectedRow, nextRow);
+                    playlistTable.addRowSelectionInterval(nextRow, nextRow);
                 }
                 makeRowVisible(maxSelectedIndex + 1);
             }
-            playlist.setCursor(playlist.indexOf(pli));
             colorizeRow();
         }
     }
 
     public void remove() {
         int selectedRowCount = playlistTable.getSelectedRowCount();
-        if(selectedRowCount == playlist.size()) {
+        if (selectedRowCount == playlist.size()) {
             clearPlaylist();
         } else if (selectedRowCount > 0) {
-            PlaylistItem pli = playlist.getCursor();
             List<PlaylistItem> items = new ArrayList<PlaylistItem>();
             int[] selectedRows = playlistTable.getSelectedRows();
             for (int i = 0, len = selectedRows.length; i < len; i++) {
-                selectedRows[i] = playlistTable.convertRowIndexToModel(selectedRows[i]);
                 items.add(playlist.getItemAt(selectedRows[i]));
             }
             playlistTableModel.removeAll(items);
-            playlist.setCursor(playlist.indexOf(pli));
             clearSelection();
             colorizeRow();
         }
@@ -447,7 +515,8 @@ public class PlaylistManager extends JPanel implements ActionListener,
             mediaInfoButton.setEnabled(false);
             moveUpButton.setEnabled(false);
             moveDownButton.setEnabled(false);
-            cleanPlaylistButton.setEnabled(false);
+            clearPlaylistButton.setEnabled(false);
+            resetTableHeaderValues();
             Settings.setPlaylistPosition(-1);
             playlistTable.requestFocusInWindow();
         }
@@ -456,7 +525,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
     public void colorizeRow() {
         if (!playlist.isEmpty()) {
             int cursorPos = playlist.getCursorPosition();
-            doubleSelectedRow = (cursorPos == -1) ? -1 : playlistTable.convertRowIndexToView(cursorPos);
+            doubleSelectedRow = cursorPos;
             playlistTable.repaint();
             makeRowVisible(cursorPos);
         }
@@ -476,21 +545,20 @@ public class PlaylistManager extends JPanel implements ActionListener,
     public void setSearchString(String searchString) {
         this.searchString = searchString;
         if (searchString != null && !searchString.isEmpty()) {
-            tableRowSorter.setRowFilter(searchFilter);
+            playlist.filter(searchFilter);
             moveUpButton.setEnabled(false);
             moveDownButton.setEnabled(false);
         } else {
-            tableRowSorter.setRowFilter(null);
-            moveUpButton.setEnabled(true);
-            moveDownButton.setEnabled(true);
+            playlist.filter(TruePredicate.INSTANCE);
         }
+        playlistTableModel.fireTableDataChanged();
         colorizeRow();
     }
 
     private void viewMediaInfo() {
         int selectedRow = playlistTable.getSelectedRow();
         if (selectedRow != -1) {
-            PlaylistItem pli = playlistTableModel.getPlaylistItem(playlistTable.convertRowIndexToModel(selectedRow));
+            PlaylistItem pli = playlistTableModel.getPlaylistItem(selectedRow);
             MediaInfoWorker mediaInfoWorker = new MediaInfoWorker(pli);
             mediaInfoWorker.execute();
         }
@@ -508,7 +576,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
             addFilesDialog();
         } else if (source.equals(remFromPlaylistButton)) {
             remove();
-        } else if (source.equals(cleanPlaylistButton)) {
+        } else if (source.equals(clearPlaylistButton)) {
             clearPlaylist();
         } else if (source.equals(moveUpButton)) {
             moveUp();
@@ -585,34 +653,6 @@ public class PlaylistManager extends JPanel implements ActionListener,
     public void dragExit(DropTargetEvent ev) {
     }
 
-    @Override
-    public void mouseClicked(MouseEvent ev) {
-        int selectedRow = playlistTable.rowAtPoint(ev.getPoint());
-        if (SwingUtilities.isLeftMouseButton(ev) && ev.getClickCount() == 2) {
-            if (selectedRow != -1) {
-                selectedRow = playlistTable.convertRowIndexToModel(selectedRow);
-                playlist.setCursor(selectedRow);
-                controlListener.acOpenAndPlay();
-            }
-        }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent ev) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent ev) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent ev) {
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent ev) {
-    }
-
     protected class PlaylistCellRenderer extends SubstanceDefaultTableCellRenderer {
 
         private Border emptyBorder = BorderFactory.createEmptyBorder();
@@ -620,11 +660,18 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
         public PlaylistCellRenderer() {
             super();
+
+            int[] columnsWidth = {850, 150, 500, 300, 200};
+            for (int i = 0; i < playlistTable.getColumnCount(); i++) {
+                DefaultTableColumnModel colModel = (DefaultTableColumnModel) playlistTable.getColumnModel();
+                TableColumn col = colModel.getColumn(i);
+                col.setPreferredWidth(columnsWidth[i]);
+            }
+
             TableColumn column = playlistTable.getColumn(playlistTable.getColumnName(PlaylistTableModel.TIME_COLUMN));
             JLabel label = new JLabel("XXX0:00:00");
             int labelWidth = label.getPreferredSize().width;
             column.setMinWidth(labelWidth);
-            column.setMaxWidth(labelWidth);
         }
 
         @Override
@@ -714,12 +761,12 @@ public class PlaylistManager extends JPanel implements ActionListener,
         protected void done() {
             setProgress(100);
             if (!playlist.isEmpty()) {
-                cleanPlaylistButton.setEnabled(true);
+                clearPlaylistButton.setEnabled(true);
                 AudioPlayer audioPlayer = XtremeMP.getInstance().getAudioPlayer();
                 if (audioPlayer.getState() == AudioSystem.NOT_SPECIFIED || audioPlayer.getState() == AudioPlayer.STOP) {
                     int index = Settings.getPlaylistPosition();
                     if (firstPlaylistLoad && index >= 0 && index <= (playlist.size() - 1)) {
-                        playlist.setCursor(index);
+                        playlist.setCursorPosition(index);
                     } else {
                         playlist.begin();
                     }
@@ -774,7 +821,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
         protected void done() {
             setProgress(100);
             if (!playlist.isEmpty()) {
-                cleanPlaylistButton.setEnabled(true);
+                clearPlaylistButton.setEnabled(true);
             }
         }
 
