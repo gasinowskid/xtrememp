@@ -49,7 +49,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import xtrememp.audio.spi.PropertiesContainer;
+import javazoom.spi.PropertiesContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tritonus.share.sampled.TAudioFormat;

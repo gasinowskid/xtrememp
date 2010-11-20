@@ -33,8 +33,8 @@ import org.jaudiotagger.audio.flac.FlacInfoReader;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.flac.FlacTag;
-import xtrememp.audio.spi.flac.FLACDecoder;
-import xtrememp.audio.spi.flac.metadata.StreamInfo;
+import org.kc7bfi.jflac.FLACDecoder;
+import org.kc7bfi.jflac.metadata.StreamInfo;
 import xtrememp.util.Utilities;
 
 /**
