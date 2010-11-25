@@ -21,8 +21,8 @@ package xtrememp.util;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.SwingWorker;
-import org.jdesktop.swingx.JXBusyLabel;
 import xtrememp.XtremeMP;
+import xtrememp.ui.label.BusyLabel;
 
 /**
  *
@@ -30,7 +30,7 @@ import xtrememp.XtremeMP;
  */
 public abstract class AbstractSwingWorker<T, V> extends SwingWorker<T, V> implements PropertyChangeListener {
 
-    private JXBusyLabel busyLabel;
+    private BusyLabel busyLabel;
 
     public AbstractSwingWorker() {
         busyLabel = XtremeMP.getInstance().getBusyLabel();
