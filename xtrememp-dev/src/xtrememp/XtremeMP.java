@@ -190,12 +190,16 @@ public final class XtremeMP implements ActionListener, ControlListener,
 //        }
 
         // Initialize JIntellitype
-        if (Utilities.isWindowsOS() && Utilities.isRunningX64()) {
+        if (Utilities.isWindowsOS()) {
             String userDir = System.getProperty("user.dir");
-            JIntellitype.setLibraryLocation(userDir + "\\native\\JIntellitype64.dll");
-        }
-        if (JIntellitype.isJIntellitypeSupported()) {
-            JIntellitype.getInstance().addIntellitypeListener(this);
+            if (Utilities.isRunningX64()) {
+                JIntellitype.setLibraryLocation(userDir + "\\native\\JIntellitype64.dll");
+            } else {
+                JIntellitype.setLibraryLocation(userDir + "\\native\\JIntellitype.dll");
+            }
+            if (JIntellitype.isJIntellitypeSupported()) {
+                JIntellitype.getInstance().addIntellitypeListener(this);
+            }
         }
 
         // Initialize audio engine
