@@ -18,11 +18,11 @@
  */
 package xtrememp;
 
+import xtrememp.ui.label.BusyLabel;
 import com.melloware.jintellitype.IntellitypeListener;
 import com.melloware.jintellitype.JIntellitype;
 import java.awt.event.ItemEvent;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -69,8 +69,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.swingx.JXBusyLabel;
-import org.jdesktop.swingx.painter.BusyPainter;
 import org.pushingpixels.lafwidget.animation.AnimationConfigurationManager;
 import org.pushingpixels.lafwidget.animation.AnimationFacet;
 import org.pushingpixels.substance.api.DecorationAreaType;
@@ -145,7 +143,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JRadioButtonMenuItem playModeShuffleMenuItem;
     private JMenuItem updateMenuItem;
     private JMenuItem aboutMenuItem;
-    private JXBusyLabel busyLabel;
+    private BusyLabel busyLabel;
     private JPanel mainPanel;
     private VisualizationManager visualizationManager;
     private JPanel controlPanel;
@@ -178,7 +176,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         return mainFrame;
     }
 
-    public JXBusyLabel getBusyLabel() {
+    public BusyLabel getBusyLabel() {
         return busyLabel;
     }
 
@@ -515,10 +513,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
 
         menuBar.add(Box.createHorizontalGlue());
 
-        busyLabel = new JXBusyLabel(new Dimension(18, 18));
-        BusyPainter busyPainter = busyLabel.getBusyPainter();
-        busyPainter.setTrailLength(4);
-        busyPainter.setHighlightColor(Color.darkGray);
+        busyLabel = new BusyLabel(new Dimension(20, 20));
         menuBar.add(busyLabel);
         menuBar.add(Box.createHorizontalStrut(8));
 
