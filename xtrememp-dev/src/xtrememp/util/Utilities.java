@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -264,19 +265,24 @@ public final class Utilities {
      * @return a human-readable display value (includes units).
      */
     public static String byteCountToDisplaySize(long size) {
-        long ONE_KB = 1024;
-        long ONE_MB = ONE_KB * ONE_KB;
-        long ONE_GB = ONE_KB * ONE_MB;
+        double ONE_KiB_D = 1024D;
+        double ONE_MiB_D = ONE_KiB_D * ONE_KiB_D;
+        double ONE_GiB_D = ONE_KiB_D * ONE_MiB_D;
 
-        if (size > ONE_GB) {
-            return String.valueOf(size / ONE_GB) + " GB";
-        } else if (size > ONE_MB) {
-            return String.valueOf(size / ONE_MB) + " MB";
-        } else if (size > ONE_KB) {
-            return String.valueOf(size / ONE_KB) + " KB";
+        StringBuilder sbResult = new StringBuilder();
+        NumberFormat sizeFormat = NumberFormat.getNumberInstance();
+        sizeFormat.setMinimumFractionDigits(0);
+        sizeFormat.setMaximumFractionDigits(2);
+        if (size > ONE_GiB_D) {
+            sbResult.append(sizeFormat.format(size / ONE_GiB_D)).append(" GiB");
+        } else if (size > ONE_MiB_D) {
+            sbResult.append(sizeFormat.format(size / ONE_MiB_D)).append(" MiB");
+        } else if (size > ONE_KiB_D) {
+            sbResult.append(sizeFormat.format(size / ONE_KiB_D)).append(" KiB");
         } else {
-            return String.valueOf(size) + " bytes";
+            sbResult.append(String.valueOf(size)).append(" bytes");
         }
+        return sbResult.toString();
     }
 
     /**
