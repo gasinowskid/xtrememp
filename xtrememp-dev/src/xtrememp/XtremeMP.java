@@ -18,6 +18,8 @@
  */
 package xtrememp;
 
+import java.util.Map;
+import xtrememp.tag.TagInfo;
 import xtrememp.ui.label.BusyLabel;
 import com.melloware.jintellitype.IntellitypeListener;
 import com.melloware.jintellitype.JIntellitype;
@@ -43,7 +45,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -92,7 +93,6 @@ import xtrememp.ui.button.PreviousButton;
 import xtrememp.ui.button.StopButton;
 import xtrememp.ui.button.VolumeButton;
 import xtrememp.ui.slider.SeekSlider;
-import xtrememp.tag.TagInfo;
 import xtrememp.ui.skin.GFXUIListener;
 import xtrememp.update.SoftwareUpdate;
 import xtrememp.update.Version;
@@ -104,10 +104,10 @@ import xtrememp.util.Utilities;
 import static xtrememp.util.Utilities.tr;
 
 /**
+ * XtremeMP main class.
+ * Special thanks to rom1dep for the changes applied to this class.
  *
  * @author Besmir Beqiri
- * 
- * Special thanks to rom1dep for the changes applied to this class.
  */
 public final class XtremeMP implements ActionListener, ControlListener,
         PlaybackListener, PlaylistListener, IntellitypeListener, GFXUIListener {
@@ -848,9 +848,9 @@ public final class XtremeMP implements ActionListener, ControlListener,
         } finally {
             if (currentPli != null) {
                 if (!currentPli.isFile()) {
-                    currentPli.loadTagInfo();
+                    currentPli.getTagInfo();
                 }
-                setStatus(currentPli.getFormattedDisplayName());
+                setStatus(currentPli.getFormattedName());
             }
         }
 
@@ -916,14 +916,14 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 TagInfo tagInfo = currentPli.getTagInfo();
                 if (!streamTitle.isEmpty() && (tagInfo != null)) {
                     String sTitle = " (" + tagInfo.getTitle() + ")";
-                    if (!currentPli.getFormattedDisplayName().equals(streamTitle + sTitle)) {
-                        currentPli.setFormattedDisplayName(streamTitle + sTitle);
+                    if (!currentPli.getFormattedName().equals(streamTitle + sTitle)) {
+                        currentPli.setFormattedName(streamTitle + sTitle);
                         EventQueue.invokeLater(new Runnable() {
 
                             @Override
                             public void run() {
                                 playlistManager.refreshRow(playlist.indexOf(currentPli));
-                                setStatus(currentPli.getFormattedDisplayName());
+                                setStatus(currentPli.getFormattedName());
                             }
                         });
                     }
@@ -1208,7 +1208,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
                         setStatus("An error occurred...");
                         logger.error(ex.getMessage(), ex);
                         if (ex.getCause().getCause() instanceof FileNotFoundException) {
-                            String msg = "<html><b>" + currentPli.getFormattedDisplayName() + "</b> could not be used<br>because the original file could not be found.<html>";
+                            String msg = "<html><b>" + currentPli.getFormattedLength() + "</b> could not be used<br>because the original file could not be found.<html>";
                             JOptionPane.showMessageDialog(mainFrame, msg, "Message", JOptionPane.ERROR_MESSAGE);
                         }
 //                    String msg = "<html><b>An exeption was generated:</b><br><br>" + ex.getMessage() + "<html>";

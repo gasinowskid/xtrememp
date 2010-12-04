@@ -18,8 +18,7 @@
  */
 package xtrememp.playlist;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Arrays;
 import xtrememp.tag.TagInfo;
 import xtrememp.tag.TagInfoFactory;
 import xtrememp.util.Utilities;
@@ -31,74 +30,61 @@ import xtrememp.util.Utilities;
  */
 public class PlaylistItem {
 
-    private static final Logger logger = LoggerFactory.getLogger(PlaylistItem.class);
-    private TagInfo tagInfo;
+//    private static final Logger logger = LoggerFactory.getLogger(PlaylistItem.class);
     private String name;
-    private String displayName;
-    private String formatedLength;
     private String location;
+    private long duration = 0;
     private boolean isFile = false;
-    private long duration = -1;
+    private TagInfo tagInfo;
+    private String formattedName;
+    private String formatedLength;
 
     /**
-     * Contructor for playlist item.
+     * Default constructor.
      *
-     * @param name     Song name to be displayed
-     * @param location File or URL
-     * @param duration Time length
-     * @param isFile   <true>true</true> for File instance
+     * @param name Track name.
+     * @param location File or URL location.
+     * @param duration Duration in seconds.
+     * @param isFile <true>true</true> for File instance, else <true>false</true>.
      */
-    public PlaylistItem(String name, String location, int duration, boolean isFile) {
+    public PlaylistItem(String name, String location, long duration, boolean isFile) {
         this.name = name;
         this.location = location;
         this.duration = duration;
         this.isFile = isFile;
-        formatedLength = getFormattedLength(this.duration);
+        this.formatedLength = getFormattedLength(this.duration);
     }
 
     /**
-     * Set name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * @return name
+     * Returns the name of this playlist item.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Set location
-     */
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    /**
-     * @return location
+     * Returns the location of this playlist item.
      */
     public String getLocation() {
         return location;
     }
 
     /**
-     * Set duration
+     * Sets the duration (in seconds) of this playlist item.
      */
     public void setDuration(long duration) {
         this.duration = duration;
     }
 
     /**
-     * @return duration
+     * Returns the duration (in seconds) of this playlist item.
      */
     public long getDuration() {
         return duration;
     }
 
     /**
+     * Returns the file instance flag.
      *
      * @return <code>true</code> if item to play is a file, else <code>false</code>.
      */
@@ -107,109 +93,148 @@ public class PlaylistItem {
     }
 
     /**
-     * Set File flag for playslit item
-     * @param isFile <true>true</true> for File instance
+     * Load and return TagInfo instance.
+     *
+     * @return A {@link TagInfo} instance.
      */
-    public void setFile(boolean isFile) {
-        this.isFile = isFile;
-    }
-
-    /**
-     * Load and return TagInfo instance
-     * @return TagInfo instance
-     */
-    public TagInfo loadTagInfo() {
+    public TagInfo getTagInfo() {
         if ((tagInfo == null) && (!Utilities.isNullOrEmpty(location))) {
             tagInfo = TagInfoFactory.getInstance().getTagInfo(location);
             if (isFile) {
                 duration = tagInfo.getTrackLength();
-                displayName = getFormattedDisplayName();
-                formatedLength = getFormattedLength(this.duration);
+                formatedLength = getFormattedLength(duration);
             }
         }
         return tagInfo;
     }
 
-    /**
-     * Return TagInfo instance
-     * @return TagInfo instance
-     */
-    public TagInfo getTagInfo() {
-        return tagInfo;
+    public void setFormattedName(String formattedName) {
+        this.name = formattedName;
+        this.formattedName = formattedName;
     }
 
     /**
-     * Returns length such as hh:mm:ss
-     * @return formatted length
+     * Returns a formatted name such as "Title - Artist" if possible.
+     *
+     * @return A formatted string.
+     */
+    public String getFormattedName() {
+        if (tagInfo == null) {
+            formattedName = name;
+        } else if (formattedName == null) {
+            String title = tagInfo.getTitle();
+            if (!Utilities.isNullOrEmpty(title)) {
+                StringBuilder sb = new StringBuilder(title);
+                String artist = tagInfo.getArtist();
+                if (!Utilities.isNullOrEmpty(artist)) {
+                    sb.append(" - ");
+                    sb.append(artist);
+                }
+                formattedName = sb.toString();
+            } else {
+                formattedName = name;
+            }
+        }
+        return formattedName;
+    }
+
+    /**
+     * Returns a human-readable version such as "hh:mm:ss" of this item duration.
+     *
+     * @return A formatted string.
      */
     public String getFormattedLength() {
         return formatedLength;
     }
 
     /**
-     * Returns length such as hh:mm:ss
-     * @param duration duration in seconds
-     * @return a formatted length
+     * Returns a human-readable version such as "hh:mm:ss" of a given duration
+     * value.
+     *
+     * @param duration Duration in seconds.
+     * @return A formatted string.
      */
-    public String getFormattedLength(long duration) {
-        String length = "";
+    public final String getFormattedLength(long duration) {
+        StringBuilder sbLength = new StringBuilder();
         if (duration > -1) {
             int min = (int) (duration / 60);
             int hours = (int) (min / 60);
             min = min - hours * 60;
             int sec = (int) (duration - min * 60 - hours * 3600);
-            // Hours.
+            // Hours
             if (hours > 0) {
-                length += Utilities.rightPadString(String.valueOf(hours), 2) + ":";
+                sbLength.append(rightPadString(String.valueOf(hours), ' ', 2)).append(':');
             }
-            length += Utilities.rightPadString(String.valueOf(min), '0', 2) + ":" + Utilities.rightPadString(sec + "", '0', 2);
+            // Minutes
+            sbLength.append(rightPadString(String.valueOf(min), '0', 2));
+            // Seconds
+            sbLength.append(':').append(rightPadString(String.valueOf(sec), '0', 2));
         }
-        return length;
+        return sbLength.toString();
     }
 
     /**
-     * Returns item name such as Title - Artist
-     * @return a formatted string
+     * Fills a given string from the right side with pad characters taking in
+     * consideration the total length.
+     *
+     * @param str The input string, can also be null.
+     * @param padChar The pad character to be used in the fill operation.
+     * @param length The total length of the new returned string.
+     * @return A formatted string.
      */
-    public String getFormattedDisplayName() {
-        if (tagInfo == null) {
-            return getName();
-        } else if (displayName == null) {
-            String title = tagInfo.getTitle() == null ? null : tagInfo.getTitle().trim();
-            String artist = tagInfo.getArtist() == null ? null : tagInfo.getArtist().trim();
-            if ((!Utilities.isNullOrEmpty(title)) && (!Utilities.isNullOrEmpty(artist))) {
-                displayName = (title + " - " + artist);
-            } else if (!Utilities.isNullOrEmpty(title)) {
-                displayName = title;
-            } else {
-                displayName = name;
-            }
+    private String rightPadString(String str, char padChar, int length) {
+        int slen, numPads = 0;
+        if (str == null) {
+            str = "";
+            numPads = length;
+        } else if ((slen = str.length()) > length) {
+            str = str.substring(length);
+        } else if (slen < length) {
+            numPads = length - slen;
         }
-        return displayName;
-    }
+        if (numPads == 0) {
+            return str;
+        }
 
-    public void setFormattedDisplayName(String displayName) {
-        this.name = displayName;
-        this.displayName = displayName;
+        char[] c = new char[numPads];
+        Arrays.fill(c, padChar);
+        StringBuilder sb = new StringBuilder();
+        sb.append(c);
+        sb.append(str);
+        return sb.toString();
     }
 
     /**
-     * Return item name such as Seconds,Title,Artist
-     * @return a formatted string
+     * Returns a formatted string such as Seconds,Title,Artist used for saving
+     * in M3U format.
+     *
+     * @return A formatted string.
      */
     public String getM3UExtInf() {
+        StringBuilder sb = new StringBuilder(String.valueOf(duration));
         if (tagInfo == null) {
-            return (duration + "," + name);
+            sb.append(',');
+            sb.append(formattedName);
         } else {
-            String title = tagInfo.getTitle() == null ? null : tagInfo.getTitle().trim();
-            String artist = tagInfo.getArtist() == null ? null : tagInfo.getArtist().trim();
-            if ((!Utilities.isNullOrEmpty(title)) && (!Utilities.isNullOrEmpty(artist))) {
-                return (getDuration() + "," + title + " - " + artist);
-            } else if (!Utilities.isNullOrEmpty(title)) {
-                return (getDuration() + "," + title);
+            String title = tagInfo.getTitle();
+            if (!Utilities.isNullOrEmpty(title)) {
+                sb.append(',');
+                sb.append(title);
+                String artist = tagInfo.getArtist();
+                if (!Utilities.isNullOrEmpty(artist)) {
+                    sb.append(" - ");
+                    sb.append(artist);
+                }
             } else {
-                return (duration + "," + name);
+                sb.append(',');
+                sb.append(formattedName);
             }
         }
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return location;
     }
 }

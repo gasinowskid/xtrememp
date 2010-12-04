@@ -243,7 +243,7 @@ public final class PlaylistIO {
                         try {
                             int index = Integer.parseInt(key.substring(5)) - 1;
                             PlaylistItem pli = itemList.get(index);
-                            pli.setName(value);
+                            pli.setFormattedName(value);
                         } catch (Exception ex) {
                             logger.warn("Corrupted PLS playlist {} at line {}", location, lineNumber);
                             continue;
@@ -433,7 +433,7 @@ public final class PlaylistIO {
                         }
                     }
                 } else {
-                    String name = pli.getName();
+                    String name = pli.getFormattedName();
                     if (!Utilities.isNullOrEmpty(name)) {
                         track.setTitle(name.trim());
                     }

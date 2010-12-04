@@ -228,19 +228,19 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 }
 
                 resetTableHeaderValues();
+                clearSelection();
 
                 StringBuilder sb = new StringBuilder(columnName);
                 if (headerValue.equals(columnName) || headerValue.contains(upArrowChar)) {
-                    playlist.sort(comparator);
+                    playlistTableModel.sort(comparator);
                     sb.append(" ").append(downArrowChar);
                     tableColumn.setHeaderValue(sb.toString());
                 } else {
-                    playlist.sort(Collections.reverseOrder(comparator));
+                    playlistTableModel.sort(Collections.reverseOrder(comparator));
                     sb.append(" ").append(upArrowChar);
                     tableColumn.setHeaderValue(sb.toString());
                 }
 
-                playlistTable.clearSelection();
                 colorizeRow();
             }
         });
@@ -331,9 +331,9 @@ public class PlaylistManager extends JPanel implements ActionListener,
             @Override
             public boolean evaluate(PlaylistItem pli) {
                 boolean matches = false;
-                String titleAndArtist = pli.getFormattedDisplayName();
-                if (titleAndArtist != null) {
-                    matches = titleAndArtist.toLowerCase().contains(
+                String displayName = pli.getFormattedName();
+                if (displayName != null) {
+                    matches = displayName.toLowerCase().contains(
                             PlaylistManager.this.searchString.toLowerCase());
                 }
                 return matches;
@@ -369,7 +369,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
     public void randomizePlaylist() {
         if (!playlist.isEmpty()) {
-            playlistTableModel.randomizePlaylist();
+            playlistTableModel.randomize();
             colorizeRow();
         }
     }
@@ -453,8 +453,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 for (int i = 0, len = selectedRows.length; i < len; i++) {
                     int selectedRow = selectedRows[i];
                     int prevRow = selectedRow - 1;
-                    playlist.moveItem(selectedRow, prevRow);
-                    playlistTableModel.fireTableRowsUpdated(prevRow, selectedRow);
+                    playlistTableModel.moveItem(selectedRow, prevRow);
                     playlistTable.addRowSelectionInterval(prevRow, prevRow);
                 }
                 makeRowVisible(minSelectedIndex - 1);
@@ -473,8 +472,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
                 for (int i = maxLength; i >= 0; i--) {
                     int selectedRow = selectedRows[i];
                     int nextRow = selectedRow + 1;
-                    playlist.moveItem(selectedRow, nextRow);
-                    playlistTableModel.fireTableRowsUpdated(selectedRow, nextRow);
+                    playlistTableModel.moveItem(selectedRow, nextRow);
                     playlistTable.addRowSelectionInterval(nextRow, nextRow);
                 }
                 makeRowVisible(maxSelectedIndex + 1);
@@ -542,23 +540,10 @@ public class PlaylistManager extends JPanel implements ActionListener,
         viewport.scrollRectToVisible(contentRect);
     }
 
-    public void setSearchString(String searchString) {
-        this.searchString = searchString;
-        if (searchString != null && !searchString.isEmpty()) {
-            playlist.filter(searchFilter);
-            moveUpButton.setEnabled(false);
-            moveDownButton.setEnabled(false);
-        } else {
-            playlist.filter(TruePredicate.INSTANCE);
-        }
-        playlistTableModel.fireTableDataChanged();
-        colorizeRow();
-    }
-
     private void viewMediaInfo() {
         int selectedRow = playlistTable.getSelectedRow();
         if (selectedRow != -1) {
-            PlaylistItem pli = playlistTableModel.getPlaylistItem(selectedRow);
+            PlaylistItem pli = playlist.getItemAt(selectedRow);
             MediaInfoWorker mediaInfoWorker = new MediaInfoWorker(pli);
             mediaInfoWorker.execute();
         }
@@ -707,7 +692,15 @@ public class PlaylistManager extends JPanel implements ActionListener,
             Document document = event.getDocument();
             try {
                 clearSelection();
-                setSearchString(document.getText(0, document.getLength()));
+                searchString = document.getText(0, document.getLength());
+                if (searchString != null && !searchString.isEmpty()) {
+                    playlistTableModel.filter(searchFilter);
+                    moveUpButton.setEnabled(false);
+                    moveDownButton.setEnabled(false);
+                } else {
+                    playlist.filter(TruePredicate.INSTANCE);
+                }
+                colorizeRow();
             } catch (Exception ex) {
             }
         }
@@ -743,7 +736,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
             int size = pliList.size();
             for (PlaylistItem pli : pliList) {
                 if (pli.isFile()) {
-                    pli.loadTagInfo();
+                    pli.getTagInfo();
                 }
                 publish(pli);
                 count++;
@@ -804,7 +797,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
             for (File file : tempFileList) {
                 String baseName = FilenameUtils.getBaseName(file.getName());
                 PlaylistItem pli = new PlaylistItem(baseName, file.getAbsolutePath(), -1, true);
-                pli.loadTagInfo();
+                pli.getTagInfo();
                 publish(pli);
                 count++;
                 setProgress(100 * count / size);
@@ -846,8 +839,8 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
         @Override
         protected Void doInBackground() throws Exception {
-            if (pli != null && pli.getTagInfo() == null) {
-                pli.loadTagInfo();
+            if (pli != null) {
+                pli.getTagInfo();
             }
             return null;
         }

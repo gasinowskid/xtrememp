@@ -18,14 +18,18 @@
  */
 package xtrememp;
 
+import java.util.Comparator;
+import xtrememp.playlist.filter.Predicate;
 import java.util.Collection;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import xtrememp.playlist.Playlist;
 import xtrememp.playlist.PlaylistItem;
+import xtrememp.util.Utilities;
+import static xtrememp.util.Utilities.tr;
 
 /**
- * Implementation of playlist table model.
+ * Playlist table model.
  *
  * @author Besmir Beqiri
  */
@@ -37,7 +41,12 @@ public class PlaylistTableModel extends AbstractTableModel {
     public static final int ALBUM_COLUMN = 3;
     public static final int GENRE_COLUMN = 4;
     public static final int COLUMN_COUNT = 5;
-    public static final String[] COLUMN_NAMES = {"Title", "Duration", "Artist", "Album", "Genre"};
+    public static final String[] COLUMN_NAMES = {
+        tr("Title"),
+        tr("Duration"),
+        tr("Artist"),
+        tr("Album"),
+        tr("Genre")};
     private final Playlist playlist;
 
     public PlaylistTableModel(Playlist playlist) {
@@ -72,13 +81,28 @@ public class PlaylistTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    public void randomizePlaylist() {
+    public void filter(Predicate<PlaylistItem> filterPredicate) {
+        playlist.filter(filterPredicate);
+        fireTableDataChanged();
+    }
+
+    public void sort(Comparator<PlaylistItem> comparator) {
+        playlist.sort(comparator);
+        fireTableDataChanged();
+    }
+
+    public void randomize() {
         playlist.randomize();
         fireTableDataChanged();
     }
 
-    public PlaylistItem getPlaylistItem(int rowIndex) {
-        return playlist.getItemAt(rowIndex);
+    public void moveItem(int fromIndex, int toIndex) {
+        playlist.moveItem(fromIndex, toIndex);
+        if (fromIndex < toIndex) {
+            fireTableRowsUpdated(fromIndex, toIndex);
+        } else {
+            fireTableRowsUpdated(toIndex, fromIndex);
+        }
     }
 
     @Override
@@ -105,18 +129,39 @@ public class PlaylistTableModel extends AbstractTableModel {
     public Object getValueAt(int rowIndex, int columnIndex) {
         if (!playlist.isEmpty()) {
             PlaylistItem item = playlist.getItemAt(rowIndex);
-            switch (columnIndex) {
-                case TITLE_COLUMN:
-                    return " " + item.getTagInfo().getTitle();
-                case TIME_COLUMN:
-                    return item.getFormattedLength() + " ";
-                case ARTIST_COLUMN:
-                    return " " + item.getTagInfo().getArtist();
-                case ALBUM_COLUMN:
-                    return " " + item.getTagInfo().getAlbum();
-                case GENRE_COLUMN:
-                    return " " + item.getTagInfo().getGenre();
+            StringBuilder sb = new StringBuilder();
+            if (item.isFile()) {
+                switch (columnIndex) {
+                    case TITLE_COLUMN:
+                        sb.append(" ");
+                        String title = item.getTagInfo().getTitle();
+                        sb.append(Utilities.isNullOrEmpty(title) ? item.getFormattedName() : title);
+                        break;
+                    case TIME_COLUMN:
+                        sb.append(item.getFormattedLength()).append(" ");
+                        break;
+                    case ARTIST_COLUMN:
+                        sb.append(" ").append(item.getTagInfo().getArtist());
+                        break;
+                    case ALBUM_COLUMN:
+                        sb.append(" ").append(item.getTagInfo().getAlbum());
+                        break;
+                    case GENRE_COLUMN:
+                        sb.append(" ").append(item.getTagInfo().getGenre());
+                        break;
+                }
+            } else {
+                switch (columnIndex) {
+                    case TITLE_COLUMN:
+                        sb.append(" ");
+                        sb.append(item.getFormattedName());
+                        break;
+                    default:
+                        sb.append(" ");
+                        break;
+                }
             }
+            return sb.toString();
         }
         return null;
     }
