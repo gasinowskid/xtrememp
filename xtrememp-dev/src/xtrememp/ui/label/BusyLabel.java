@@ -109,18 +109,19 @@ public class BusyLabel extends JLabel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+        g2d.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
         int width = getWidth();
         int height = getHeight();
+        int points = 8;
         Color fgColor = getForeground();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < points; i++) {
             if (busy) {
-                int alpha = 255 * ((i + angle) % 12) / 12;
+                int alpha = 255 * ((i + angle) % points) / points;
                 g2d.setColor(new Color(fgColor.getRed(), fgColor.getGreen(), fgColor.getBlue(), alpha));
             } else {
                 g2d.setColor(fgColor);
             }
-            double a = 2 * Math.PI / 12, x = Math.sin(i * a), y = Math.cos(i * a);
+            double a = 2 * Math.PI / points, x = Math.sin(i * a), y = Math.cos(i * a);
             g2d.drawLine(width / 2 + (int) (5 * x), height / 2 + (int) (5 * y),
                     width / 2 + (int) (width / 2 * x), height / 2 + (int) (height / 2 * y));
         }
