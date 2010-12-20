@@ -33,7 +33,7 @@ import org.pushingpixels.substance.api.renderers.SubstanceDefaultComboBoxRendere
  */
 public abstract class IconComboBox<T> extends JComboBox {
 
-    public IconComboBox(T... items) {
+    public IconComboBox(T[] items) {
         super(items);
     }
 
