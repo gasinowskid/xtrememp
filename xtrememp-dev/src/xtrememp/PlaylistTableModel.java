@@ -35,13 +35,17 @@ import static xtrememp.util.Utilities.tr;
  */
 public class PlaylistTableModel extends AbstractTableModel {
 
-    public static final int TITLE_COLUMN = 0;
-    public static final int TIME_COLUMN = 1;
-    public static final int ARTIST_COLUMN = 2;
-    public static final int ALBUM_COLUMN = 3;
-    public static final int GENRE_COLUMN = 4;
-    public static final int COLUMN_COUNT = 5;
+    //@Todo: store those values into the configfile instead of hardcoding them
+    //  eg: keep the user-defined order for table columns
+    public static final int TRACK_COLUMN = 0;
+    public static final int TITLE_COLUMN = 1;
+    public static final int TIME_COLUMN = 2;
+    public static final int ARTIST_COLUMN = 3;
+    public static final int ALBUM_COLUMN = 4;
+    public static final int GENRE_COLUMN = 5;
+    public static final int COLUMN_COUNT = 6;
     public static final String[] COLUMN_NAMES = {
+        tr("track nr."),
         tr("Title"),
         tr("Duration"),
         tr("Artist"),
@@ -132,6 +136,14 @@ public class PlaylistTableModel extends AbstractTableModel {
             StringBuilder sb = new StringBuilder();
             if (item.isFile()) {
                 switch (columnIndex) {
+                    case TRACK_COLUMN:
+                        String track = item.getTagInfo().getTrack();
+                        if(track.contains("/")){//Sometimes the returned track looks like "02/13"
+                           track=track.substring(0  , track.indexOf("/"));
+                        }
+                        int ntrack = Integer.parseInt(track);
+                        sb.append(ntrack < 0 ? "0" : ntrack);
+                        break;
                     case TITLE_COLUMN:
                         sb.append(" ");
                         String title = item.getTagInfo().getTitle();

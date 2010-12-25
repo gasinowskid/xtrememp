@@ -89,6 +89,7 @@ import xtrememp.playlist.filter.TruePredicate;
 import xtrememp.playlist.sort.AlbumComparator;
 import xtrememp.playlist.sort.ArtistComparator;
 import xtrememp.playlist.sort.TitleComparator;
+import xtrememp.playlist.sort.TrackComparator;
 import xtrememp.ui.text.SearchTextField;
 import xtrememp.util.AbstractSwingWorker;
 import xtrememp.util.Utilities;
@@ -205,11 +206,31 @@ public class PlaylistManager extends JPanel implements ActionListener,
             public void mouseClicked(MouseEvent ev) {
                 int clickedColumn = tableColumnModel.getColumnIndexAtX(ev.getX());
                 TableColumn tableColumn = tableColumnModel.getColumn(clickedColumn);
-                String columnName = PlaylistTableModel.COLUMN_NAMES[clickedColumn];
-                String headerValue = String.valueOf(tableColumn.getHeaderValue());
-
+                String columnName=String.valueOf(tableColumn.getHeaderValue());
+                //String headerValue = String.valueOf(tableColumn.getHeaderValue());
+                
                 Comparator<PlaylistItem> comparator = null;
+                
+                if(columnName.contains(PlaylistTableModel.COLUMN_NAMES[0])){
+                    comparator = new TrackComparator();
+                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[1])){
+                    comparator = new TitleComparator();
+                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[2])){
+                    comparator = new DurationComparator();
+                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[3])){
+                    comparator = new ArtistComparator();
+                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[4])){
+                    comparator = new AlbumComparator();
+                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[5])){
+                    comparator = new GenreComparator();
+                }
+                playlistTableModel.sort(comparator);
+                
+                /*
                 switch (clickedColumn) {
+                    case PlaylistTableModel.TRACK_COLUMN:
+                        comparator = new TrackComparator();
+                        break;
                     case PlaylistTableModel.TITLE_COLUMN:
                         comparator = new TitleComparator();
                         break;
@@ -240,7 +261,8 @@ public class PlaylistManager extends JPanel implements ActionListener,
                     sb.append(" ").append(upArrowChar);
                     tableColumn.setHeaderValue(sb.toString());
                 }
-
+                */
+                
                 colorizeRow();
             }
         });
@@ -646,7 +668,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
         public PlaylistCellRenderer() {
             super();
 
-            int[] columnsWidth = {850, 150, 500, 300, 200};
+            int[] columnsWidth = {50, 850, 150, 500, 300, 200};
             for (int i = 0; i < playlistTable.getColumnCount(); i++) {
                 DefaultTableColumnModel colModel = (DefaultTableColumnModel) playlistTable.getColumnModel();
                 TableColumn col = colModel.getColumn(i);
