@@ -33,8 +33,9 @@ public class TruePredicate<T> implements Predicate<T> {
      * 
      * @return the singleton instance
      */
-    public static Predicate getInstance() {
-        return INSTANCE;
+    @SuppressWarnings("unchecked")
+    public static <T> Predicate<T> getInstance() {
+        return (Predicate<T>) INSTANCE;
     }
 
     /**

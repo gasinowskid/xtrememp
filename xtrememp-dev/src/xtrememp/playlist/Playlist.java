@@ -66,7 +66,7 @@ public class Playlist {
         shuffledList = new ArrayList<PlaylistItem>();
         listeners = new ArrayList<PlaylistListener>(1);
         rnd = new Random();
-        filterPredicate = TruePredicate.INSTANCE;
+        filterPredicate = TruePredicate.getInstance();
     }
 
     /**
