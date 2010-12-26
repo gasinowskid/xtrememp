@@ -20,6 +20,7 @@ package xtrememp.playlist.sort;
 
 import java.util.Comparator;
 import xtrememp.playlist.PlaylistItem;
+import xtrememp.util.Utilities;
 
 /**
  * Playlist item track comparator.
@@ -30,25 +31,21 @@ public class TrackComparator implements Comparator<PlaylistItem> {
 
     @Override
     public int compare(PlaylistItem pli1, PlaylistItem pli2) {
-        String tg1 = pli1.getTagInfo().getTrack();
-        String tg2 = pli2.getTagInfo().getTrack();
-        if (tg1.contains("/")) {
-            tg1 = tg1.substring(0, tg1.indexOf("/"));
-        }
-        if (tg2.contains("/")) {
-            tg2 = tg2.substring(0, tg2.indexOf("/"));
-        }
-        int ntg1 = Integer.parseInt(tg1);
-        int ntg2 = Integer.parseInt(tg2);
+        String trackStr1 = pli1.getTagInfo().getTrack();
+        String trackStr2 = pli2.getTagInfo().getTrack();
+        
+        int track1 = -1;
+        int track2 = -1;
 
-        if (ntg1 < 0) {
-            ntg1 = 0;
-        }
-        if (ntg2 < 0) {
-            ntg2 = 0;
+        if(!Utilities.isNullOrEmpty(trackStr1)) {
+            track1 = Integer.parseInt(trackStr1);
         }
 
-        return Integer.valueOf(ntg1).compareTo(Integer.valueOf(ntg2));
+        if(!Utilities.isNullOrEmpty(trackStr2)) {
+            track2 = Integer.parseInt(trackStr2);
+        }
+
+        return (track1 < track2 ? -1 : (track1 == track2 ? 0 : 1));
     }
 
     @Override

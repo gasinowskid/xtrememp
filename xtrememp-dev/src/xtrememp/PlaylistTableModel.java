@@ -45,7 +45,7 @@ public class PlaylistTableModel extends AbstractTableModel {
     public static final int GENRE_COLUMN = 5;
     public static final int COLUMN_COUNT = 6;
     public static final String[] COLUMN_NAMES = {
-        tr("track nr."),
+        tr("Track"),
         tr("Title"),
         tr("Duration"),
         tr("Artist"),
@@ -137,12 +137,12 @@ public class PlaylistTableModel extends AbstractTableModel {
             if (item.isFile()) {
                 switch (columnIndex) {
                     case TRACK_COLUMN:
-                        String track = item.getTagInfo().getTrack();
-                        if(track.contains("/")){//Sometimes the returned track looks like "02/13"
-                           track=track.substring(0  , track.indexOf("/"));
+                        String trackStr = item.getTagInfo().getTrack();
+                        int trackNum = -1;
+                        if (!Utilities.isNullOrEmpty(trackStr)) {
+                            trackNum = Integer.parseInt(trackStr);
                         }
-                        int ntrack = Integer.parseInt(track);
-                        sb.append(ntrack < 0 ? "0" : ntrack);
+                        sb.append(trackNum < 0 ? "" : trackNum);
                         break;
                     case TITLE_COLUMN:
                         sb.append(" ");
