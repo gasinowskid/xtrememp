@@ -20,8 +20,6 @@ package xtrememp.playlist.sort;
 
 import java.util.Comparator;
 import xtrememp.playlist.PlaylistItem;
-import xtrememp.tag.TagInfo;
-import xtrememp.util.Utilities;
 
 /**
  * Playlist item track comparator.
@@ -50,7 +48,7 @@ public class TrackComparator implements Comparator<PlaylistItem> {
             ntg2 = 0;
         }
 
-        return Integer.compare(ntg1, ntg2);
+        return Integer.valueOf(ntg1).compareTo(Integer.valueOf(ntg2));
     }
 
     @Override
@@ -61,6 +59,6 @@ public class TrackComparator implements Comparator<PlaylistItem> {
     @Override
     public boolean equals(Object obj) {
         return (this == obj)
-                || ((obj != null) && (obj instanceof AlbumComparator));
+                || ((obj != null) && (obj instanceof TrackComparator));
     }
 }
