@@ -299,18 +299,14 @@ public final class XtremeMP implements ActionListener, ControlListener,
         // Configure logback
         Settings.configureLogback();
 
-        // Enable uncaught exception catching
-        try {
-            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+        // Enable uncaught exception catching.
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 
-                @Override
-                public void uncaughtException(Thread t, Throwable e) {
-                    logger.error(t.getName(), e);
-                }
-            });
-        } catch (Throwable t) {
-            logger.error(t.getMessage(), t);
-        }
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                logger.error(t.getName(), e);
+            }
+        });
 
         // Close error stream
         System.err.close();

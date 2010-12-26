@@ -18,10 +18,6 @@
  */
 package xtrememp;
 
-import org.pushingpixels.substance.internal.utils.border.SubstanceBorder;
-import org.pushingpixels.substance.api.DecorationAreaType;
-import org.pushingpixels.substance.api.SubstanceColorScheme;
-import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -53,15 +49,19 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JToolBar;
+import org.pushingpixels.substance.api.DecorationAreaType;
+import org.pushingpixels.substance.api.SubstanceColorScheme;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.SkinChangeListener;
+import org.pushingpixels.substance.internal.utils.border.SubstanceBorder;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
 import xtrememp.ui.button.PopupButton;
 import xtrememp.util.Utilities;
+import xtrememp.visualization.Spectrogram;
+import xtrememp.visualization.SpectrumBars;
 import xtrememp.visualization.Visualization;
 import xtrememp.visualization.VolumeMeter;
 import xtrememp.visualization.Waveform;
-import xtrememp.visualization.Spectrogram;
-import xtrememp.visualization.SpectrumBars;
 import static xtrememp.util.Utilities.tr;
 
 /**
@@ -92,7 +92,6 @@ public final class VisualizationManager extends JPanel implements ActionListener
         initVisualizations();
         initComponents();
         skinChanged();
-        SubstanceLookAndFeel.registerSkinChangeListener(this);
     }
 
     private void initVisualizations() {
@@ -154,6 +153,8 @@ public final class VisualizationManager extends JPanel implements ActionListener
         showVisualization(Settings.getVisualization());
 
         fullscreenWindow = new FullscreenWindow();
+
+        SubstanceLookAndFeel.registerSkinChangeListener(this);
     }
 
     public void setDssEnabled(boolean flag) {

@@ -49,7 +49,6 @@ import java.io.FilenameFilter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 import javax.sound.sampled.AudioSystem;
@@ -206,46 +205,45 @@ public class PlaylistManager extends JPanel implements ActionListener,
             public void mouseClicked(MouseEvent ev) {
                 int clickedColumn = tableColumnModel.getColumnIndexAtX(ev.getX());
                 TableColumn tableColumn = tableColumnModel.getColumn(clickedColumn);
-                String columnName=String.valueOf(tableColumn.getHeaderValue());
+                String columnName = String.valueOf(tableColumn.getHeaderValue());
                 //String headerValue = String.valueOf(tableColumn.getHeaderValue());
-                
+
                 Comparator<PlaylistItem> comparator = null;
-                
-                if(columnName.contains(PlaylistTableModel.COLUMN_NAMES[0])){
+                if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[0])) {
                     comparator = new TrackComparator();
-                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[1])){
+                } else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[1])) {
                     comparator = new TitleComparator();
-                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[2])){
+                } else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[2])) {
                     comparator = new DurationComparator();
-                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[3])){
+                } else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[3])) {
                     comparator = new ArtistComparator();
-                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[4])){
+                } else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[4])) {
                     comparator = new AlbumComparator();
-                }else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[5])){
+                } else if (columnName.contains(PlaylistTableModel.COLUMN_NAMES[5])) {
                     comparator = new GenreComparator();
                 }
                 playlistTableModel.sort(comparator);
-                
+
                 /*
                 switch (clickedColumn) {
-                    case PlaylistTableModel.TRACK_COLUMN:
-                        comparator = new TrackComparator();
-                        break;
-                    case PlaylistTableModel.TITLE_COLUMN:
-                        comparator = new TitleComparator();
-                        break;
-                    case PlaylistTableModel.TIME_COLUMN:
-                        comparator = new DurationComparator();
-                        break;
-                    case PlaylistTableModel.ARTIST_COLUMN:
-                        comparator = new ArtistComparator();
-                        break;
-                    case PlaylistTableModel.ALBUM_COLUMN:
-                        comparator = new AlbumComparator();
-                        break;
-                    case PlaylistTableModel.GENRE_COLUMN:
-                        comparator = new GenreComparator();
-                        break;
+                case PlaylistTableModel.TRACK_COLUMN:
+                comparator = new TrackComparator();
+                break;
+                case PlaylistTableModel.TITLE_COLUMN:
+                comparator = new TitleComparator();
+                break;
+                case PlaylistTableModel.TIME_COLUMN:
+                comparator = new DurationComparator();
+                break;
+                case PlaylistTableModel.ARTIST_COLUMN:
+                comparator = new ArtistComparator();
+                break;
+                case PlaylistTableModel.ALBUM_COLUMN:
+                comparator = new AlbumComparator();
+                break;
+                case PlaylistTableModel.GENRE_COLUMN:
+                comparator = new GenreComparator();
+                break;
                 }
 
                 resetTableHeaderValues();
@@ -253,16 +251,16 @@ public class PlaylistManager extends JPanel implements ActionListener,
 
                 StringBuilder sb = new StringBuilder(columnName);
                 if (headerValue.equals(columnName) || headerValue.contains(upArrowChar)) {
-                    playlistTableModel.sort(comparator);
-                    sb.append(" ").append(downArrowChar);
-                    tableColumn.setHeaderValue(sb.toString());
+                playlistTableModel.sort(comparator);
+                sb.append(" ").append(downArrowChar);
+                tableColumn.setHeaderValue(sb.toString());
                 } else {
-                    playlistTableModel.sort(Collections.reverseOrder(comparator));
-                    sb.append(" ").append(upArrowChar);
-                    tableColumn.setHeaderValue(sb.toString());
+                playlistTableModel.sort(Collections.reverseOrder(comparator));
+                sb.append(" ").append(upArrowChar);
+                tableColumn.setHeaderValue(sb.toString());
                 }
-                */
-                
+                 */
+
                 colorizeRow();
             }
         });
@@ -353,9 +351,9 @@ public class PlaylistManager extends JPanel implements ActionListener,
             @Override
             public boolean evaluate(PlaylistItem pli) {
                 boolean matches = false;
-                String displayName = pli.getFormattedName();
-                if (displayName != null) {
-                    matches = displayName.toLowerCase().contains(
+                String formattedName = pli.getFormattedName();
+                if (formattedName != null) {
+                    matches = formattedName.toLowerCase().contains(
                             PlaylistManager.this.searchString.toLowerCase());
                 }
                 return matches;
@@ -720,7 +718,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
                     moveUpButton.setEnabled(false);
                     moveDownButton.setEnabled(false);
                 } else {
-                    playlist.filter(TruePredicate.INSTANCE);
+                    playlist.filter(TruePredicate.<PlaylistItem>getInstance());
                 }
                 colorizeRow();
             } catch (Exception ex) {

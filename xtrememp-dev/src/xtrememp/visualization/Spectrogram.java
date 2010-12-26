@@ -20,9 +20,6 @@ package xtrememp.visualization;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
-import java.awt.image.VolatileImage;
 import java.nio.FloatBuffer;
 import javax.sound.sampled.SourceDataLine;
 import xtrememp.player.dsp.DigitalSignalSynchronizer;
@@ -67,9 +64,6 @@ public final class Spectrogram extends Visualization {
     private float bandWidth;
     private float[] brgb;
     private float[] frgb;
-    private GraphicsConfiguration gc;
-    private VolatileImage image1;
-    private VolatileImage image2;
 
     public Spectrogram() {
         this.bandDistribution = DEFAULT_SPECTROGRAM_BAND_DISTRIBUTION;
@@ -83,7 +77,7 @@ public final class Spectrogram extends Visualization {
     }
 
     /**
-     * Sets the numbers of bands rendered by the spectrum analyser.
+     * Sets the numbers of bands rendered by the spectrogram.
      *
      * @param count Cannot be more than half the "FFT sample size".
      */
@@ -119,128 +113,62 @@ public final class Spectrogram extends Visualization {
     @Override
     public void setBackgroundColor(Color backgroundColor) {
         super.setBackgroundColor(backgroundColor);
-        image1 = null;
+        freeImage();
     }
 
     @Override
     public void setForegroundColor(Color foregroundColor) {
         super.setForegroundColor(foregroundColor);
-        image1 = null;
+        freeImage();
     }
 
     @Override
     public synchronized void render(Graphics2D g2d, int width, int height) {
-        if (image1 == null || (image1.getWidth() != width || image1.getHeight() != height)) {
-            createImages(width, height);
-        }
-        do {
-            int valCode1 = image1.validate(gc);
-            int valCode2 = image2.validate(gc);
-            if (valCode1 == VolatileImage.IMAGE_RESTORED || valCode2 == VolatileImage.IMAGE_RESTORED) {
-                fillBackground(backgroundColor);
-            } else if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
-                    || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
-                createImages(width, height);
+        // FFT processing.
+        FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
+        float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
+        bandWidth = (float) height / (float) bands;
+
+        // Rendering.
+        float y = height;
+        int width2 = width - 1;
+        int b, bd, i, li = 0, mi;
+        float fs, m;
+        // Group up available bands using band distribution table.
+        for (bd = 0; bd < bands; bd++) {
+            //Get band distribution entry.
+            i = bdTable[bd].distribution;
+            m = 0;
+            mi = 0;
+            // Find loudest band in group. (Group is from 'li' to 'i').
+            for (b = li; b < i; b++) {
+                float lf = _fft[b];
+                if (lf > m) {
+                    m = lf;
+                    mi = b;
+                }
+            }
+            li = i;
+            // Calculate gain using log, then static gain.
+            fs = (m * bgTable[mi]) * gain;
+            // Limit over-saturation.
+            if (fs > 1.0F) {
+                fs = 1.0F;
             }
 
-            //FFT processing.
-            FloatBuffer[] channelsBuffer = dssContext.getDataNormalized();
-            float[] _fft = fft.calculate(channelsMerge(channelsBuffer));
-            bandWidth = (float) height / (float) bands;
+            // Calculate spectrogram color shifting between foreground and background colors.
+            float _fs = 1.0F - fs;
+            backgroundColor.getColorComponents(brgb);
+            foregroundColor.getColorComponents(frgb);
+            Color color = new Color(frgb[0] * fs + brgb[0] * _fs,
+                    frgb[1] * fs + brgb[1] * _fs,
+                    frgb[2] * fs + brgb[2] * _fs);
+            buffGraphics.setColor(color);
+            buffGraphics.drawLine(width2, Math.round(y), width2, Math.round(y - bandWidth));
 
-            Graphics2D g2d1 = image1.createGraphics();
-            g2d1.drawImage(image2, -1, 0, null);
-
-            float y = height;
-            int width2 = width - 1;
-            int b, bd, i, li = 0, mi;
-            float fs, m;
-            //Group up available bands using band distribution table.
-            for (bd = 0; bd < bands; bd++) {
-                //Get band distribution entry.
-                i = bdTable[bd].distribution;
-                m = 0;
-                mi = 0;
-                //Find loudest band in group. (Group is from 'li' to 'i').
-                for (b = li; b < i; b++) {
-                    float lf = _fft[b];
-                    if (lf > m) {
-                        m = lf;
-                        mi = b;
-                    }
-                }
-                li = i;
-                //Calculate gain using log, then static gain.
-                fs = (m * bgTable[mi]) * gain;
-                //Limit over-saturation.
-                if (fs > 1.0F) {
-                    fs = 1.0F;
-                }
-
-                //Calculate spectrogram color shifting between foreground and background colors.
-                float _fs = 1.0F - fs;
-                backgroundColor.getColorComponents(brgb);
-                foregroundColor.getColorComponents(frgb);
-                Color color = new Color(frgb[0] * fs + brgb[0] * _fs,
-                        frgb[1] * fs + brgb[1] * _fs,
-                        frgb[2] * fs + brgb[2] * _fs);
-                g2d1.setColor(color);
-                g2d1.drawLine(width2, Math.round(y), width2, Math.round(y - bandWidth));
-                
-                y -= bandWidth;
-            }
-            g2d1.dispose();
-
-            Graphics2D g2d2 = image2.createGraphics();
-            g2d2.drawImage(image1, 0, 0, null);
-            g2d2.dispose();
-
-            g2d.drawImage(image2, 0, 0, null);
-        } while (image1.contentsLost() || image2.contentsLost());
-    }
-
-    private void createImages(int width, int height) {
-        // free image resources
-        if (image1 != null) {
-            image1.flush();
-            image1 = null;
+            y -= bandWidth;
         }
 
-        if (image2 != null) {
-            image2.flush();
-            image2 = null;
-        }
-
-        // create images
-        gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
-                getDefaultScreenDevice().getDefaultConfiguration();
-
-        image1 = gc.createCompatibleVolatileImage(width, height);
-        image2 = gc.createCompatibleVolatileImage(width, height);
-
-        int valCode1 = image1.validate(gc);
-        int valCode2 = image2.validate(gc);
-        if (valCode1 == VolatileImage.IMAGE_INCOMPATIBLE
-                || valCode2 == VolatileImage.IMAGE_INCOMPATIBLE) {
-            createImages(width, height);
-        }
-
-        fillBackground(backgroundColor);
-    }
-
-    private void fillBackground(Color c) {
-        if (image1 != null) {
-            Graphics2D g2d1 = image1.createGraphics();
-            g2d1.setColor(c);
-            g2d1.fillRect(0, 0, image1.getWidth(), image1.getHeight());
-            g2d1.dispose();
-        }
-
-        if (image2 != null) {
-            Graphics2D g2d2 = image2.createGraphics();
-            g2d2.setColor(c);
-            g2d2.fillRect(0, 0, image2.getWidth(), image2.getHeight());
-            g2d2.dispose();
-        }
+        buffGraphics.drawImage(buffImage, -1, 0, null);
     }
 }

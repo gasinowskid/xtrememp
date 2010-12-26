@@ -18,8 +18,6 @@
  */
 package xtrememp.tag;
 
-import org.tritonus.share.sampled.file.TAudioFileFormat;
-
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -34,6 +32,7 @@ import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.tritonus.share.sampled.file.TAudioFileFormat;
 import xtrememp.util.Utilities;
 
 /**

@@ -237,26 +237,6 @@ public final class Utilities {
     }
 
     /**
-     * Check if the provided {@link String} start with one supported
-     * protocol strings.
-     *
-     * @param input the {@link String} to check.
-     * @return <code>true</code> if the {@link String} start with a protocol,
-     *         else <code>false</code>.
-     */
-    public static boolean startWithProtocol(String input) {
-        if (input != null) {
-            input = input.toLowerCase();
-            for (String protocol : PROTOCOLS) {
-                if (input.startsWith(protocol)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns a human-readable version of the file size, where the input
      * represents a specific number of bytes.
      *
@@ -282,6 +262,26 @@ public final class Utilities {
             sbResult.append(String.valueOf(size)).append(" bytes");
         }
         return sbResult.toString();
+    }
+
+    /**
+     * Check if the provided {@link String} start with one supported
+     * protocol strings.
+     *
+     * @param input the {@link String} to check.
+     * @return <code>true</code> if the {@link String} start with a protocol,
+     *         else <code>false</code>.
+     */
+    public static boolean startWithProtocol(String input) {
+        if (input != null) {
+            input = input.toLowerCase();
+            for (String protocol : PROTOCOLS) {
+                if (input.startsWith(protocol)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

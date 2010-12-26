@@ -23,6 +23,9 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsEnvironment;
+import java.awt.image.BufferedImage;
 import java.nio.FloatBuffer;
 import javax.swing.JComponent;
 import xtrememp.player.dsp.DigitalSignalProcessor;
@@ -36,34 +39,55 @@ import xtrememp.player.dsp.DssContext;
 public abstract class Visualization extends JComponent implements Comparable<Visualization>,
         DigitalSignalProcessor, Runnable {
 
+    protected final GraphicsConfiguration gc;
     protected Color backgroundColor = Color.black;
     protected Color foregroundColor = Color.white;
     protected DssContext dssContext;
+    protected BufferedImage buffImage;
+    protected Graphics2D buffGraphics;
     private Dimension size;
 
     public Visualization() {
         super();
         setOpaque(false);
         setIgnoreRepaint(true);
+
+        gc = GraphicsEnvironment.getLocalGraphicsEnvironment().
+                getDefaultScreenDevice().getDefaultConfiguration();
     }
 
     @Override
     public void process(DssContext dssContext) {
         this.dssContext = dssContext;
+        size = getSize(size);
+        if (buffImage == null || (buffImage.getWidth() != size.width || buffImage.getHeight() != size.height)) {
+            // Free image resources.
+            freeImage();
+
+            // Create image.
+            buffImage = gc.createCompatibleImage(size.width, size.height);
+
+            buffGraphics = buffImage.createGraphics();
+            buffGraphics.setColor(backgroundColor);
+            buffGraphics.fillRect(0, 0, buffImage.getWidth(), buffImage.getHeight());
+        }
+        render(buffGraphics, size.width, size.height);
         EventQueue.invokeLater(this);
     }
 
     @Override
     public void paintComponent(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g.create();
-        if (dssContext != null) {
-            size = getSize(size);
-            render(g2d, size.width, size.height);
-        } else {
-            g2d.setColor(backgroundColor);
-            g2d.fillRect(0, 0, getWidth(), getHeight());
+        int width = getWidth();
+        int height = getHeight();
+        if (buffImage == null || (buffImage.getWidth() != width || buffImage.getHeight() != height)) {
+            // Create image.
+            buffImage = gc.createCompatibleImage(width, height);
+
+            buffGraphics = buffImage.createGraphics();
+            buffGraphics.setColor(backgroundColor);
+            buffGraphics.fillRect(0, 0, buffImage.getWidth(), buffImage.getHeight());
         }
-        g2d.dispose();
+        g.drawImage(buffImage, 0, 0, this);
     }
 
     @Override
@@ -132,6 +156,17 @@ public abstract class Visualization extends JComponent implements Comparable<Vis
             channelsBuffer[0].put(a, mcd / (float) ch);
         }
         return channelsBuffer[0].asReadOnlyBuffer();
+    }
+
+    public void freeImage() {
+        if (buffGraphics != null) {
+            buffGraphics.dispose();
+            buffGraphics = null;
+        }
+        if (buffImage != null) {
+            buffImage.flush();
+            buffImage = null;
+        }
     }
 
     @Override

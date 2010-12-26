@@ -93,7 +93,7 @@ public final class SpectrumBars extends Visualization {
 
         Toolkit tk = Toolkit.getDefaultToolkit();
         this.desktopHints = (Map) (tk.getDesktopProperty("awt.font.desktophints"));
-        this.freqFont = new Font("arial", Font.PLAIN, 10);
+        this.freqFont = new Font("Arial", Font.PLAIN, 10);
 
         setBandCount(DEFAULT_SPECTRUM_ANALYSER_BAND_COUNT);
     }
