@@ -224,8 +224,10 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 guiEffectsStateChanged(Settings.isUIEffectsEnabled());
 
                 StringBuilder appTitle = new StringBuilder(tr("Application.title"));
-                appTitle.append(" ");
-                appTitle.append(currentVersion);
+                appTitle.append(" ").append(currentVersion);
+                appTitle.append(" [").append(tr("Dialog.About.Codename"));
+                appTitle.append(" ").append(tr("Application.version.codename"));
+                appTitle.append("]");
                 mainFrame = new JFrame(appTitle.toString());
                 mainFrame.setIconImages(Utilities.getIconImages());
                 mainFrame.setBounds(Settings.getMainFrameBounds());
@@ -796,6 +798,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
             message.append("<br>Copyright © 2005-2010 The Xtreme Media Player Project");
             message.append("<br><br><b>").append(tr("Dialog.About.Author")).append(": </b>").append(tr("Application.author"));
             message.append("<br><b>").append(tr("Dialog.About.Version")).append(": </b>").append(currentVersion);
+            message.append("<br><b>").append(tr("Dialog.About.Codename")).append(": </b>").append(currentVersion.getCodename());
             message.append("<br><b>").append(tr("Dialog.About.ReleaseDate")).append(": </b>").append(currentVersion.getReleaseDate());
             message.append("<br><b>").append(tr("Dialog.About.Homepage")).append(": </b>").append(tr("Application.homepage"));
             message.append("<br><br><b>").append(tr("Dialog.About.JavaVersion")).append(": </b>").append(System.getProperty("java.version"));

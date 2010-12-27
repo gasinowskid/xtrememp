@@ -36,7 +36,6 @@ public class Version implements Comparable<Version> {
         RC1("RC 1"),
         RC2("RC 2"),
         FINAL("Final");
-
         private String vtString;
 
         VersionType(String vtString) {
@@ -64,6 +63,10 @@ public class Version implements Comparable<Version> {
      * Version type.
      */
     private VersionType versionType = VersionType.FINAL;
+    /**
+     * Codename.
+     */
+    private String codename;
     /** 
      * Release date.
      */
@@ -90,12 +93,15 @@ public class Version implements Comparable<Version> {
      * @param date
      * @param downloadURL
      */
-    public Version(int majorNumber, int minorNumber, int microNumber, VersionType versionType, String date, String downloadURL) {
+    public Version(int majorNumber, int minorNumber, int microNumber,
+            VersionType versionType, String codename, String date,
+            String downloadURL) {
         super();
         this.majorNumber = majorNumber;
         this.minorNumber = minorNumber;
         this.microNumber = microNumber;
         this.versionType = versionType;
+        this.codename = codename;
         this.releaseDate = date;
         this.downloadURL = downloadURL;
     }
@@ -170,6 +176,15 @@ public class Version implements Comparable<Version> {
      */
     public VersionType getVersionType() {
         return versionType;
+    }
+
+    /**
+     * Gets codename.
+     *
+     * @return the codename
+     */
+    public String getCodename() {
+        return codename;
     }
 
     /**
@@ -248,6 +263,15 @@ public class Version implements Comparable<Version> {
 
     /**
      * Sets release date.
+     *
+     * @param codename the codename
+     */
+    protected void setCodename(String codename) {
+        this.codename = codename;
+    }
+
+    /**
+     * Sets release date.
      * 
      * @param date the release date
      */
@@ -268,7 +292,11 @@ public class Version implements Comparable<Version> {
         int majorNumber = Integer.parseInt(tr("Application.version.majorNumber"));
         int minorNumber = Integer.parseInt(tr("Application.version.minorNumber"));
         int microNumber = Integer.parseInt(tr("Application.version.microNumber"));
+        VersionType versionType = VersionType.DEV;
+        String codename = tr("Application.version.codename");
         String releaseDate = tr("Application.version.releaseDate");
-        return new Version(majorNumber, minorNumber, microNumber, VersionType.DEV, releaseDate, tr("Application.homepage"));
+        String downloadURL = tr("Application.homepage");
+        return new Version(majorNumber, minorNumber, microNumber, versionType,
+                codename, releaseDate, downloadURL);
     }
 }
