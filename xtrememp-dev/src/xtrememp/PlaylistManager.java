@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
@@ -87,6 +88,7 @@ import xtrememp.playlist.filter.Predicate;
 import xtrememp.playlist.filter.TruePredicate;
 import xtrememp.playlist.sort.AlbumComparator;
 import xtrememp.playlist.sort.ArtistComparator;
+import xtrememp.playlist.sort.HeaderPopupMenu;
 import xtrememp.playlist.sort.TitleComparator;
 import xtrememp.playlist.sort.TrackComparator;
 import xtrememp.ui.text.SearchTextField;
@@ -124,6 +126,7 @@ public class PlaylistManager extends JPanel implements ActionListener,
     private ControlListener controlListener;
     private Playlist playlist;
     private PlaylistTableModel playlistTableModel;
+    private HeaderPopupMenu playlistHeaderPopupMenu;
     private TableColumnModel tableColumnModel;
     private SearchTextField searchTextField;
     private Predicate<PlaylistItem> searchFilter;
@@ -199,10 +202,18 @@ public class PlaylistManager extends JPanel implements ActionListener,
         playlistTable.setDefaultRenderer(String.class, new PlaylistCellRenderer());
         playlistTable.setActionMap(null);
         tableColumnModel = playlistTable.getColumnModel();
+
+        playlistHeaderPopupMenu = new HeaderPopupMenu();
+
         playlistTable.getTableHeader().addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseClicked(MouseEvent ev) {
+                if (SwingUtilities.isRightMouseButton(ev) || (MouseInfo.getNumberOfButtons() == 1 && ev.isControlDown())) {
+                    playlistHeaderPopupMenu.show(playlistTable.getTableHeader(), ev.getX(), ev.getY());
+                    return;
+                }
+
                 int clickedColumn = tableColumnModel.getColumnIndexAtX(ev.getX());
                 TableColumn tableColumn = tableColumnModel.getColumn(clickedColumn);
                 String columnName = String.valueOf(tableColumn.getHeaderValue());
