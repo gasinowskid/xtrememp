@@ -42,23 +42,10 @@ import xtrememp.util.Utilities;
  * 
  * @author Besmir Beqiri
  */
-public class FlacInfo implements TagInfo {
+public class FlacInfo extends TagInfo {
 
     protected String type = null;
-    protected int channels = 0;
     protected int bitspersample = 0;
-    protected int samplerate = 0;
-    protected int bitrate = 0;
-    protected long size = -1;
-    protected int duration = -1;
-    protected String location = null;
-    protected String track = null;
-    protected String year = null;
-    protected String genre = null;
-    protected String title = null;
-    protected String artist = null;
-    protected String album = null;
-    protected String comment = null;
     protected StreamInfo info = null;
 
     /**
@@ -90,9 +77,9 @@ public class FlacInfo implements TagInfo {
 
             if (gah != null) {
                 type = gah.getEncodingType();
-                channels = gah.getChannelNumber();
-                samplerate = gah.getSampleRateAsNumber();
-                bitrate = (int) gah.getBitRateAsNumber();
+                channelsAsNumber = gah.getChannelNumber();
+                sampleRateAsNumber = gah.getSampleRateAsNumber();
+                bitRateAsNumber = (int) gah.getBitRateAsNumber();
                 duration = gah.getTrackLength();
             }
             if (flacTag != null) {
@@ -153,8 +140,8 @@ public class FlacInfo implements TagInfo {
         if (!type.equalsIgnoreCase("flac")) {
             throw new UnsupportedAudioFileException("Not Flac audio format");
         }
-        channels = info.getChannels();
-        samplerate = info.getSampleRate();
+        channelsAsNumber = info.getChannels();
+        sampleRateAsNumber = info.getSampleRate();
         bitspersample = info.getBitsPerSample();
         duration = Math.round(info.getTotalSamples() / info.getSampleRate());
     }
@@ -177,77 +164,16 @@ public class FlacInfo implements TagInfo {
         sb.append("<html><b>Encoding Type: </b>");
         sb.append(getEncodingType().toUpperCase());
         sb.append("<br><b>Sampling rate: </b>");
-        sb.append(getSampleRate()).append(" Hz");
+        sb.append(getSampleRateAsNumber()).append(" Hz");
         sb.append("<br><b>Bitrate: </b>");
-        sb.append(getBitRate()).append(" Kbps");
+        sb.append(getBitRateAsNumber()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
-        sb.append(getChannels());
+        sb.append(getChannelsAsNumber());
         if (size != -1) {
             sb.append("<br><b>Size: </b>");
             sb.append(Utilities.byteCountToDisplaySize(size));
         }
         sb.append("</html>");
         return sb.toString();
-    }
-
-    /*-- TagInfo Implementation --*/
-    @Override
-    public int getChannels() {
-        return channels;
-    }
-
-    @Override
-    public int getSampleRate() {
-        return samplerate;
-    }
-
-    @Override
-    public int getBitRate() {
-        return bitrate;
-    }
-
-    @Override
-    public int getTrackLength() {
-        return duration;
-    }
-
-    @Override
-    public String getTitle() {
-        return (title == null) ? null : title.trim();
-    }
-
-    @Override
-    public String getArtist() {
-        return (artist == null) ? null : artist.trim();
-    }
-
-    @Override
-    public String getAlbum() {
-        return (album == null) ? null : album.trim();
-    }
-
-    @Override
-    public String getTrack() {
-        return (track == null) ? null : track.trim();
-    }
-
-    @Override
-    public String getGenre() {
-        return (genre == null) ? null : genre.trim();
-    }
-
-    @Override
-    public String getComment() {
-        return (comment == null) ? null : comment.trim();
-    }
-
-    @Override
-    public String getYear() {
-        return (year == null) ? null : year.trim();
-    }
-
-    @Override
-    public String getEncodingType() {
-        return (type == null) ? null : type.trim();
     }
 }

@@ -41,28 +41,14 @@ import xtrememp.util.Utilities;
  * 
  * @author Besmir Beqiri
  */
-public class OggVorbisInfo implements TagInfo {
+public class OggVorbisInfo extends TagInfo {
 
-    protected String type = null;
     protected int serial = 0;
-    protected int channels = 0;
     protected int version = 0;
-    protected int samplerate = 0;
     protected int minbitrate = 0;
     protected int maxbitrate = 0;
     protected int averagebitrate = 0;
-    protected int bitrate = 0;
-    protected int totalms = -1;
-    protected long size = -1;
-    protected String location = null;
     protected String vendor = null;
-    protected String track = null;
-    protected String year = null;
-    protected String genre = null;
-    protected String title = null;
-    protected String artist = null;
-    protected String album = null;
-    protected String comment = null;
 
     /**
      * Load and parse Ogg Vorbis info from a file.
@@ -74,8 +60,8 @@ public class OggVorbisInfo implements TagInfo {
     public void load(File input) throws IOException, UnsupportedAudioFileException {
         AudioFileFormat aff = AudioSystem.getAudioFileFormat(input);
 //        loadInfo(aff);
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("ogg")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("ogg")) {
             throw new UnsupportedAudioFileException("Not Ogg Vorbis audio format");
         }
         size = input.length();
@@ -89,11 +75,11 @@ public class OggVorbisInfo implements TagInfo {
             gah = oir.read(new RandomAccessFile(input, "r"));
 
             if (gah != null) {
-                type = gah.getEncodingType();
-                channels = gah.getChannelNumber();
-                samplerate = gah.getSampleRateAsNumber();
-                bitrate = (int) gah.getBitRateAsNumber();
-                totalms = gah.getTrackLength();
+                encodingType = gah.getEncodingType();
+                channelsAsNumber = gah.getChannelNumber();
+                sampleRateAsNumber = gah.getSampleRateAsNumber();
+                bitRateAsNumber = (int) gah.getBitRateAsNumber();
+                duration = gah.getTrackLength();
             }
             if (vcTag != null) {
                 vendor = vcTag.getVendor();
@@ -145,22 +131,22 @@ public class OggVorbisInfo implements TagInfo {
      * @throws UnsupportedAudioFileException
      */
     protected void loadInfo(AudioFileFormat aff) throws UnsupportedAudioFileException {
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("ogg")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("ogg")) {
             throw new UnsupportedAudioFileException("Not Ogg Vorbis audio format");
         }
         if (aff instanceof TAudioFileFormat) {
             Map props = ((TAudioFileFormat) aff).properties();
             if (props.containsKey("ogg.channels")) {
-                channels = ((Integer) props.get("ogg.channels")).intValue();
+                channelsAsNumber = ((Integer) props.get("ogg.channels")).intValue();
             }
             if (props.containsKey("ogg.frequency.hz")) {
-                samplerate = ((Integer) props.get("ogg.frequency.hz")).intValue();
+                sampleRateAsNumber = ((Integer) props.get("ogg.frequency.hz")).intValue();
             }
             if (props.containsKey("ogg.bitrate.nominal.bps")) {
-                bitrate = ((Integer) props.get("ogg.bitrate.nominal.bps")).intValue();
+                bitRateAsNumber = ((Integer) props.get("ogg.bitrate.nominal.bps")).intValue();
             }
-            averagebitrate = bitrate;
+            averagebitrate = (int) bitRateAsNumber;
             if (props.containsKey("ogg.bitrate.max.bps")) {
                 maxbitrate = ((Integer) props.get("ogg.bitrate.max.bps")).intValue();
             }
@@ -196,7 +182,7 @@ public class OggVorbisInfo implements TagInfo {
                 comment.concat((String) props.get("comment"));
             }
             if (props.containsKey("duration")) {
-                totalms = Math.round((((Long) props.get("duration")).longValue()) / 1000000);
+                duration = Math.round((((Long) props.get("duration")).longValue()) / 1000000);
             }
             if (props.containsKey("ogg.comment.genre")) {
                 genre = (String) props.get("ogg.comment.genre");
@@ -224,8 +210,8 @@ public class OggVorbisInfo implements TagInfo {
      * @throws UnsupportedAudioFileException
      */
     protected void loadExtendedInfo(AudioFileFormat aff) throws IOException, UnsupportedAudioFileException {
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("ogg")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("ogg")) {
             throw new UnsupportedAudioFileException("Not Ogg Vorbis audio format");
         }
         if (aff instanceof TAudioFileFormat) {
@@ -272,11 +258,11 @@ public class OggVorbisInfo implements TagInfo {
         sb.append("<html><b>Encoding Type: </b>");
         sb.append(getEncodingType().toUpperCase());
         sb.append("<br><b>Sampling rate: </b>");
-        sb.append(getSampleRate()).append(" Hz");
+        sb.append(getSampleRateAsNumber()).append(" Hz");
         sb.append("<br><b>Bitrate: </b>");
-        sb.append(getBitRate()).append(" Kbps");
+        sb.append(getBitRateAsNumber()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
-        sb.append(getChannels());
+        sb.append(getChannelsAsNumber());
         sb.append("<br><b>Vendor: </b>");
         sb.append(getVendor());
         if (size != -1) {
@@ -285,66 +271,5 @@ public class OggVorbisInfo implements TagInfo {
         }
         sb.append("</html>");
         return sb.toString();
-    }
-
-    /*-- TagInfo Implementation --*/
-    @Override
-    public int getChannels() {
-        return channels;
-    }
-
-    @Override
-    public int getSampleRate() {
-        return samplerate;
-    }
-
-    @Override
-    public int getBitRate() {
-        return bitrate;
-    }
-
-    @Override
-    public int getTrackLength() {
-        return totalms;
-    }
-
-    @Override
-    public String getTitle() {
-        return (title == null) ? null : title.trim();
-    }
-
-    @Override
-    public String getArtist() {
-        return (artist == null) ? null : artist.trim();
-    }
-
-    @Override
-    public String getAlbum() {
-        return (album == null) ? null : album.trim();
-    }
-
-    @Override
-    public String getTrack() {
-        return (track == null) ? null : track.trim();
-    }
-
-    @Override
-    public String getGenre() {
-        return (genre == null) ? null : genre.trim();
-    }
-
-    @Override
-    public String getComment() {
-        return (comment == null) ? null : comment.trim();
-    }
-
-    @Override
-    public String getYear() {
-        return (year == null) ? null : year.trim();
-    }
-
-    @Override
-    public String getEncodingType() {
-        return (type == null) ? null : type.trim();
     }
 }

@@ -27,24 +27,25 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import org.apache.commons.io.FilenameUtils;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
 import xtrememp.util.Utilities;
 
 /**
  *
  * @author Besmir Beqiri
  */
-public class GenericInfo implements TagInfo {
+public class GenericInfo extends TagInfo {
 
-    protected String type = null;
-    protected int channels = 0;
-    protected int bitspersample = 0;
-    protected int framesize = 0;
-    protected float samplerate = 0;
-    protected int bitrate = 0;
-    protected int duration = -1;
-    protected long size = -1;
-    protected String location = null;
-    protected String title = null;
+    protected int bitspersample = AudioSystem.NOT_SPECIFIED;
+    protected int framesize = AudioSystem.NOT_SPECIFIED;
 
     /**
      * Load and parse info from a File.
@@ -57,12 +58,41 @@ public class GenericInfo implements TagInfo {
         size = input.length();
         location = input.getPath();
         title = FilenameUtils.getBaseName(input.getName());
-        AudioFileFormat aff = AudioSystem.getAudioFileFormat(input);
-        loadInfo(aff);
-        if (bitspersample > 0) {
-            duration = Math.round(size / (samplerate * channels * (bitspersample / 8)));
-        } else {
-            duration = Math.round(size / (samplerate * framesize));
+
+        AudioFile audioFile;
+        try {
+            audioFile = AudioFileIO.read(input);
+
+            AudioHeader audioHeader = audioFile.getAudioHeader();
+            if (audioHeader != null) {
+                encodingType = audioHeader.getEncodingType();
+                format = audioHeader.getFormat();
+                sampleRate = audioHeader.getSampleRate();
+                sampleRateAsNumber = audioHeader.getSampleRateAsNumber();
+                bitRate = audioHeader.getBitRate();
+                bitRateAsNumber = audioHeader.getBitRateAsNumber();
+                duration = audioHeader.getTrackLength();
+                channels = audioHeader.getChannels();
+            }
+
+            Tag tag = audioFile.getTag();
+            if (tag != null) {
+                title = tag.getFirst(FieldKey.TITLE);
+                artist = tag.getFirst(FieldKey.ARTIST);
+                album = tag.getFirst(FieldKey.ALBUM);
+                year = tag.getFirst(FieldKey.YEAR);
+                genre = tag.getFirst(FieldKey.GENRE);
+                track = tag.getFirst(FieldKey.TRACK);
+                comment = tag.getFirst(FieldKey.COMMENT);
+            }
+        } catch (CannotReadException ex) {
+            throw new IOException(ex);
+        } catch (TagException ex) {
+            throw new UnsupportedAudioFileException(ex.getMessage());
+        } catch (ReadOnlyFileException ex) {
+            throw new IOException(ex);
+        } catch (InvalidAudioFrameException ex) {
+            throw new UnsupportedAudioFileException(ex.getMessage());
         }
     }
 
@@ -100,18 +130,13 @@ public class GenericInfo implements TagInfo {
      * @throws javax.sound.sampled.UnsupportedAudioFileException
      */
     protected void loadInfo(AudioFileFormat aff) throws UnsupportedAudioFileException {
-        type = aff.getType().toString();
-        AudioFormat format = aff.getFormat();
-        channels = format.getChannels();
-        samplerate = format.getSampleRate();
-        bitspersample = format.getSampleSizeInBits();
-        framesize = format.getFrameSize();
-        bitrate = Math.round(bitspersample * samplerate * channels / 1000);
-    }
-
-    @Override
-    public String getEncodingType() {
-        return type;
+        encodingType = aff.getType().toString();
+        AudioFormat audioFormat = aff.getFormat();
+        channelsAsNumber = audioFormat.getChannels();
+        sampleRateAsNumber = (int) audioFormat.getSampleRate();
+        bitspersample = audioFormat.getSampleSizeInBits();
+        framesize = audioFormat.getFrameSize();
+        bitRateAsNumber = Math.round(bitspersample * sampleRateAsNumber * channelsAsNumber / 1000);
     }
 
     @Override
@@ -119,72 +144,18 @@ public class GenericInfo implements TagInfo {
         StringBuilder sb = new StringBuilder();
         sb.append("<html><b>Encoding Type: </b>");
         sb.append(getEncodingType().toUpperCase());
+        sb.append("<br><b>Format: </b>").append(getFormat());
         sb.append("<br><b>Sampling rate: </b>");
         sb.append(getSampleRate()).append(" Hz");
         sb.append("<br><b>Bitrate: </b>");
         sb.append(getBitRate()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
         sb.append(getChannels());
-        if (size != -1) {
+        if (size != AudioSystem.NOT_SPECIFIED) {
             sb.append("<br><b>Size: </b>");
             sb.append(Utilities.byteCountToDisplaySize(size));
         }
         sb.append("</html>");
         return sb.toString();
-    }
-
-    @Override
-    public int getSampleRate() {
-        return (int) samplerate;
-    }
-
-    @Override
-    public int getBitRate() {
-        return bitrate;
-    }
-
-    @Override
-    public int getChannels() {
-        return channels;
-    }
-
-    @Override
-    public int getTrackLength() {
-        return duration;
-    }
-
-    @Override
-    public String getTitle() {
-        return title;
-    }
-
-    @Override
-    public String getArtist() {
-        return "";
-    }
-
-    @Override
-    public String getAlbum() {
-        return "";
-    }
-
-    @Override
-    public String getTrack() {
-        return "";
-    }
-
-    @Override
-    public String getGenre() {
-        return "";
-    }
-
-    @Override
-    public String getYear() {
-        return "";
-    }
-
-    @Override
-    public String getComment() {
-        return "";
     }
 }

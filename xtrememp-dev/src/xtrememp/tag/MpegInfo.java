@@ -40,33 +40,18 @@ import xtrememp.util.Utilities;
  * 
  * @author Besmir Beqiri
  */
-public class MpegInfo implements TagInfo {
+public class MpegInfo extends TagInfo {
 
-    protected String type = null;
     protected String encoder = null;
-    protected String channelsMode = null;
     protected String version = null;
     protected String layer = null;
     protected String emphasis = null;
     protected String vendor = null;
-    protected String location = null;
-    protected int channels = 0;
-    protected int samplerate = 0;
-    protected int bitrate = 0;
-    protected int totals = -1;
-    protected long size = -1;
     protected boolean copyright = false;
     protected boolean crc = false;
     protected boolean original = false;
     protected boolean privat = false;
     protected boolean vbr = false;
-    protected String track = null;
-    protected String year = null;
-    protected String genre = null;
-    protected String title = null;
-    protected String artist = null;
-    protected String album = null;
-    protected String comment = null;
 
     /**
      * Load and parse MP3 info from a file.
@@ -78,8 +63,8 @@ public class MpegInfo implements TagInfo {
     public void load(File input) throws IOException, UnsupportedAudioFileException {
         AudioFileFormat aff = AudioSystem.getAudioFileFormat(input);
 //        loadInfo(aff);
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("mp3")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("mp3")) {
             throw new UnsupportedAudioFileException("Not MP3 audio format");
         }
         size = input.length();
@@ -92,22 +77,22 @@ public class MpegInfo implements TagInfo {
             mpegTag = mp3File.getTag();
 
             if (audioHeader != null) {
-                type = audioHeader.getEncodingType();
+                encodingType = audioHeader.getEncodingType();
                 encoder = audioHeader.getEncoder();
-                channelsMode = audioHeader.getChannels();
-                if (channelsMode.equals("Stereo")) {
-                    channels = 2;
-                } else if (channelsMode.equals("Joint Stereo")) {
-                    channels = 2;
-                } else if (channelsMode.equals("Dual")) {
-                    channels = 2;
-                } else if (channelsMode.equals("Mono")) {
-                    channels = 1;
+                channels = audioHeader.getChannels();
+                if (channels.equals("Stereo")) {
+                    channelsAsNumber = 2;
+                } else if (channels.equals("Joint Stereo")) {
+                    channelsAsNumber = 2;
+                } else if (channels.equals("Dual")) {
+                    channelsAsNumber = 2;
+                } else if (channels.equals("Mono")) {
+                    channelsAsNumber = 1;
                 } else {
-                    channels = 0;
+                    channelsAsNumber = 0;
                 }
-                samplerate = audioHeader.getSampleRateAsNumber();
-                bitrate = (int) audioHeader.getBitRateAsNumber();
+                sampleRateAsNumber = audioHeader.getSampleRateAsNumber();
+                bitRateAsNumber = (int) audioHeader.getBitRateAsNumber();
                 layer = audioHeader.getMpegLayer();
                 version = audioHeader.getMpegVersion();
                 crc = audioHeader.isProtected();
@@ -116,7 +101,7 @@ public class MpegInfo implements TagInfo {
                 original = audioHeader.isOriginal();
                 privat = audioHeader.isPrivate();
                 emphasis = audioHeader.getEmphasis();
-                totals = audioHeader.getTrackLength();
+                duration = audioHeader.getTrackLength();
             }
             if (mpegTag != null) {
                 title = mpegTag.getFirst(FieldKey.TITLE);
@@ -166,20 +151,20 @@ public class MpegInfo implements TagInfo {
      * @param aff the audio file format
      */
     protected void loadInfo(AudioFileFormat aff) throws UnsupportedAudioFileException {
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("mp3")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("mp3")) {
             throw new UnsupportedAudioFileException("Not MP3 audio format");
         }
         if (aff instanceof TAudioFileFormat) {
             Map props = ((TAudioFileFormat) aff).properties();
             if (props.containsKey("mp3.channels")) {
-                channels = ((Integer) props.get("mp3.channels")).intValue();
+                channelsAsNumber = ((Integer) props.get("mp3.channels")).intValue();
             }
             if (props.containsKey("mp3.frequency.hz")) {
-                samplerate = ((Integer) props.get("mp3.frequency.hz")).intValue();
+                sampleRateAsNumber = ((Integer) props.get("mp3.frequency.hz")).intValue();
             }
             if (props.containsKey("mp3.bitrate.nominal.bps")) {
-                bitrate = ((Integer) props.get("mp3.bitrate.nominal.bps")).intValue() / 1000;
+                bitRateAsNumber = ((Integer) props.get("mp3.bitrate.nominal.bps")).intValue() / 1000;
             }
             if (props.containsKey("mp3.version.layer")) {
                 layer = "Layer " + props.get("mp3.version.layer");
@@ -197,13 +182,13 @@ public class MpegInfo implements TagInfo {
             if (props.containsKey("mp3.mode")) {
                 int mode = ((Integer) props.get("mp3.mode")).intValue();
                 if (mode == 0) {
-                    channelsMode = "Stereo";
+                    channels = "Stereo";
                 } else if (mode == 1) {
-                    channelsMode = "Joint Stereo";
+                    channels = "Joint Stereo";
                 } else if (mode == 2) {
-                    channelsMode = "Dual Channel";
+                    channels = "Dual Channel";
                 } else if (mode == 3) {
-                    channelsMode = "Single Channel";
+                    channels = "Single Channel";
                 }
             }
             if (props.containsKey("mp3.crc")) {
@@ -232,7 +217,7 @@ public class MpegInfo implements TagInfo {
                 year = (String) props.get("date");
             }
             if (props.containsKey("duration")) {
-                totals = Math.round((((Long) props.get("duration")).longValue()) / 1000000);
+                duration = Math.round((((Long) props.get("duration")).longValue()) / 1000000);
             }
             if (props.containsKey("mp3.id3tag.genre")) {
                 genre = (String) props.get("mp3.id3tag.genre");
@@ -251,8 +236,8 @@ public class MpegInfo implements TagInfo {
      * @throws UnsupportedAudioFileException
      */
     protected void loadShoutastInfo(AudioFileFormat aff) throws IOException, UnsupportedAudioFileException {
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("mp3")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("mp3")) {
             throw new UnsupportedAudioFileException("Not MP3 audio format");
         }
         if (aff instanceof TAudioFileFormat) {
@@ -279,10 +264,6 @@ public class MpegInfo implements TagInfo {
 
     public String getEncoder() {
         return encoder;
-    }
-
-    public String getChannelsMode() {
-        return channelsMode;
     }
 
     public String getMpegLayer() {
@@ -339,13 +320,13 @@ public class MpegInfo implements TagInfo {
         sb.append("<br><b>Layer: </b>");
         sb.append(getMpegLayer());
         sb.append("<br><b>Sampling rate: </b>");
-        sb.append(getSampleRate()).append(" Hz");
+        sb.append(getSampleRateAsNumber()).append(" Hz");
         sb.append("<br><b>Bitrate: </b>");
-        sb.append(getBitRate()).append(" Kbps");
+        sb.append(getBitRateAsNumber()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
-        sb.append(getChannels());
+        sb.append(getChannelsAsNumber());
         sb.append("<br><b>Channels mode: </b>");
-        sb.append(getChannelsMode());
+        sb.append(getChannels());
         sb.append("<br><b>CRC: </b>");
         sb.append(isProtected());
         sb.append("<br><b>Variable Bitrate: </b>");
@@ -362,71 +343,5 @@ public class MpegInfo implements TagInfo {
         }
         sb.append("</html>");
         return sb.toString();
-    }
-
-    /*-- TagInfo Implementation --*/
-    @Override
-    public int getChannels() {
-        return channels;
-    }
-
-    @Override
-    public int getSampleRate() {
-        return samplerate;
-    }
-
-    @Override
-    public int getBitRate() {
-        return bitrate;
-    }
-
-    @Override
-    public int getTrackLength() {
-        return totals;
-    }
-
-    @Override
-    public String getTitle() {
-        return (title == null) ? null : title.trim();
-    }
-
-    @Override
-    public String getArtist() {
-        return (artist == null) ? null : artist.trim();
-    }
-
-    @Override
-    public String getAlbum() {
-        return (album == null) ? null : album.trim();
-    }
-
-    @Override
-    public String getTrack() {
-        if (track != null) {
-            if (track.contains("/")) {
-                track = track.substring(0, track.indexOf("/"));
-            }
-        }
-        return (track == null) ? null : track.trim();
-    }
-
-    @Override
-    public String getGenre() {
-        return (genre == null) ? null : genre.trim();
-    }
-
-    @Override
-    public String getComment() {
-        return (comment == null) ? null : comment.trim();
-    }
-
-    @Override
-    public String getYear() {
-        return (year == null) ? null : year.trim();
-    }
-
-    @Override
-    public String getEncodingType() {
-        return (type == null) ? null : type.trim();
     }
 }

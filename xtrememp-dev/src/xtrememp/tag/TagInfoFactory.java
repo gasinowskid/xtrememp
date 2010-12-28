@@ -39,9 +39,9 @@ public class TagInfoFactory {
 
     /**
      * 
-     * @return Instance of TagInfoFactory
+     * @return instance of TagInfoFactory
      */
-    public static synchronized TagInfoFactory getInstance() {
+    public static TagInfoFactory getInstance() {
         if (instance == null) {
             instance = new TagInfoFactory();
         }
@@ -63,7 +63,7 @@ public class TagInfoFactory {
             // Not Mpeg Format
             taginfo = null;
         } catch (IOException ex) {
-                logger.debug(ex.getMessage(), ex);
+            logger.debug(ex.getMessage(), ex);
             taginfo = null;
         }
         if (taginfo == null) {
@@ -130,60 +130,18 @@ public class TagInfoFactory {
     /**
      * Get TagInfo for given file.
      *
-     * @param location
-     * @return TagInfo structure for given location
+     * @param file
+     * @return TagInfo structure for given file
      */
-    public TagInfo getTagInfo(File location) {
-        TagInfo taginfo;
-        // Check Mpeg format.
+    public TagInfo getTagInfo(File file) {
+        TagInfo taginfo = null;
         try {
-            taginfo = new MpegInfo();
-            taginfo.load(location);
+            taginfo = new GenericInfo();
+            taginfo.load(file);
         } catch (UnsupportedAudioFileException ex) {
-            // Not Mpeg Format
-            taginfo = null;
+            logger.debug(ex.getMessage(), ex);
         } catch (IOException ex) {
-                logger.debug(ex.getMessage(), ex);
-            taginfo = null;
-        }
-        if (taginfo == null) {
-            // Check Ogg Vorbis format.
-            try {
-                taginfo = new OggVorbisInfo();
-                taginfo.load(location);
-            } catch (UnsupportedAudioFileException ex) {
-                // Not Ogg Vorbis Format
-                taginfo = null;
-            } catch (IOException ex) {
-                logger.debug(ex.getMessage(), ex);
-                taginfo = null;
-            }
-        }
-        if (taginfo == null) {
-            // Check Flac format.
-            try {
-                taginfo = new FlacInfo();
-                taginfo.load(location);
-            } catch (UnsupportedAudioFileException ex) {
-                // Not Flac Format
-                taginfo = null;
-            } catch (IOException ex) {
-                logger.debug(ex.getMessage(), ex);
-                taginfo = null;
-            }
-        }
-        if (taginfo == null) {
-            // Check Generic format.
-            try {
-                taginfo = new GenericInfo();
-                taginfo.load(location);
-            } catch (UnsupportedAudioFileException ex) {
-                // Not Generic Format
-                taginfo = null;
-            } catch (IOException ex) {
-                logger.debug(ex.getMessage(), ex);
-                taginfo = null;
-            }
+            logger.debug(ex.getMessage(), ex);
         }
         return taginfo;
     }
