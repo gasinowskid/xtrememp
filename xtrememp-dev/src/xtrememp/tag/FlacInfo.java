@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,9 +29,13 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.flac.FlacInfoReader;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.flac.FlacTag;
 import org.kc7bfi.jflac.FLACDecoder;
 import org.kc7bfi.jflac.metadata.StreamInfo;
@@ -44,39 +48,34 @@ import xtrememp.util.Utilities;
  */
 public class FlacInfo extends TagInfo {
 
-    protected String type = null;
-    protected int bitspersample = 0;
     protected StreamInfo info = null;
+    protected int bitspersample = AudioSystem.NOT_SPECIFIED;
 
     /**
      * Load and parse Flac info from File.
      *
-     * @param input
+     * @param file
      * @throws IOException
+     * @throws UnsupportedAudioFileException
      */
     @Override
-    public void load(File input) throws IOException, UnsupportedAudioFileException {
-        AudioFileFormat aff = AudioSystem.getAudioFileFormat(input);
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("flac")) {
-            throw new UnsupportedAudioFileException("Not Flac audio format");
-        }
-        size = input.length();
-        location = input.getPath();
-        FileInputStream is = new FileInputStream(input);
+    public void load(File file) throws IOException, UnsupportedAudioFileException {
+        size = file.length();
+        location = file.getPath();
+
+        FileInputStream is = new FileInputStream(file);
         FLACDecoder decoder = new FLACDecoder(is);
         decoder.readMetadata();
         info = decoder.getStreamInfo();
-        FlacTag flacTag = null;
-        GenericAudioHeader gah = null;
+        
         try {
-            AudioFile flacFile = AudioFileIO.read(input);
-            flacTag = (FlacTag) flacFile.getTag();
+            AudioFile flacFile = AudioFileIO.read(file);
+            FlacTag flacTag = (FlacTag) flacFile.getTag();
             FlacInfoReader fir = new FlacInfoReader();
-            gah = fir.read(new RandomAccessFile(input, "r"));
+            GenericAudioHeader gah = fir.read(new RandomAccessFile(file, "r"));
 
             if (gah != null) {
-                type = gah.getEncodingType();
+                encodingType = gah.getEncodingType();
                 channelsAsNumber = gah.getChannelNumber();
                 sampleRateAsNumber = gah.getSampleRateAsNumber();
                 bitRateAsNumber = (int) gah.getBitRateAsNumber();
@@ -91,8 +90,14 @@ public class FlacInfo extends TagInfo {
                 track = flacTag.getFirst(FieldKey.TRACK);
                 comment = flacTag.getFirst(FieldKey.COMMENT);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+        } catch (CannotReadException ex) {
+            throw new IOException(ex);
+        } catch (TagException ex) {
+            throw new UnsupportedAudioFileException("Not Flac audio format");
+        } catch (ReadOnlyFileException ex) {
+            throw new IOException(ex);
+        } catch (InvalidAudioFrameException ex) {
+            throw new UnsupportedAudioFileException("Not Flac audio format");
         }
     }
 
@@ -136,8 +141,8 @@ public class FlacInfo extends TagInfo {
      * @throws javax.sound.sampled.UnsupportedAudioFileException
      */
     protected void loadInfo(AudioFileFormat aff) throws UnsupportedAudioFileException {
-        type = aff.getType().toString();
-        if (!type.equalsIgnoreCase("flac")) {
+        encodingType = aff.getType().toString();
+        if (!encodingType.equalsIgnoreCase("flac")) {
             throw new UnsupportedAudioFileException("Not Flac audio format");
         }
         channelsAsNumber = info.getChannels();
@@ -169,7 +174,7 @@ public class FlacInfo extends TagInfo {
         sb.append(getBitRateAsNumber()).append(" Kbps");
         sb.append("<br><b>Channels: </b>");
         sb.append(getChannelsAsNumber());
-        if (size != -1) {
+        if (size > 0) {
             sb.append("<br><b>Size: </b>");
             sb.append(Utilities.byteCountToDisplaySize(size));
         }

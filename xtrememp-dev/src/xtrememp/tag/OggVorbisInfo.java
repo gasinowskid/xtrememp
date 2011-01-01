@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,20 +18,24 @@
  */
 package xtrememp.tag;
 
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Map;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.audio.ogg.util.OggInfoReader;
 import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 import org.tritonus.share.sampled.file.TAudioFileFormat;
 import xtrememp.util.Utilities;
@@ -43,36 +47,30 @@ import xtrememp.util.Utilities;
  */
 public class OggVorbisInfo extends TagInfo {
 
-    protected int serial = 0;
-    protected int version = 0;
-    protected int minbitrate = 0;
-    protected int maxbitrate = 0;
-    protected int averagebitrate = 0;
     protected String vendor = null;
+    protected int serial = AudioSystem.NOT_SPECIFIED;
+    protected int version = AudioSystem.NOT_SPECIFIED;
+    protected int minbitrate = AudioSystem.NOT_SPECIFIED;
+    protected int maxbitrate = AudioSystem.NOT_SPECIFIED;
+    protected int averagebitrate = AudioSystem.NOT_SPECIFIED;
 
     /**
      * Load and parse Ogg Vorbis info from a file.
      *
-     * @param input
+     * @param file
      * @throws IOException
+     * @throws UnsupportedAudioFileException
      */
     @Override
-    public void load(File input) throws IOException, UnsupportedAudioFileException {
-        AudioFileFormat aff = AudioSystem.getAudioFileFormat(input);
-//        loadInfo(aff);
-        encodingType = aff.getType().toString();
-        if (!encodingType.equalsIgnoreCase("ogg")) {
-            throw new UnsupportedAudioFileException("Not Ogg Vorbis audio format");
-        }
-        size = input.length();
-        location = input.getPath();
-        VorbisCommentTag vcTag = null;
-        GenericAudioHeader gah = null;
+    public void load(File file) throws IOException, UnsupportedAudioFileException {
+        size = file.length();
+        location = file.getPath();
+
         try {
-            AudioFile oggFile = AudioFileIO.read(input);
-            vcTag = (VorbisCommentTag) oggFile.getTag();
+            AudioFile oggFile = AudioFileIO.read(file);
+            VorbisCommentTag vcTag = (VorbisCommentTag) oggFile.getTag();
             OggInfoReader oir = new OggInfoReader();
-            gah = oir.read(new RandomAccessFile(input, "r"));
+            GenericAudioHeader gah = oir.read(new RandomAccessFile(file, "r"));
 
             if (gah != null) {
                 encodingType = gah.getEncodingType();
@@ -91,8 +89,14 @@ public class OggVorbisInfo extends TagInfo {
                 track = vcTag.getFirst(FieldKey.TRACK);
                 comment = vcTag.getFirst(FieldKey.COMMENT);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+        } catch (CannotReadException ex) {
+            throw new IOException(ex);
+        } catch (TagException ex) {
+            throw new UnsupportedAudioFileException("Not Ogg Vorbis audio format");
+        } catch (ReadOnlyFileException ex) {
+            throw new IOException(ex);
+        } catch (InvalidAudioFrameException ex) {
+            throw new UnsupportedAudioFileException("Not Ogg Vorbis audio format");
         }
     }
 
@@ -265,7 +269,7 @@ public class OggVorbisInfo extends TagInfo {
         sb.append(getChannelsAsNumber());
         sb.append("<br><b>Vendor: </b>");
         sb.append(getVendor());
-        if (size != -1) {
+        if (size > 0) {
             sb.append("<br><b>Size: </b>");
             sb.append(Utilities.byteCountToDisplaySize(size));
         }

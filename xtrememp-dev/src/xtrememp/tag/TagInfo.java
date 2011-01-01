@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import org.jaudiotagger.tag.datatype.Artwork;
 
 /**
  * TagInfo interface define needed features for song information.
@@ -45,6 +46,7 @@ public abstract class TagInfo {
     protected String artist = null;
     protected String album = null;
     protected String comment = null;
+    protected Artwork artwork = null;
     protected int channelsAsNumber = AudioSystem.NOT_SPECIFIED;
     protected int sampleRateAsNumber = AudioSystem.NOT_SPECIFIED;
     protected long bitRateAsNumber = AudioSystem.NOT_SPECIFIED;
@@ -54,29 +56,29 @@ public abstract class TagInfo {
     /**
      * Load tag information from an input stream.
      * 
-     * @param input 
+     * @param inputStream
      * @throws java.io.IOException 
      * @throws javax.sound.sampled.UnsupportedAudioFileException 
      */
-    public abstract void load(InputStream input) throws IOException, UnsupportedAudioFileException;
+    public abstract void load(InputStream inputStream) throws IOException, UnsupportedAudioFileException;
 
     /**
      * Load tag information from an URL.
      * 
-     * @param input 
+     * @param url
      * @throws java.io.IOException 
      * @throws javax.sound.sampled.UnsupportedAudioFileException 
      */
-    public abstract void load(URL input) throws IOException, UnsupportedAudioFileException;
+    public abstract void load(URL url) throws IOException, UnsupportedAudioFileException;
 
     /**
      * Load tag information from a file.
      * 
-     * @param input
+     * @param file
      * @throws java.io.IOException
      * @throws javax.sound.sampled.UnsupportedAudioFileException
      */
-    public abstract void load(File input) throws IOException, UnsupportedAudioFileException;
+    public abstract void load(File file) throws IOException, UnsupportedAudioFileException;
 
     /**
      * Get codec details
@@ -243,5 +245,15 @@ public abstract class TagInfo {
      */
     public String getComment() {
         return (comment == null) ? null : comment.trim();
+    }
+
+
+    /**
+     * Get track artwork.
+     *
+     * @return artwork or null if none exist
+     */
+    public Artwork getArtwork(){
+        return artwork;
     }
 }

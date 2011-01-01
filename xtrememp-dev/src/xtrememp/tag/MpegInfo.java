@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,10 +28,14 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
 import org.tritonus.share.sampled.file.TAudioFileFormat;
 import xtrememp.util.Utilities;
 
@@ -56,25 +60,19 @@ public class MpegInfo extends TagInfo {
     /**
      * Load and parse MP3 info from a file.
      *
-     * @param input
+     * @param file
      * @throws IOException
+     * @throws UnsupportedAudioFileException
      */
     @Override
-    public void load(File input) throws IOException, UnsupportedAudioFileException {
-        AudioFileFormat aff = AudioSystem.getAudioFileFormat(input);
-//        loadInfo(aff);
-        encodingType = aff.getType().toString();
-        if (!encodingType.equalsIgnoreCase("mp3")) {
-            throw new UnsupportedAudioFileException("Not MP3 audio format");
-        }
-        size = input.length();
-        location = input.getPath();
-        MP3AudioHeader audioHeader = null;
-        Tag mpegTag = null;
+    public void load(File file) throws IOException, UnsupportedAudioFileException {
+        size = file.length();
+        location = file.getPath();
+        
         try {
-            MP3File mp3File = (MP3File) AudioFileIO.read(input);
-            audioHeader = mp3File.getMP3AudioHeader();
-            mpegTag = mp3File.getTag();
+            MP3File mp3File = (MP3File) AudioFileIO.read(file);
+            MP3AudioHeader audioHeader = mp3File.getMP3AudioHeader();
+            Tag mpegTag = mp3File.getTag();
 
             if (audioHeader != null) {
                 encodingType = audioHeader.getEncodingType();
@@ -112,8 +110,14 @@ public class MpegInfo extends TagInfo {
                 track = mpegTag.getFirst(FieldKey.TRACK);
                 comment = mpegTag.getFirst(FieldKey.COMMENT);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+        } catch (CannotReadException ex) {
+            throw new IOException(ex);
+        } catch (TagException ex) {
+            throw new UnsupportedAudioFileException("Not MP3 audio format");
+        } catch (ReadOnlyFileException ex) {
+            throw new IOException(ex);
+        } catch (InvalidAudioFrameException ex) {
+            throw new UnsupportedAudioFileException("Not MP3 audio format");
         }
     }
 
@@ -203,6 +207,9 @@ public class MpegInfo extends TagInfo {
             if (props.containsKey("mp3.original")) {
                 original = ((Boolean) props.get("mp3.original")).booleanValue();
             }
+            if (props.containsKey("duration")) {
+                duration = Math.round((((Long) props.get("duration")).longValue()) / 1000000);
+            }
             emphasis = "none";
             if (props.containsKey("title")) {
                 title = (String) props.get("title");
@@ -215,9 +222,6 @@ public class MpegInfo extends TagInfo {
             }
             if (props.containsKey("date")) {
                 year = (String) props.get("date");
-            }
-            if (props.containsKey("duration")) {
-                duration = Math.round((((Long) props.get("duration")).longValue()) / 1000000);
             }
             if (props.containsKey("mp3.id3tag.genre")) {
                 genre = (String) props.get("mp3.id3tag.genre");
@@ -337,7 +341,7 @@ public class MpegInfo extends TagInfo {
         sb.append(isPrivate());
         sb.append("<br><b>Emphasis: </b>");
         sb.append(getEmphasis());
-        if (size != -1) {
+        if (size > 0) {
             sb.append("<br><b>Size: </b>");
             sb.append(Utilities.byteCountToDisplaySize(size));
         }

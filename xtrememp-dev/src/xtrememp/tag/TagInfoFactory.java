@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,16 +35,13 @@ import xtrememp.util.Utilities;
 public class TagInfoFactory {
 
     private static Logger logger = LoggerFactory.getLogger(TagInfoFactory.class);
-    private static TagInfoFactory instance = null;
+    private static final TagInfoFactory instance = new TagInfoFactory();
 
     /**
      * 
      * @return instance of TagInfoFactory
      */
     public static TagInfoFactory getInstance() {
-        if (instance == null) {
-            instance = new TagInfoFactory();
-        }
         return instance;
     }
 

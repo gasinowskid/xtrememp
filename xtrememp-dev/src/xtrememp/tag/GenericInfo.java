@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,10 +59,8 @@ public class GenericInfo extends TagInfo {
         location = input.getPath();
         title = FilenameUtils.getBaseName(input.getName());
 
-        AudioFile audioFile;
         try {
-            audioFile = AudioFileIO.read(input);
-
+            AudioFile audioFile = AudioFileIO.read(input);
             AudioHeader audioHeader = audioFile.getAudioHeader();
             if (audioHeader != null) {
                 encodingType = audioHeader.getEncodingType();
@@ -84,6 +82,7 @@ public class GenericInfo extends TagInfo {
                 genre = tag.getFirst(FieldKey.GENRE);
                 track = tag.getFirst(FieldKey.TRACK);
                 comment = tag.getFirst(FieldKey.COMMENT);
+                artwork = tag.getFirstArtwork();
             }
         } catch (CannotReadException ex) {
             throw new IOException(ex);
