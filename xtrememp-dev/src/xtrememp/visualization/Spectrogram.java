@@ -1,6 +1,6 @@
 /**
  * Xtreme Media Player a cross-platform media player.
- * Copyright (C) 2005-2010 Besmir Beqiri
+ * Copyright (C) 2005-2011 Besmir Beqiri
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -136,7 +136,7 @@ public final class Spectrogram extends Visualization {
         float fs, m;
         // Group up available bands using band distribution table.
         for (bd = 0; bd < bands; bd++) {
-            //Get band distribution entry.
+            // Get band distribution entry.
             i = bdTable[bd].distribution;
             m = 0;
             mi = 0;
