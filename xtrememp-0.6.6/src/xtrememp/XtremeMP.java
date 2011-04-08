@@ -137,6 +137,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem stopMenuItem;
     private JMenuItem previousMenuItem;
     private JMenuItem randomizePlaylistMenuItem;
+    private JMenuItem shutdownAfterPlayMenuItem;
     private JRadioButtonMenuItem playlistManagerMenuItem;
     private JRadioButtonMenuItem visualizationMenuItem;
     private JRadioButtonMenuItem playModeRepeatNoneMenuItem;
@@ -413,6 +414,11 @@ public final class XtremeMP implements ActionListener, ControlListener,
         playPauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
         playPauseMenuItem.addActionListener(this);
         playerMenu.add(playPauseMenuItem);
+
+        shutdownAfterPlayMenuItem = new JMenuItem(tr("Shutdown After Playing TEST"));
+        shutdownAfterPlayMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
+        shutdownAfterPlayMenuItem.addActionListener(this);
+        playerMenu.add(shutdownAfterPlayMenuItem);
 
         stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
         stopMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
@@ -765,6 +771,8 @@ public final class XtremeMP implements ActionListener, ControlListener,
             acNext();
         } else if (source == randomizePlaylistMenuItem) {
             playlistManager.randomizePlaylist();
+        } else if (source == shutdownAfterPlayMenuItem) {
+            //***add code here
         } else if (source == stopMenuItem || source == stopButton) {
             acStop();
         } else if (source == playlistManagerMenuItem) {
