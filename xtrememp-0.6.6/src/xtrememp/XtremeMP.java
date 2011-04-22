@@ -20,6 +20,7 @@ package xtrememp;
 
 import com.melloware.jintellitype.IntellitypeListener;
 import com.melloware.jintellitype.JIntellitype;
+import java.awt.BorderLayout;
 import java.awt.event.ItemEvent;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -104,6 +105,13 @@ import xtrememp.util.file.AudioFileFilter;
 import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.util.Utilities;
 import static xtrememp.util.Utilities.tr;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import xtrememp.player.video.videoplayer;
+
 
 /**
  *
@@ -115,6 +123,9 @@ public final class XtremeMP implements ActionListener, ControlListener,
         PlaybackListener, PlaylistListener, IntellitypeListener, GFXUIListener {
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
+
+
+
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
     private final PlaylistFileFilter playlistFileFilter = new PlaylistFileFilter();
     private final Version currentVersion = Version.getCurrentVersion();
@@ -137,7 +148,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem stopMenuItem;
     private JMenuItem previousMenuItem;
     private JMenuItem randomizePlaylistMenuItem;
-    private JMenuItem shutdownAfterPlayMenuItem;
     private JRadioButtonMenuItem playlistManagerMenuItem;
     private JRadioButtonMenuItem visualizationMenuItem;
     private JRadioButtonMenuItem playModeRepeatNoneMenuItem;
@@ -165,14 +175,13 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private SeekSlider seekSlider;
     private PlaylistItem currentPli;
 
-    private XtremeMP() {
-    }
-
+ 
     public static XtremeMP getInstance() {
         if (instance == null) {
             instance = new XtremeMP();
         }
         return instance;
+        
     }
 
     public JFrame getMainFrame() {
@@ -187,6 +196,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         return audioPlayer;
     }
 
+    
     public void init(List<String> arguments) {
         // Process arguments
 //        for (String arg : arguments) {
@@ -208,6 +218,9 @@ public final class XtremeMP implements ActionListener, ControlListener,
         if (!Utilities.isNullOrEmpty(mixerName)) {
             audioPlayer.setMixerName(mixerName);
         }
+
+
+
 
         // Launch gui
         EventQueue.invokeLater(new Runnable() {
@@ -289,7 +302,41 @@ public final class XtremeMP implements ActionListener, ControlListener,
         });
     }
 
-    public static void main(String[] args) throws Exception {
+
+    public static void main(String[] args){
+
+      
+        //Here for testing the JMF video player
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showOpenDialog(null);
+
+        if(result==JFileChooser.APPROVE_OPTION)
+        {
+            URL mediaURL=null;
+
+        try{
+        mediaURL=fileChooser.getSelectedFile().toURL();
+        }
+
+        catch(MalformedURLException malformedURLException)
+        {
+            System.err.println("Error");
+        }
+        if(mediaURL != null)
+        {
+            JFrame XtremeMP = new JFrame("Video Tester");
+            XtremeMP.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            videoplayer VideoPlayer = new videoplayer(mediaURL);
+            XtremeMP.add(VideoPlayer);
+
+            XtremeMP.setSize(300,300);
+            XtremeMP.setVisible(true);
+
+            }
+        }
+            
+
         List<String> arguments = Arrays.asList(args);
 //        boolean debug = arguments.contains("-debug");
 
@@ -297,6 +344,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         Settings.loadSettings();
         // Configure logback
         Settings.configureLogback();
+
 
         // Enable uncaught exception catching
         try {
@@ -319,6 +367,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         Locale.setDefault(locale);
         LanguageBundle.setLanguage(locale);
 
+        
         // Animation configurations
         AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ICON_GLOW, JTable.class);
         AnimationConfigurationManager.getInstance().disallowAnimations(AnimationFacet.ROLLOVER, JTable.class);
@@ -332,7 +381,10 @@ public final class XtremeMP implements ActionListener, ControlListener,
             // wait 5 sec
             SoftwareUpdate.scheduleCheckForUpdates(5 * 1000);
         }
-    }
+
+       
+      }
+
 
     protected void exit() {
         // Save current settings
@@ -414,11 +466,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
         playPauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
         playPauseMenuItem.addActionListener(this);
         playerMenu.add(playPauseMenuItem);
-
-        shutdownAfterPlayMenuItem = new JMenuItem(tr("Shutdown After Playing TEST"));
-        shutdownAfterPlayMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
-        shutdownAfterPlayMenuItem.addActionListener(this);
-        playerMenu.add(shutdownAfterPlayMenuItem);
 
         stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
         stopMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
@@ -646,6 +693,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 }
             }
         });
+        //
         volumePanel.add(muteCheckBox, "south");
         volumePopupMenu.add(volumePanel);
         controlPanel.add(volumeButton);
@@ -771,8 +819,6 @@ public final class XtremeMP implements ActionListener, ControlListener,
             acNext();
         } else if (source == randomizePlaylistMenuItem) {
             playlistManager.randomizePlaylist();
-        } else if (source == shutdownAfterPlayMenuItem) {
-            //***add code here
         } else if (source == stopMenuItem || source == stopButton) {
             acStop();
         } else if (source == playlistManagerMenuItem) {
