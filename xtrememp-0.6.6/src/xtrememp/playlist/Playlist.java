@@ -320,6 +320,7 @@ public class Playlist {
      */
     public PlaylistItem getCursor() {
         if ((cursorPos < 0) || (cursorPos >= playlist.size())) {
+                firePlaylistEndedEvent(getCursor()); //Call Event to send to Listner  For Playlist Ended *currently for shutdown feature only
             return null;
         }
         return getItemAt(cursorPos);
@@ -464,5 +465,12 @@ public class Playlist {
             listener.playModeChanged(event);
         }
         logger.info("Play mode changed: {}", playMode);
+    }
+
+        private void firePlaylistEndedEvent(PlaylistItem item) {
+        PlaylistEvent event = new PlaylistEvent(this, item);
+        for (PlaylistListener listener : listeners) {
+            listener.playlistEnded(event);
+        }
     }
 }
