@@ -1216,6 +1216,11 @@ public final class XtremeMP implements ActionListener, ControlListener,
         }
     }
 
+    @Override
+    public void playlistEnded(PlaylistEvent e) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     private class PlayerLauncher extends AbstractSwingWorker<Boolean, Void> {
 
         private boolean play = false;
