@@ -26,8 +26,11 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -106,12 +109,13 @@ import xtrememp.util.file.PlaylistFileFilter;
 import xtrememp.util.Utilities;
 import static xtrememp.util.Utilities.tr;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import java.awt.Dimension;
 import xtrememp.player.video.videoplayer;
-
 
 /**
  *
@@ -124,6 +128,8 @@ public final class XtremeMP implements ActionListener, ControlListener,
 
     private static final Logger logger = LoggerFactory.getLogger(XtremeMP.class);
 
+    
+
 
 
     private final AudioFileFilter audioFileFilter = new AudioFileFilter();
@@ -131,6 +137,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private final Version currentVersion = Version.getCurrentVersion();
     private static XtremeMP instance;
     private JFrame mainFrame;
+    private JPanel visPanel;
     private JMenuBar menuBar;
     private JMenu fileMenu;
     private JMenu playerMenu;
@@ -148,6 +155,8 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JMenuItem stopMenuItem;
     private JMenuItem previousMenuItem;
     private JMenuItem randomizePlaylistMenuItem;
+    private JMenuItem shutdownAfterPlayMenuItem;
+    private JMenuItem openVideoMenuItem;
     private JRadioButtonMenuItem playlistManagerMenuItem;
     private JRadioButtonMenuItem visualizationMenuItem;
     private JRadioButtonMenuItem playModeRepeatNoneMenuItem;
@@ -174,9 +183,15 @@ public final class XtremeMP implements ActionListener, ControlListener,
     private JLabel playModeLabel;
     private SeekSlider seekSlider;
     private PlaylistItem currentPli;
-
- 
+    
+    //private final GraphicsDevice device;
+   GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+   private static DisplayMode displayMode;
+   private static GraphicsDevice device;
+   private Dimension size;
+  
     public static XtremeMP getInstance() {
+  
         if (instance == null) {
             instance = new XtremeMP();
         }
@@ -196,6 +211,9 @@ public final class XtremeMP implements ActionListener, ControlListener,
         return audioPlayer;
     }
 
+    public Dimension size(){
+        return size();
+    }
     
     public void init(List<String> arguments) {
         // Process arguments
@@ -303,38 +321,15 @@ public final class XtremeMP implements ActionListener, ControlListener,
     }
 
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException{
 
-      
-        //Here for testing the JMF video player
-        JFileChooser fileChooser = new JFileChooser();
-        int result = fileChooser.showOpenDialog(null);
+        /*
+           
+        Runtime runtime = Runtime.getRuntime();
+        Process proc = runtime.exec("shutdown -s -t 0");
+        System.exit(0)
 
-        if(result==JFileChooser.APPROVE_OPTION)
-        {
-            URL mediaURL=null;
-
-        try{
-        mediaURL=fileChooser.getSelectedFile().toURL();
-        }
-
-        catch(MalformedURLException malformedURLException)
-        {
-            System.err.println("Error");
-        }
-        if(mediaURL != null)
-        {
-            JFrame XtremeMP = new JFrame("Video Tester");
-            XtremeMP.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            videoplayer VideoPlayer = new videoplayer(mediaURL);
-            XtremeMP.add(VideoPlayer);
-
-            XtremeMP.setSize(300,300);
-            XtremeMP.setVisible(true);
-
-            }
-        }
+         */
             
 
         List<String> arguments = Arrays.asList(args);
@@ -403,6 +398,10 @@ public final class XtremeMP implements ActionListener, ControlListener,
         if (JIntellitype.isJIntellitypeSupported()) {
             JIntellitype.getInstance().cleanUp();
         }
+
+
+
+
         logger.info("Exit application...");
         System.exit(0);
     }
@@ -415,7 +414,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
         fileMenu = new JMenu(fileMenuStr);
         fileMenu.setMnemonic(fileMenuStr.charAt(0));
 
-        openMenuItem = new JMenuItem(tr("MainFrame.Menu.File.OpenFile"));
+        openMenuItem = new JMenuItem(tr("OpenMusic"));
         openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
         openMenuItem.setIcon(Utilities.FOLDER_ICON);
         openMenuItem.addActionListener(this);
@@ -426,6 +425,14 @@ public final class XtremeMP implements ActionListener, ControlListener,
         openURLMenuItem.setIcon(Utilities.FOLDER_REMOTE_ICON);
         openURLMenuItem.addActionListener(this);
         fileMenu.add(openURLMenuItem);
+
+
+        //new openVideoMenu
+        openVideoMenuItem= new JMenuItem(tr("OpenVideo"));
+        openVideoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
+        openVideoMenuItem.setIcon(Utilities.FOLDER_ICON);
+        openVideoMenuItem.addActionListener(this);
+        fileMenu.add(openVideoMenuItem);
 
         fileMenu.addSeparator();
 
@@ -466,6 +473,12 @@ public final class XtremeMP implements ActionListener, ControlListener,
         playPauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
         playPauseMenuItem.addActionListener(this);
         playerMenu.add(playPauseMenuItem);
+
+        shutdownAfterPlayMenuItem = new JMenuItem(tr("Shutdown After Playing"));
+        shutdownAfterPlayMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
+        shutdownAfterPlayMenuItem.addActionListener(this);
+        playerMenu.add(shutdownAfterPlayMenuItem);
+        
 
         stopMenuItem = new JMenuItem(tr("MainFrame.Menu.Player.Stop"));
         stopMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
@@ -757,8 +770,50 @@ public final class XtremeMP implements ActionListener, ControlListener,
     @Override
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
+        
+        
+        //added XtremeMP video open here
+       if (source == openVideoMenuItem){
+       JFileChooser fileChooser  = new JFileChooser(Settings.getLastDir());
+       int result = fileChooser.showOpenDialog(null);
 
-        if (source == openMenuItem) {
+
+         if(result== JFileChooser.APPROVE_OPTION)
+         {
+
+             URL mediaURL= null;
+        try{
+            mediaURL=fileChooser.getSelectedFile().toURL();
+
+        }
+        catch(MalformedURLException malformedURLException)
+        {
+            System.err.println("Error");
+        }
+             if(mediaURL !=null)
+             {
+                 
+               JFrame XtremeMP = new JFrame("Xtreme Media Player 0.6.6");
+               XtremeMP.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+               videoplayer VideoPlayer = new videoplayer(mediaURL);
+               XtremeMP.add(VideoPlayer);
+
+               GraphicsEnvironment envi = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                device = envi.getDefaultScreenDevice();
+                displayMode = device.getDisplayMode();
+
+                
+                //size = getSize(size);
+
+               XtremeMP.setSize(700,450);
+               XtremeMP.setVisible(true);
+             }
+            }
+            }
+        else if (source == openMenuItem) {
+
+
             JFileChooser fileChooser = new JFileChooser(Settings.getLastDir());
             fileChooser.addChoosableFileFilter(playlistFileFilter);
             fileChooser.addChoosableFileFilter(audioFileFilter);
@@ -766,6 +821,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
             if (fileChooser.showOpenDialog(mainFrame) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 FileFilter fileFilter = fileChooser.getFileFilter();
+
                 if (fileFilter == playlistFileFilter) {
                     playlistManager.clearPlaylist();
                     acStop();
@@ -779,6 +835,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
                 acOpenAndPlay();
                 Settings.setLastDir(file.getParent());
             }
+        
         } else if (source == openURLMenuItem) {
             String url = JOptionPane.showInputDialog(mainFrame,
                     tr("Dialog.OpenURL.Message"),
