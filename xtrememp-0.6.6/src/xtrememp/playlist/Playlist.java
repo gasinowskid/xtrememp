@@ -286,6 +286,7 @@ public class Playlist {
         } else {
             cursorPos++;
             if (cursorPos > playlist.size() - 1) {
+                firePlaylistEndedEvent(getCursor()); //Call Event to send to Listner  For Playlist Ended *currently for shutdown feature only
                 cursorPos = 0;
             }
         }
@@ -320,7 +321,6 @@ public class Playlist {
      */
     public PlaylistItem getCursor() {
         if ((cursorPos < 0) || (cursorPos >= playlist.size())) {
-                firePlaylistEndedEvent(getCursor()); //Call Event to send to Listner  For Playlist Ended *currently for shutdown feature only
             return null;
         }
         return getItemAt(cursorPos);

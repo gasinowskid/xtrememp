@@ -39,12 +39,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -1218,6 +1220,15 @@ public final class XtremeMP implements ActionListener, ControlListener,
 
     @Override
     public void playlistEnded(PlaylistEvent e) {
+        if(shutdownAfterPlayMenuItem.isEnabled()){
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                Process proc = runtime.exec("shutdown -s -t 0");
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(XtremeMP.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            System.exit(0);
+        }
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
