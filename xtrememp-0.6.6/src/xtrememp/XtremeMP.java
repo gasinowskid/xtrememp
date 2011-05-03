@@ -336,6 +336,7 @@ public final class XtremeMP implements ActionListener, ControlListener,
 //        boolean debug = arguments.contains("-debug");
 
         // Load Settings
+        //
         Settings.loadSettings();
         // Configure logback
         Settings.configureLogback();
@@ -774,9 +775,10 @@ public final class XtremeMP implements ActionListener, ControlListener,
         
         //added XtremeMP video open here
        if (source == openVideoMenuItem){
+       
        JFileChooser fileChooser  = new JFileChooser(Settings.getLastDir());
        int result = fileChooser.showOpenDialog(null);
-
+       
 
          if(result== JFileChooser.APPROVE_OPTION)
          {
